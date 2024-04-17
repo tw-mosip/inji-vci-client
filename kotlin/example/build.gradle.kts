@@ -65,6 +65,14 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.6.2")
 
 
+//INJI VCI client project
+    implementation(project(":vci-client"))
+
+    implementation("com.madgag.spongycastle:core:1.56.0.0")
+    implementation("com.madgag.spongycastle:prov:1.56.0.0")
+    implementation("com.madgag.spongycastle:bcpkix-jdk15on:1.56.0.0")
+    implementation("net.openid:appauth:0.11.1")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
