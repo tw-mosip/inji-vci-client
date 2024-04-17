@@ -1,4 +1,8 @@
 fileignoreconfig:
+- filename: kotlin/example/src/main/java/com/example/vciclient/util/PemConverter.kt
+  checksum: 2e05cd2db4234be060ca69ac3aa26841fc40cd86255325df5913a5903cae31b1
+- filename: kotlin/example/src/main/java/com/example/vciclient/MainActivity.kt
+  checksum: 7203b7bbbe2149ddae57c0e3138f063d0c4d62bc2c84757150ff19f81df00f42
 - filename: kotlin/example/src/main/res/xml/backup_rules.xml
   checksum: 00d72dfeff6c859b511c1a589ffb94be2be1580dbc16958e4212ec1be3a2dd5d
 - filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/jwt/JWTProofTest.kt
