@@ -1,0 +1,16 @@
+fileignoreconfig:
+- filename: kotlin/example/src/main/res/xml/backup_rules.xml
+  checksum: 00d72dfeff6c859b511c1a589ffb94be2be1580dbc16958e4212ec1be3a2dd5d
+- filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/jwt/JWTProofTest.kt
+  checksum: ed2142dc5ce98b658317218215c4a926775b9206862a531c9362b70efe44d715
+- filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/VCIClientTest.kt
+  checksum: ebc3e59e410c7199b68927509b484771d0768fe65c45b51b9d7b5c26dc600142
+- filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/jwt/JWTHeaderTest.kt
+  checksum: b90c08a32efe4f248cd19bc876af6d7f4f0aa669149ec2f6ebb74cd8a771a3f5
+- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/VCIClient.kt
+  checksum: 069c69286dd33700d5795ac0f42936618afe13863c3c6f88b140e8d4e4529368
+- filename: kotlin/readme.md
+  checksum: d061b65788fc3e874364d8e449f37df31a2b5be473272669d192aa3285e28351
+- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/jwt/JWTHeader.kt
+  checksum: 1658bad6dcb8d41768f5233e90401e9c2afbc3d5a9cdd4b8cce716425d73318c
+version: ""
