@@ -41,10 +41,6 @@ android {
             isReturnDefaultValues = true
         }
     }
-//    kotlin {
-//        jvmToolchain(21)
-//    }
-
 }
 
 dependencies {
