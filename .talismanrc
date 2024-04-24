@@ -14,7 +14,7 @@ fileignoreconfig:
 - filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/VCIClient.kt
   checksum: 069c69286dd33700d5795ac0f42936618afe13863c3c6f88b140e8d4e4529368
 - filename: kotlin/readme.md
-  checksum: d061b65788fc3e874364d8e449f37df31a2b5be473272669d192aa3285e28351
+  checksum: 34e93864cf9bfdc27dbcead01e8c193bc91511bb77654a5e5a0dec80c384729e
 - filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/jwt/JWTHeader.kt
   checksum: 1658bad6dcb8d41768f5233e90401e9c2afbc3d5a9cdd4b8cce716425d73318c
 version: ""

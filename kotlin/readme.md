@@ -1,24 +1,40 @@
 ## INJI VCI Client
 
-This library takes care of downloading a VC (Verifiable Credential) given the consumer application performs the authorization flow and has its own keypair generation and signing logic
+This kotlin library takes care of downloading a VC (Verifiable Credential) given the consumer application performs the authorization flow and has its own keypair generation and signing logic
 
-## Usage
+## Installation
 
-### Download VC
+TODO: add installation guide
+
+## API
+
+| Method                                                             | ReturnType         | Description                                                                                       |
+|--------------------------------------------------------------------|--------------------|---------------------------------------------------------------------------------------------------|
+| requestCredential(issuerMeta, ::signer, accessToken, publicKeyPem) | CredentialResponse | Request Credential - Initiates a download request to the credential endpoint added in issuer meta |
+
+
+### Request Credential
+
+Returns the credential downloaded from the provided issuer.
+
 ```
 val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
-                        issuer = IssuerMeta(
-                            Constants.CREDENTIAL_AUDIENCE,
-                            Constants.CREDENTIAL_ENDPOINT,
-                            Constants.DOWNLOAD_TIMEOUT,
-                            Constants.CREDENTIAL_TYPE,
-                            Constants.CREDENTIAL_FORMAT
-                        ),
-                        signer = ::signer,
-                        accessToken = accessToken,
-                        publicKeyPem = publicKeyInPem
+                        IssuerMeta( CREDENTIAL_AUDIENCE, CREDENTIAL_ENDPOINT, DOWNLOAD_TIMEOUT, CREDENTIAL_TYPE, CREDENTIAL_FORMAT ),
+                        ::signer,
+                        accessToken,
+                        publicKeyPem
                     )
 ```
+**Parameters**
+
+| Name         | Type                               | Description                                                                                                  | Sample                                                                                                  |
+|--------------|------------------------------------|--------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| issuerMeta   | IssuerMeta                         | Data object of the issuer details                                                                            | `IssuerMeta(credentialAudience, credentialEndpoint, downloadTimeout, credentialType, credentialFormat)` |
+| signer       | Function  (ByteArray) -> ByteArray | Function which is called to get the signature passing the preHash (Base64EncodedHeader.Base64EncodedPayload) | `fun signer(preHash: ByteArray): ByteArray {//Signing logic}`                                           |
+| accessToken  | String                             |                                                                                                              |                                                                                                         |
+| publicKeyPem | String                             | Public key in PEM format is passed from the keypair generated                                                |                                                                                                         |
+
+
 
 ###### Exceptions
 
@@ -27,6 +43,6 @@ val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
 3. DownloadFailedException is thrown for any other error scenarios
 
 
-#### How to use it?
+#### More details
 
-example app can be referenced for more details on how to use it
+An example app is added under /example folder which can be referenced for more details
