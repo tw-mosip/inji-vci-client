@@ -1,13 +1,10 @@
 package io.mosip.vciclient.jwt
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import io.mosip.vciclient.common.Encoder
 import io.mosip.vciclient.common.Util
 
 //TODO: Rename to JWT
 class JWTProof {
-    @RequiresApi(Build.VERSION_CODES.O)
     fun generateProofJWT(
         header: String,
         payload: String,

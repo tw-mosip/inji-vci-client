@@ -16,8 +16,8 @@ class JWTPayloadTest {
 
         assertEquals(
             """{
-    "aud": "https://domai.env.net",
     "iss": "45453XDF",
+    "aud": "https://domai.env.net",
     "exp": 1713250631,
     "nonce": "O0Ar8K73Ws3Ors9NzlO",
     "iat": 1713232631

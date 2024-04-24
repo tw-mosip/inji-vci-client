@@ -1,12 +1,11 @@
 package io.mosip.vciclient
 
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import com.google.gson.Gson
 import com.nimbusds.jwt.JWT
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.JWTParser
+import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.dto.CredentialDefinition
 import io.mosip.vciclient.dto.CredentialRequestBody
 import io.mosip.vciclient.dto.CredentialResponse
@@ -19,7 +18,6 @@ import io.mosip.vciclient.jwt.JWKBuilder
 import io.mosip.vciclient.jwt.JWTHeader
 import io.mosip.vciclient.jwt.JWTPayload
 import io.mosip.vciclient.jwt.JWTProof
-import io.mosip.vciclient.common.Util
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -29,7 +27,6 @@ import org.json.JSONObject
 import java.io.InterruptedIOException
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import kotlin.Exception
 import kotlin.math.floor
 
 
@@ -37,7 +34,6 @@ class VCIClient {
     private val logTag = Util.getLogTag(javaClass.simpleName)
 
     @Throws(DownloadFailedException::class, InvalidAccessTokenException::class, NetworkRequestTimeoutException::class)
-    @RequiresApi(Build.VERSION_CODES.O)
     fun requestCredential(
         issuer: IssuerMeta, //TODO: IssuerMeta?
         signer: (ByteArray) -> ByteArray,
