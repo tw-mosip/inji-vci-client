@@ -3,7 +3,6 @@ package io.mosip.vciclient.jwt
 import io.mosip.vciclient.common.Encoder
 import io.mosip.vciclient.common.Util
 
-//TODO: Rename to JWT
 class JWTProof {
     fun generateProofJWT(
         header: String,
@@ -13,7 +12,6 @@ class JWTProof {
         val encoder = Encoder()
         val encodedHeader: String =
             encoder.encodeToBase64UrlFormat(header).replace('+', '-').replace('/', '_')
-        //TODO: check if this replace is necessary
         val encodedPayload: String = encoder.encodeToBase64UrlFormat(payload)
 
         val contentBytes =

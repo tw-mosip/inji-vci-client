@@ -65,7 +65,6 @@ class MainActivity : ComponentActivity() {
             } else {
                 if (response != null) {
                     authState.update(response, exception)
-                    println("response after token call ${response.accessToken}")
                     downloadCredential(response)
                 }
             }
@@ -81,7 +80,7 @@ class MainActivity : ComponentActivity() {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
-                        issuer = IssuerMeta(
+                        issuerMeta = IssuerMeta(
                             Constants.CREDENTIAL_AUDIENCE,
                             Constants.CREDENTIAL_ENDPOINT,
                             Constants.DOWNLOAD_TIMEOUT,
@@ -100,7 +99,6 @@ class MainActivity : ComponentActivity() {
                         val toast = Toast.makeText(this, text, duration) // in Activity
                         toast.show()
                     }
-                    println("-----op----- ${credentialResponse.toString()}")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
