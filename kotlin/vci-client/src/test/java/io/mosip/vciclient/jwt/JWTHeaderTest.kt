@@ -37,8 +37,8 @@ ptxWSQnlPIXZbrtSYFkPQOHN8Ba0o1b4iNK3AX43WFy8srpOkEPqGJcCAwEAAQ==
 
         assertEquals(
             """{
-    "typ": "openid4vci-proof+jwt",
     "alg": "RS256",
+    "typ": "openid4vci-proof+jwt",
     "jwk": {
         "kty": "RSA",
         "e": "AQAB",
