@@ -35,7 +35,7 @@ class VCIClient {
 
     @Throws(DownloadFailedException::class, InvalidAccessTokenException::class, NetworkRequestTimeoutException::class)
     fun requestCredential(
-        issuer: IssuerMeta, //TODO: IssuerMeta?
+        issuerMeta: IssuerMeta,
         signer: (ByteArray) -> ByteArray,
         accessToken: String,
         publicKeyPem: String,
@@ -44,25 +44,21 @@ class VCIClient {
 
         try {
             val header: String = buildHeader(publicKeyPem)
-            println("header $header")
-            val payload: String = buildPayload(accessToken, issuer)
-            println("payload $payload")
+            val payload: String = buildPayload(accessToken, issuerMeta)
             val proofJWT = JWTProof().generateProofJWT(header, payload, signer)
-            println("proofJWT $proofJWT")
 
             val client = OkHttpClient.Builder()
-                .callTimeout(issuer.downloadTimeoutInMillSeconds.toLong(), TimeUnit.MILLISECONDS)
+                .callTimeout(issuerMeta.downloadTimeoutInMillSeconds.toLong(), TimeUnit.MILLISECONDS)
                 .build()
 
             val request = Request.Builder()
-                .url(issuer.credentialEndpoint)
+                .url(issuerMeta.credentialEndpoint)
                 .addHeader("Authorization", "Bearer $accessToken")
                 .addHeader("Content-Type", "application/json")
-                .post(generateRequestBody(proofJWT,issuer))
+                .post(generateRequestBody(proofJWT,issuerMeta))
                 .build()
 
             val response = client.newCall(request).execute()
-            println("response $response")
 
             if (response.code != 200) {
                 Log.e(
@@ -74,23 +70,17 @@ class VCIClient {
 
             val responseBody: String =
                 response.body?.byteStream()?.bufferedReader().use { it?.readText() } ?: ""
-            println("responseBody $responseBody")
             Log.d(logTag,"credential downloaded successfully!")
 
             if (responseBody != "") {
-                val gson = Gson()
-                val credential: CredentialResponse =
-                    gson.fromJson(responseBody, CredentialResponse::class.java)
-                println("Without face property in credential response ${credential.credential.credentialSubject - "face"}")
-                println("credential $credential")
-                return credential
+                return Gson().fromJson(responseBody, CredentialResponse::class.java)
             }
 
             return null
         } catch (exception: InterruptedIOException) {
             Log.e(
                 logTag,
-                "Network request for ${issuer.credentialEndpoint} took more than expected time(${issuer.downloadTimeoutInMillSeconds / 1000}s). Exception - $exception"
+                "Network request for ${issuerMeta.credentialEndpoint} took more than expected time(${issuerMeta.downloadTimeoutInMillSeconds / 1000}s). Exception - $exception"
             )
             throw NetworkRequestTimeoutException()
         } catch (exception: Exception) {
@@ -109,7 +99,7 @@ class VCIClient {
         return JWTHeader("RS256", "openid4vci-proof+jwt", jwk).build()
     }
 
-    private fun buildPayload(accessToken: String, issuer: IssuerMeta): String {
+    private fun buildPayload(accessToken: String, issuerMeta: IssuerMeta): String {
         try {
             val decodedAccessToken: JWT = JWTParser.parse(accessToken)
             val jwtClaimsSet: JWTClaimsSet = decodedAccessToken.jwtClaimsSet
@@ -118,14 +108,13 @@ class VCIClient {
             return JWTPayload(
                 jwtClaimsSet.getClaim("client_id").toString(),
                 jwtClaimsSet.getClaim("c_nonce").toString(),
-                issuer.credentialAudience,
+                issuerMeta.credentialAudience,
                 issuanceTime,
                 issuanceTime + 18000
             )
                 .build()
         } catch (exception: Exception) {
             Log.e(logTag, "Error while parsing access token - $exception")
-            println("Error while parsing access token - ${exception.message}")
             throw InvalidAccessTokenException(exception.message!!)
         }
     }
