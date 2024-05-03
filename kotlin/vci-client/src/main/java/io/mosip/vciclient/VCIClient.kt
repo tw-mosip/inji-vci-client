@@ -32,6 +32,7 @@ import kotlin.math.floor
 
 
 class VCIClient {
+    private val tokenExpirationPeriodInMilliseconds = 18000
     private val logTag = Util.getLogTag(javaClass.simpleName)
 
     @Throws(
@@ -122,8 +123,7 @@ class VCIClient {
                 jwtClaimsSet.getClaim("c_nonce").toString(),
                 issuerMeta.credentialAudience,
                 issuanceTime,
-                //TODO: Move the 18000 to constant
-                issuanceTime + 18000
+                issuanceTime + tokenExpirationPeriodInMilliseconds
             )
                 .build()
         } catch (exception: Exception) {
