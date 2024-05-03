@@ -22,7 +22,7 @@ import com.example.vciclient.util.PemConverter
 import com.example.vciclient.ui.theme.VCIClientTheme
 import com.example.vciclient.util.Constants
 import io.mosip.vciclient.VCIClient
-import io.mosip.vciclient.dto.CredentialResponse
+import io.mosip.vciclient.credentialResponse.CredentialResponse
 import io.mosip.vciclient.dto.IssuerMeta
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
         val thread = Thread {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
+                    val credentialResponseClass: CredentialResponse? = VCIClient().requestCredential(
                         issuerMeta = IssuerMeta(
                             Constants.CREDENTIAL_AUDIENCE,
                             Constants.CREDENTIAL_ENDPOINT,
@@ -91,9 +91,8 @@ class MainActivity : ComponentActivity() {
                         accessToken = accessToken,
                         publicKeyPem = publicKeyInPem
                     )
-                    if (credentialResponse != null) {
-                        val text =
-                            "Downloaded VC of format ${credentialResponse.format} success"
+                    if (credentialResponseClass != null) {
+                        val text = "Download success"
                         val duration = Toast.LENGTH_LONG
                         Looper.prepare()
                         val toast = Toast.makeText(this, text, duration) // in Activity

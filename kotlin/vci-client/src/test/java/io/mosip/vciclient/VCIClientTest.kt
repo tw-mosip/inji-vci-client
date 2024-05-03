@@ -7,7 +7,8 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
-import io.mosip.vciclient.dto.CredentialResponse
+import io.mosip.vciclient.constants.CredentialFormat
+import io.mosip.vciclient.credentialResponse.types.ldpVc.LdpVcCredentialResponse
 import io.mosip.vciclient.dto.IssuerMeta
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidAccessTokenException
@@ -126,7 +127,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                 mockWebServer.url(credentialEndpoint).toString(),
                 downloadTimeout,
                 credentialType = arrayOf("VerifiableCredential"),
-                credentialFormat = "ldp_vc"
+                credentialFormat = CredentialFormat.LDP_VC
             ),
             ::signer,
             accessToken,
@@ -155,7 +156,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                 mockWebServer.url(credentialEndpoint).toString(),
                 downloadTimeout,
                 credentialType = arrayOf("VerifiableCredential"),
-                credentialFormat = "ldp_vc"
+                credentialFormat = CredentialFormat.LDP_VC
             ),
             ::signer,
             accessToken,
@@ -163,7 +164,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         )
 
         assertEquals(
-            Gson().fromJson(mockCredentialResponse, CredentialResponse::class.java),
+            Gson().fromJson(mockCredentialResponse, LdpVcCredentialResponse::class.java),
             credentialResponse
         )
     }
@@ -181,7 +182,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                     credentialAudience,
                     mockWebServer.url(credentialEndpoint).toString(),
                     10000, credentialType = arrayOf("VerifiableCredential"),
-                    credentialFormat = "ldp_vc"
+                    credentialFormat = CredentialFormat.LDP_VC
                 ), ::signer, accessToken, publicKey
             )
         }
@@ -197,7 +198,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                 mockWebServer.url(credentialEndpoint).toString(),
                 1,
                 credentialType = arrayOf("VerifiableCredential"),
-                credentialFormat = "ldp_vc"
+                credentialFormat = CredentialFormat.LDP_VC
             )
 
         val networkRequestTimeoutException = assertThrows(
@@ -231,7 +232,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                     credentialAudience,
                     mockWebServer.url(credentialEndpoint).toString(),
                     downloadTimeout, credentialType = arrayOf("VerifiableCredential"),
-                    credentialFormat = "ldp_vc"
+                    credentialFormat = CredentialFormat.LDP_VC
                 ),
                 ::signer,
                 invalidAccessToken,
@@ -260,7 +261,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                     credentialAudience,
                     mockWebServer.url(credentialEndpoint).toString(),
                     downloadTimeout, credentialType = arrayOf("VerifiableCredential"),
-                    credentialFormat = "ldp_vc"
+                    credentialFormat = CredentialFormat.LDP_VC
                 ),
                 ::signer,
                 accessToken,

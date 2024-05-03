@@ -1,15 +1,15 @@
 package io.mosip.vciclient
 
 import android.util.Log
-import com.google.gson.Gson
 import com.nimbusds.jwt.JWT
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.JWTParser
 import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.constants.JWTProofType
+import io.mosip.vciclient.credentialResponse.CredentialResponse
+import io.mosip.vciclient.credentialResponse.CredentialResponseFactory
 import io.mosip.vciclient.dto.CredentialDefinition
 import io.mosip.vciclient.dto.CredentialRequestBody
-import io.mosip.vciclient.dto.CredentialResponse
 import io.mosip.vciclient.dto.IssuerMeta
 import io.mosip.vciclient.dto.Proof
 import io.mosip.vciclient.exception.DownloadFailedException
@@ -81,14 +81,17 @@ class VCIClient {
                 response.body?.byteStream()?.bufferedReader().use { it?.readText() } ?: ""
             Log.d(logTag, "credential downloaded successfully!")
 
-            /** Interface  : type(format) -> boolean
-             *  -> JSONLD : construct
-             */
-            //TODO: Introduce interface & build response dynamically
             if (responseBody != "") {
-                return Gson().fromJson(responseBody, CredentialResponse::class.java)
+                return CredentialResponseFactory.createCredentialResponse(
+                    issuerMeta.credentialFormat,
+                    responseBody
+                )
             }
 
+            Log.w(
+                logTag,
+                "The response body from credentialEndpoint is empty, responseCode - ${response.code}, responseMessage ${response.message}, returning null."
+            )
             return null
         } catch (exception: InterruptedIOException) {
             Log.e(
@@ -136,11 +139,9 @@ class VCIClient {
         val credentialRequestBody = CredentialRequestBody(
             credentialDefinition = CredentialDefinition(type = issuer.credentialType),
             proof = Proof(jwt = proofJWT),
-            format = issuer.credentialFormat
+            format = issuer.credentialFormat.value
         ).toJson()
         return credentialRequestBody
             .toRequestBody("application/json".toMediaTypeOrNull())
     }
-
-
 }

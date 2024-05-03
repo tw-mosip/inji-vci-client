@@ -5,10 +5,12 @@ import io.mosip.vciclient.constants.JWTProofType
 import org.json.JSONObject
 
 
+private const val ALGORITHM = "alg"
+
 class JWTProofHeader(algorithm: String, jwk: JSONObject) {
     private val header = JSONObject(
         (mutableMapOf(
-            algorithm to algorithm,
+            ALGORITHM to algorithm,
             "typ" to JWTProofType.TYPE.value,
             "jwk" to jwk,
         ) as Map<*, *>?)!!
@@ -18,10 +20,9 @@ class JWTProofHeader(algorithm: String, jwk: JSONObject) {
 }
 
 class JWKBuilder {
-    private val algorithm = "alg"
     fun build(publicKeyPem: String): JSONObject {
         val jwkJson = JSONObject(JSONWebKey.build(publicKeyPem).toJSON())
-        jwkJson.put(algorithm, JWTProofType.Algorithms.RS256)
+        jwkJson.put(ALGORITHM, JWTProofType.Algorithms.RS256)
         return jwkJson
     }
 }

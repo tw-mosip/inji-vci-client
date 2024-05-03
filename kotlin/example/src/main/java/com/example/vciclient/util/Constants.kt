@@ -1,6 +1,7 @@
 package com.example.vciclient.util
 
 import android.net.Uri
+import io.mosip.vciclient.constants.CredentialFormat
 
 class Constants {
     companion object {
@@ -15,6 +16,6 @@ class Constants {
         const val SCOPE = "<scope>"
         const val CREDENTIAL_AUDIENCE = "<credential-audience>"
         val CREDENTIAL_TYPE = arrayOf("<credential-type1>", "<credential-type1>")
-        const val CREDENTIAL_FORMAT = "<credential-format>"
+        val CREDENTIAL_FORMAT = CredentialFormat.LDP_VC
     }
 }

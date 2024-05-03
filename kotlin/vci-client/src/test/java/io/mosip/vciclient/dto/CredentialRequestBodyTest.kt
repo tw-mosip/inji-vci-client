@@ -1,5 +1,6 @@
 package io.mosip.vciclient.dto
 
+import io.mosip.vciclient.constants.CredentialFormat
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -11,7 +12,7 @@ class CredentialRequestBodyTest {
                 type = arrayOf("VerifiableCredential")
             ),
             proof = Proof(jwt = "header.payload.signature"),
-            format = "ldp_vc"
+            format = CredentialFormat.LDP_VC.value
         )
 
         val credentialRequestBodyJson: String = credentialRequestBody.toJson()
