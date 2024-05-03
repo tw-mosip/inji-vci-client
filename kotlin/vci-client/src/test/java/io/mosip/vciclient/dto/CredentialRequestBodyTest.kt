@@ -6,7 +6,7 @@ import org.junit.Test
 class CredentialRequestBodyTest {
     @Test
     fun `should create JSON in expected format`() {
-        val credentialRequestBody = CredentialRequestBody(
+        val credentialRequestBody = CredentialRequestTypes.LdpVcRequestBody(
             credentialDefinition = CredentialDefinition(
                 type = arrayOf("VerifiableCredential")
             ),
