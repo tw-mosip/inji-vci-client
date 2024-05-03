@@ -91,6 +91,7 @@ class MainActivity : ComponentActivity() {
                     val credentialResponse = when(vcFormat){
                         VcFormat.LDP_VC.format -> {
                             VCIClient().requestCredential(
+                                context = this@MainActivity,
                                 issuerMeta = IssuerMeta(
                                     Constants.CREDENTIAL_AUDIENCE,
                                     Constants.CREDENTIAL_ENDPOINT,
@@ -106,6 +107,7 @@ class MainActivity : ComponentActivity() {
                         }
                         VcFormat.MSO_MDOC.format -> {
                             VCIClient().requestCredential(
+                                context = this@MainActivity,
                                 issuerMeta = IssuerMeta(
                                     Constants.CREDENTIAL_AUDIENCE,
                                     Constants.CREDENTIAL_ENDPOINT,
