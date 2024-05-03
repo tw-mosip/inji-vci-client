@@ -1,13 +1,15 @@
 package io.mosip.vciclient.jwt
 
 import io.fusionauth.jwks.domain.JSONWebKey
+import io.mosip.vciclient.constants.JWTProofType
 import org.json.JSONObject
 
-class JWTHeader(algorithm: String, type: String, jwk: JSONObject) {
+
+class JWTProofHeader(algorithm: String, jwk: JSONObject) {
     private val header = JSONObject(
         (mutableMapOf(
-            "alg" to algorithm,
-            "typ" to type,
+            algorithm to algorithm,
+            "typ" to JWTProofType.TYPE.value,
             "jwk" to jwk,
         ) as Map<*, *>?)!!
     )
@@ -16,9 +18,10 @@ class JWTHeader(algorithm: String, type: String, jwk: JSONObject) {
 }
 
 class JWKBuilder {
+    private val algorithm = "alg"
     fun build(publicKeyPem: String): JSONObject {
         val jwkJson = JSONObject(JSONWebKey.build(publicKeyPem).toJSON())
-        jwkJson.put("alg", "RS256")
+        jwkJson.put(algorithm, JWTProofType.Algorithms.RS256)
         return jwkJson
     }
 }

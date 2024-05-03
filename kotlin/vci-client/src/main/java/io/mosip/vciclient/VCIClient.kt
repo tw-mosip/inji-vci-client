@@ -6,6 +6,7 @@ import com.nimbusds.jwt.JWT
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.JWTParser
 import io.mosip.vciclient.common.Util
+import io.mosip.vciclient.constants.JWTProofType
 import io.mosip.vciclient.dto.CredentialDefinition
 import io.mosip.vciclient.dto.CredentialRequestBody
 import io.mosip.vciclient.dto.CredentialResponse
@@ -15,9 +16,9 @@ import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidAccessTokenException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
 import io.mosip.vciclient.jwt.JWKBuilder
-import io.mosip.vciclient.jwt.JWTHeader
 import io.mosip.vciclient.jwt.JWTPayload
 import io.mosip.vciclient.jwt.JWTProof
+import io.mosip.vciclient.jwt.JWTProofHeader
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -33,7 +34,11 @@ import kotlin.math.floor
 class VCIClient {
     private val logTag = Util.getLogTag(javaClass.simpleName)
 
-    @Throws(DownloadFailedException::class, InvalidAccessTokenException::class, NetworkRequestTimeoutException::class)
+    @Throws(
+        DownloadFailedException::class,
+        InvalidAccessTokenException::class,
+        NetworkRequestTimeoutException::class
+    )
     fun requestCredential(
         issuerMeta: IssuerMeta,
         signer: (ByteArray) -> ByteArray,
@@ -48,14 +53,17 @@ class VCIClient {
             val proofJWT = JWTProof().generateProofJWT(header, payload, signer)
 
             val client = OkHttpClient.Builder()
-                .callTimeout(issuerMeta.downloadTimeoutInMillSeconds.toLong(), TimeUnit.MILLISECONDS)
+                .callTimeout(
+                    issuerMeta.downloadTimeoutInMillSeconds.toLong(),
+                    TimeUnit.MILLISECONDS
+                )
                 .build()
 
             val request = Request.Builder()
                 .url(issuerMeta.credentialEndpoint)
                 .addHeader("Authorization", "Bearer $accessToken")
                 .addHeader("Content-Type", "application/json")
-                .post(generateRequestBody(proofJWT,issuerMeta))
+                .post(generateRequestBody(proofJWT, issuerMeta))
                 .build()
 
             val response = client.newCall(request).execute()
@@ -70,8 +78,12 @@ class VCIClient {
 
             val responseBody: String =
                 response.body?.byteStream()?.bufferedReader().use { it?.readText() } ?: ""
-            Log.d(logTag,"credential downloaded successfully!")
+            Log.d(logTag, "credential downloaded successfully!")
 
+            /** Interface  : type(format) -> boolean
+             *  -> JSONLD : construct
+             */
+            //TODO: Introduce interface & build response dynamically
             if (responseBody != "") {
                 return Gson().fromJson(responseBody, CredentialResponse::class.java)
             }
@@ -96,7 +108,7 @@ class VCIClient {
 
     private fun buildHeader(publicKeyPem: String): String {
         val jwk: JSONObject = JWKBuilder().build(publicKeyPem)
-        return JWTHeader("RS256", "openid4vci-proof+jwt", jwk).build()
+        return JWTProofHeader(JWTProofType.Algorithms.RS256.name, jwk).build()
     }
 
     private fun buildPayload(accessToken: String, issuerMeta: IssuerMeta): String {
@@ -110,6 +122,7 @@ class VCIClient {
                 jwtClaimsSet.getClaim("c_nonce").toString(),
                 issuerMeta.credentialAudience,
                 issuanceTime,
+                //TODO: Move the 18000 to constant
                 issuanceTime + 18000
             )
                 .build()

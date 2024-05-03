@@ -1,10 +1,11 @@
 package io.mosip.vciclient.jwt
 
+import io.mosip.vciclient.constants.JWTProofType
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class JWTHeaderTest {
+class JWTProofHeaderTest {
     private val publicKeyPEM: String = """-----BEGIN RSA PUBLIC KEY-----
 MIICCgKCAgEAi/X/H2tFMb5y5S1OG/OWLRacXo4Qos7Md0N9szlfL6vqS98DPXVY
 H45q/mZKqcyJVSRSEv9fdJkhoRUi3VM60tJs+by/XnqYjs6FNtWGDoUsR52Qjj4z
@@ -33,7 +34,7 @@ ptxWSQnlPIXZbrtSYFkPQOHN8Ba0o1b4iNK3AX43WFy8srpOkEPqGJcCAwEAAQ==
     fun `should construct header with given keyType, algorithm and JWK`() {
         val jwkInJSON: JSONObject = JWKBuilder().build(publicKeyPEM)
         val jwtHeader: String =
-            JWTHeader("RS256", "openid4vci-proof+jwt", jwkInJSON).build()
+            JWTProofHeader(JWTProofType.Algorithms.RS256.name, jwkInJSON).build()
 
         assertEquals(
             """{
