@@ -52,6 +52,13 @@ dependencies {
     implementation("io.fusionauth:fusionauth-jwt:5.3.2")
     implementation("io.jsonwebtoken:jjwt:0.12.5")
     implementation("com.google.code.gson:gson:2.10.1")
+
+    //Parse CBOR Data
+    implementation("co.nstant.in:cbor:0.9")
+
+    //Build Json Object
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
+
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("io.mockk:mockk:1.13.10")

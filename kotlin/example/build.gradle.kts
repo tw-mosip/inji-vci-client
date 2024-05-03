@@ -68,6 +68,9 @@ dependencies {
 //INJI VCI client project
     implementation(project(":vci-client"))
 
+    //Build Json Object
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
+
     implementation("com.madgag.spongycastle:core:1.56.0.0")
     implementation("com.madgag.spongycastle:prov:1.56.0.0")
     implementation("com.madgag.spongycastle:bcpkix-jdk15on:1.56.0.0")

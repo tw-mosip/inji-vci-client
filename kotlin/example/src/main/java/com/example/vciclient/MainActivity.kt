@@ -27,7 +27,9 @@ import com.example.vciclient.ui.theme.VCIClientTheme
 import com.example.vciclient.util.Constants
 import io.mosip.vciclient.VCIClient
 import io.mosip.vciclient.VcFormat
+import io.mosip.vciclient.dto.CredentialResponseTypes
 import io.mosip.vciclient.dto.IssuerMeta
+import io.mosip.vciclient.parsers.mdoc.MdocParser
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
@@ -124,7 +126,21 @@ class MainActivity : ComponentActivity() {
                     }
 
                     if (credentialResponse != null) {
-                        Log.d("Downloaded Vc Response----->", credentialResponse.toString())
+                        when(vcFormat){
+                            VcFormat.MSO_MDOC.format -> {
+                                val encodedBase64URL = (credentialResponse as CredentialResponseTypes.MdocVcResponse).base64URLString
+                                Log.d("Parsed Mdoc Vc------>", MdocParser.decodeAndParseMDocData(encodedBase64URL).toString())
+
+                            }
+                            VcFormat.LDP_VC.format -> {
+                                Log.d("Parsed LDP Vc------>",credentialResponse.toString())
+                            }
+
+                        }
+
+
+
+
                         val text =
                             "Downloaded VC of format ${vcFormat} success"
                         val duration = Toast.LENGTH_LONG
