@@ -13,16 +13,20 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.vciclient.util.PemConverter
 import com.example.vciclient.ui.theme.VCIClientTheme
 import com.example.vciclient.util.Constants
 import io.mosip.vciclient.VCIClient
-import io.mosip.vciclient.dto.CredentialResponse
+import io.mosip.vciclient.VcFormat
 import io.mosip.vciclient.dto.IssuerMeta
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
@@ -42,10 +46,13 @@ lateinit var authorizationService: AuthorizationService
 lateinit var authState: AuthState
 
 class MainActivity : ComponentActivity() {
+    var vcFormat by mutableStateOf("")
+
     private val activityResultLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 val data: Intent? = result.data
+
                 println("data ${data.toString()}")
                 handleAuthorizationResponse(data!!)
             } else {
@@ -79,21 +86,47 @@ class MainActivity : ComponentActivity() {
         val thread = Thread {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
-                        issuerMeta = IssuerMeta(
-                            Constants.CREDENTIAL_AUDIENCE,
-                            Constants.CREDENTIAL_ENDPOINT,
-                            Constants.DOWNLOAD_TIMEOUT,
-                            Constants.CREDENTIAL_TYPE,
-                            Constants.CREDENTIAL_FORMAT
-                        ),
-                        signer = ::signer,
-                        accessToken = accessToken,
-                        publicKeyPem = publicKeyInPem
-                    )
+                    val credentialResponse = when(vcFormat){
+                        VcFormat.LDP_VC.format -> {
+                            VCIClient().requestCredential(
+                                issuerMeta = IssuerMeta(
+                                    Constants.CREDENTIAL_AUDIENCE,
+                                    Constants.CREDENTIAL_ENDPOINT,
+                                    Constants.DOWNLOAD_TIMEOUT,
+                                    Constants.CREDENTIAL_TYPE,
+                                    VcFormat.LDP_VC
+                                ),
+                                signer = ::signer,
+                                accessToken = accessToken,
+                                publicKeyPem = publicKeyInPem
+                            )
+
+                        }
+                        VcFormat.MSO_MDOC.format -> {
+                            VCIClient().requestCredential(
+                                issuerMeta = IssuerMeta(
+                                    Constants.CREDENTIAL_AUDIENCE,
+                                    Constants.CREDENTIAL_ENDPOINT,
+                                    Constants.DOWNLOAD_TIMEOUT,
+                                    Constants.CREDENTIAL_TYPE,
+                                    VcFormat.MSO_MDOC,
+                                    Constants.MDL_DOC_TYPE
+                                ),
+                                signer = ::signer,
+                                accessToken = accessToken,
+                                publicKeyPem = publicKeyInPem
+                            )
+                        }
+
+                        else -> {
+
+                        }
+                    }
+
                     if (credentialResponse != null) {
+                        Log.d("Downloaded Vc Response----->", credentialResponse.toString())
                         val text =
-                            "Downloaded VC of format ${credentialResponse.format} success"
+                            "Downloaded VC of format ${vcFormat} success"
                         val duration = Toast.LENGTH_LONG
                         Looper.prepare()
                         val toast = Toast.makeText(this, text, duration) // in Activity
@@ -107,9 +140,8 @@ class MainActivity : ComponentActivity() {
         thread.start()
     }
 
-    @Composable
-    private fun handleVCAuthAndDownload() = {
-        ->
+    private fun handleVCAuthAndDownload() {
+
         Log.d(javaClass.simpleName, "ABout to start authorization")
 
         val config =
@@ -130,13 +162,31 @@ class MainActivity : ComponentActivity() {
         activityResultLauncher.launch(authorizationRequestIntent)
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         authorizationService = AuthorizationService(this)
+
+
         setContent {
-            Button(onClick = handleVCAuthAndDownload()) {
-                Text(text = "Get VC")
+
+            Column {
+
+                Button(onClick = {
+                    vcFormat = VcFormat.LDP_VC.format
+                    handleVCAuthAndDownload()
+                }) {
+                    Text(text = "Get LDP VC Response")
+                }
+                Button(onClick = {
+                    vcFormat = VcFormat.MSO_MDOC.format
+                    handleVCAuthAndDownload()
+                } ) {
+
+                    Text(text = "Get Mdoc VC Response")
+                }
             }
+
         }
     }
 

@@ -4,17 +4,59 @@ import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
 
-data class CredentialRequestBody(
-    val format: String,
-    val credentialDefinition: CredentialDefinition,
-    val proof: Proof,
-) {
-    fun toJson(): String {
-        val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .create()
-        return gson.toJson(this)!!
+
+sealed class CredentialRequestTypes {
+    data class LdpVcRequestBody(
+        val format: String,
+        val credentialDefinition: CredentialDefinition,
+        val proof: Proof,
+    ) {
+        fun toJson(): String {
+            val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create()
+            return gson.toJson(this)!!
+        }
     }
+
+
+    data class MdocCredentialRequestBody(
+        val format: String,
+        val doctype: String,
+        val claims: Claims,
+        val proof : Proof
+    ) {
+        fun toJson(): String {
+            val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create()
+            return gson.toJson(this)!!
+        }
+    }
+
 }
+
+data class BasicClaim(val value: Any = emptyMap<String, Any>()) // Base class for claims with a single value
+
+data class nameSpace(
+    @SerializedName("given_name")
+    val givenName: BasicClaim,
+    @SerializedName("family_name")
+    val familyName: BasicClaim,
+    @SerializedName("birth_date")
+    val birthData: BasicClaim
+)
+
+data class nameSpaceAAMVA(
+    @SerializedName("organ_donor")
+    val organDonor: BasicClaim)
+
+// This represents the entire claims section
+data class Claims(
+    @SerializedName("org.iso.18013.5.1")
+    val nameSpace: nameSpace,
+    @SerializedName("org.iso.18013.5.1.aamva")
+    val nameSpaceAAMVA: nameSpaceAAMVA
+)
+
 
 data class CredentialDefinition(
     @SerializedName("@context")

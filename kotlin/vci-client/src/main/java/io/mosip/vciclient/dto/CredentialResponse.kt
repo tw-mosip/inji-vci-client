@@ -2,7 +2,14 @@ package io.mosip.vciclient.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class CredentialResponse(val format: String, val credential: Credential)
+
+sealed class CredentialResponseTypes{
+    data class LdpVcResponse(val format: String, val credential: Credential)
+
+    data class MdocVcResponse(val base64URLString: String)
+}
+
+
 
 data class Credential(
     val id: String,

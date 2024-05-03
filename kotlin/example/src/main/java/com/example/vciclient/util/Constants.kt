@@ -16,5 +16,6 @@ class Constants {
         const val CREDENTIAL_AUDIENCE = "<credential-audience>"
         val CREDENTIAL_TYPE = arrayOf("<credential-type1>", "<credential-type1>")
         const val CREDENTIAL_FORMAT = "<credential-format>"
+        const val MDL_DOC_TYPE= "org.iso.18013.5.1.mDL"
     }
 }
