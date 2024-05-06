@@ -1,6 +1,8 @@
 package io.mosip.vciclient.dto
 
 import io.mosip.vciclient.constants.CredentialFormat
+import io.mosip.vciclient.credentialRequest.types.CredentialDefinition
+import io.mosip.vciclient.credentialRequest.types.CredentialRequestBody
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -11,7 +13,7 @@ class CredentialRequestBodyTest {
             credentialDefinition = CredentialDefinition(
                 type = arrayOf("VerifiableCredential")
             ),
-            proof = Proof(jwt = "header.payload.signature"),
+            proof = JWTProof(jwt = "header.payload.signature"),
             format = CredentialFormat.LDP_VC.value
         )
 

@@ -6,12 +6,10 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.JWTParser
 import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.constants.JWTProofType
+import io.mosip.vciclient.credentialRequest.CredentialRequestFactory
 import io.mosip.vciclient.credentialResponse.CredentialResponse
 import io.mosip.vciclient.credentialResponse.CredentialResponseFactory
-import io.mosip.vciclient.dto.CredentialDefinition
-import io.mosip.vciclient.dto.CredentialRequestBody
 import io.mosip.vciclient.dto.IssuerMeta
-import io.mosip.vciclient.dto.Proof
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidAccessTokenException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
@@ -19,11 +17,7 @@ import io.mosip.vciclient.jwt.JWKBuilder
 import io.mosip.vciclient.jwt.JWTPayload
 import io.mosip.vciclient.jwt.JWTProof
 import io.mosip.vciclient.jwt.JWTProofHeader
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.InterruptedIOException
 import java.util.Date
@@ -60,12 +54,12 @@ class VCIClient {
                 )
                 .build()
 
-            val request = Request.Builder()
-                .url(issuerMeta.credentialEndpoint)
-                .addHeader("Authorization", "Bearer $accessToken")
-                .addHeader("Content-Type", "application/json")
-                .post(generateRequestBody(proofJWT, issuerMeta))
-                .build()
+            val request = CredentialRequestFactory.createCredentialRequest(
+                issuerMeta.credentialFormat,
+                accessToken,
+                issuerMeta,
+                proofJWT
+            )!!
 
             val response = client.newCall(request).execute()
 
@@ -135,13 +129,4 @@ class VCIClient {
         }
     }
 
-    private fun generateRequestBody(proofJWT: String, issuer: IssuerMeta): RequestBody {
-        val credentialRequestBody = CredentialRequestBody(
-            credentialDefinition = CredentialDefinition(type = issuer.credentialType),
-            proof = Proof(jwt = proofJWT),
-            format = issuer.credentialFormat.value
-        ).toJson()
-        return credentialRequestBody
-            .toRequestBody("application/json".toMediaTypeOrNull())
-    }
 }

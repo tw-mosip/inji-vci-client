@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
         val thread = Thread {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val credentialResponseClass: CredentialResponse? = VCIClient().requestCredential(
+                    val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
                         issuerMeta = IssuerMeta(
                             Constants.CREDENTIAL_AUDIENCE,
                             Constants.CREDENTIAL_ENDPOINT,
@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity() {
                         accessToken = accessToken,
                         publicKeyPem = publicKeyInPem
                     )
-                    if (credentialResponseClass != null) {
+                    if (credentialResponse != null) {
                         val text = "Download success"
                         val duration = Toast.LENGTH_LONG
                         Looper.prepare()
