@@ -21,7 +21,7 @@ import com.example.vciclient.util.Constants
 import com.example.vciclient.util.PemConverter
 import io.mosip.vciclient.VCIClient
 import io.mosip.vciclient.credentialResponse.CredentialResponse
-import io.mosip.vciclient.dto.IssuerMeta
+import io.mosip.vciclient.dto.IssuerMetaData
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
         val thread = Thread {
             try {
                 val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
-                    issuerMeta = IssuerMeta(
+                    issuerMetaData = IssuerMetaData(
                         Constants.CREDENTIAL_AUDIENCE,
                         Constants.CREDENTIAL_ENDPOINT,
                         Constants.DOWNLOAD_TIMEOUT,

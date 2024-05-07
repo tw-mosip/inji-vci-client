@@ -6,7 +6,7 @@ import io.mosip.vciclient.constants.JWTProofType
 import io.mosip.vciclient.credentialRequest.CredentialRequestFactory
 import io.mosip.vciclient.credentialResponse.CredentialResponse
 import io.mosip.vciclient.credentialResponse.CredentialResponseFactory
-import io.mosip.vciclient.dto.IssuerMeta
+import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidAccessTokenException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
@@ -26,7 +26,7 @@ class VCIClient {
         NetworkRequestTimeoutException::class
     )
     fun requestCredential(
-        issuerMeta: IssuerMeta,
+        issuerMetaData: IssuerMetaData,
         signer: (ByteArray) -> ByteArray,
         accessToken: String,
         publicKeyPem: String,
@@ -37,22 +37,22 @@ class VCIClient {
             val proof: Proof = JWTProof().generate(
                 publicKeyPem,
                 accessToken,
-                issuerMeta,
+                issuerMetaData,
                 signer,
                 JWTProofType.Algorithms.RS256
             )
 
             val client = OkHttpClient.Builder()
                 .callTimeout(
-                    issuerMeta.downloadTimeoutInMillSeconds.toLong(),
+                    issuerMetaData.downloadTimeoutInMillSeconds.toLong(),
                     TimeUnit.MILLISECONDS
                 )
                 .build()
 
             val request = CredentialRequestFactory.createCredentialRequest(
-                issuerMeta.credentialFormat,
+                issuerMetaData.credentialFormat,
                 accessToken,
-                issuerMeta,
+                issuerMetaData,
                 proof
             )
 
@@ -72,7 +72,7 @@ class VCIClient {
 
             if (responseBody != "") {
                 return CredentialResponseFactory.createCredentialResponse(
-                    issuerMeta.credentialFormat,
+                    issuerMetaData.credentialFormat,
                     responseBody
                 )
             }
@@ -85,7 +85,7 @@ class VCIClient {
         } catch (exception: InterruptedIOException) {
             Log.e(
                 logTag,
-                "Network request for ${issuerMeta.credentialEndpoint} took more than expected time(${issuerMeta.downloadTimeoutInMillSeconds / 1000}s). Exception - $exception"
+                "Network request for ${issuerMetaData.credentialEndpoint} took more than expected time(${issuerMetaData.downloadTimeoutInMillSeconds / 1000}s). Exception - $exception"
             )
             throw NetworkRequestTimeoutException()
         } catch (exception: Exception) {

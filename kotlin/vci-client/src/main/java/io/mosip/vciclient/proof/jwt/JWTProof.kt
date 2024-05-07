@@ -9,7 +9,7 @@ import io.mosip.vciclient.common.Encoder
 import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.constants.JWTProofType
 import io.mosip.vciclient.constants.ProofType
-import io.mosip.vciclient.dto.IssuerMeta
+import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.exception.InvalidAccessTokenException
 import io.mosip.vciclient.proof.Proof
 import kotlin.math.floor
@@ -23,18 +23,18 @@ class JWTProof : Proof {
     override fun generate(
         publicKeyPem: String,
         accessToken: String,
-        issuerMeta: IssuerMeta,
+        issuerMetaData: IssuerMetaData,
         signer: (ByteArray) -> ByteArray,
         algorithm: JWTProofType.Algorithms,
     ): Proof {
         val header: String =
             JWTProofHeader(JWTProofType.Algorithms.RS256.name, publicKeyPem).build()
-        val payload: String = buildPayload(accessToken, issuerMeta)
+        val payload: String = buildPayload(accessToken, issuerMetaData)
         this.jwt = generateJWT(header, payload, signer)
         return this
     }
 
-    private fun buildPayload(accessToken: String, issuerMeta: IssuerMeta): String {
+    private fun buildPayload(accessToken: String, issuerMetaData: IssuerMetaData): String {
         try {
             val decodedAccessToken: JWT = JWTParser.parse(accessToken)
             val jwtClaimsSet: JWTClaimsSet = decodedAccessToken.jwtClaimsSet
@@ -44,7 +44,7 @@ class JWTProof : Proof {
             return JWTProofPayload(
                 jwtClaimsSet.getClaim("client_id").toString(),
                 jwtClaimsSet.getClaim("c_nonce").toString(),
-                issuerMeta.credentialAudience,
+                issuerMetaData.credentialAudience,
                 issuanceTime,
                 issuanceTime + TOKEN_EXPIRATION_PERIOD_IN_MILLISECONDS
             )

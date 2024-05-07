@@ -13,9 +13,8 @@ import io.mosip.vciclient.constants.CredentialFormat
 import io.mosip.vciclient.constants.JWTProofType
 import io.mosip.vciclient.constants.ProofType
 import io.mosip.vciclient.proof.Proof
-import io.mosip.vciclient.dto.IssuerMeta
+import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.exception.InvalidAccessTokenException
-import io.mosip.vciclient.proof.jwt.JWTProof
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -39,7 +38,7 @@ ptxWSQnlPIXZbrtSYFkPQOHN8Ba0o1b4iNK3AX43WFy8srpOkEPqGJcCAwEAAQ==
     private val accessToken =
         "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.NHVaYe26MbtOYhSKkoKYdFVomg4i8ZJd8_-RU8VNbftc4TSMb4bXP3l3YlNWACwyXPGffz5aXHc6lty1Y2t4SWRqGteragsVdZufDn5BlnJl9pdR_kdVFUsra2rWKEofkZeIC4yWytE58sMIihvo9H1ScmmVwBcQP6XETqYd0aSHp1gOa9RdUPDvoXQ5oqygTqVtxaDr6wUFKrKItgBMzWIdNZ6y7O9E0DhEPTbE9rfBo6KTFsHAZnMg4k68CDp2woYIaXbmYTWcvbzIuHO7_37GT79XdIwkm95QJ7hYC9RiwrV7mesbY4PAahERJawntho0my942XheVLmGwLMBkQ"
     private val invalidAccessToken = "invalid-access-token"
-    private val issuerMeta: IssuerMeta = IssuerMeta(
+    private val issuerMetaData: IssuerMetaData = IssuerMetaData(
         "/https://domain.net",
         "/https://domain.net/credential",
         10000,
@@ -72,7 +71,7 @@ ptxWSQnlPIXZbrtSYFkPQOHN8Ba0o1b4iNK3AX43WFy8srpOkEPqGJcCAwEAAQ==
     @Test
     fun `should generate JWT for the given payload and header with the signer function passed`() {
         val generatedProofJWT: Proof = JWTProof().generate(
-            publicKeyPEM, accessToken, issuerMeta, ::signer, JWTProofType.Algorithms.RS256
+            publicKeyPEM, accessToken, issuerMetaData, ::signer, JWTProofType.Algorithms.RS256
         )
 
         assertEquals(
@@ -99,7 +98,7 @@ ptxWSQnlPIXZbrtSYFkPQOHN8Ba0o1b4iNK3AX43WFy8srpOkEPqGJcCAwEAAQ==
             JWTProof().generate(
                 publicKeyPEM,
                 invalidAccessToken,
-                issuerMeta,
+                issuerMetaData,
                 ::signer,
                 JWTProofType.Algorithms.RS256
             )

@@ -13,7 +13,7 @@ import io.mosip.vciclient.constants.JWTProofType
 import io.mosip.vciclient.constants.ProofType
 import io.mosip.vciclient.proof.jwt.JWTProof
 import io.mosip.vciclient.credentialResponse.types.ldpVc.LdpVcCredentialResponse
-import io.mosip.vciclient.dto.IssuerMeta
+import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidAccessTokenException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
@@ -131,7 +131,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         mockWebServer.enqueue(mockCredentialRequestSuccessResponse)
 
         VCIClient().requestCredential(
-            IssuerMeta(
+            IssuerMetaData(
                 credentialAudience,
                 mockWebServer.url(credentialEndpoint).toString(),
                 downloadTimeout,
@@ -160,7 +160,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         mockWebServer.enqueue(mockCredentialRequestSuccessResponse)
 
         val credentialResponse = VCIClient().requestCredential(
-            IssuerMeta(
+            IssuerMetaData(
                 credentialAudience,
                 mockWebServer.url(credentialEndpoint).toString(),
                 downloadTimeout,
@@ -183,7 +183,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         mockWebServer.enqueue(mockCredentialRequestSuccessResponse.setBody(""))
 
         val credentialResponse = VCIClient().requestCredential(
-            IssuerMeta(
+            IssuerMetaData(
                 credentialAudience,
                 mockWebServer.url(credentialEndpoint).toString(),
                 downloadTimeout,
@@ -206,7 +206,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
             DownloadFailedException::class.java,
         ) {
             VCIClient().requestCredential(
-                IssuerMeta(
+                IssuerMetaData(
                     credentialAudience,
                     mockWebServer.url(credentialEndpoint).toString(),
                     10000, credentialType = arrayOf("VerifiableCredential"),
@@ -221,7 +221,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
     @Test
     fun `should throw timeout exception when credential endpoint api call takes more time than the passed timeout`() {
         val issuerWithLessTimeout =
-            IssuerMeta(
+            IssuerMetaData(
                 credentialAudience,
                 mockWebServer.url(credentialEndpoint).toString(),
                 1,
@@ -257,7 +257,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
             InvalidAccessTokenException::class.java,
         ) {
             VCIClient().requestCredential(
-                IssuerMeta(
+                IssuerMetaData(
                     credentialAudience,
                     mockWebServer.url(credentialEndpoint).toString(),
                     downloadTimeout, credentialType = arrayOf("VerifiableCredential"),
@@ -294,7 +294,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
             DownloadFailedException::class.java,
         ) {
             VCIClient().requestCredential(
-                IssuerMeta(
+                IssuerMetaData(
                     credentialAudience,
                     mockWebServer.url(credentialEndpoint).toString(),
                     downloadTimeout, credentialType = arrayOf("VerifiableCredential"),

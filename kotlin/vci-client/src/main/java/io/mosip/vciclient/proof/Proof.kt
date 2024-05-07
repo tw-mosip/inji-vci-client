@@ -2,7 +2,7 @@ package io.mosip.vciclient.proof
 
 import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.constants.JWTProofType
-import io.mosip.vciclient.dto.IssuerMeta
+import io.mosip.vciclient.dto.IssuerMetaData
 
 interface Proof {
     @get:SerializedName("proof_jwt")
@@ -10,7 +10,7 @@ interface Proof {
     fun generate(
         publicKeyPem: String,
         accessToken: String,
-        issuerMeta: IssuerMeta,
+        issuerMetaData: IssuerMetaData,
         signer: (ByteArray) -> ByteArray,
         algorithm: JWTProofType.Algorithms,
     ): Proof

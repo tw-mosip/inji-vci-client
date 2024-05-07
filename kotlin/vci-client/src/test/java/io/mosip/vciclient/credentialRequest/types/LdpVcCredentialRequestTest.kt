@@ -2,7 +2,7 @@ package io.mosip.vciclient.credentialRequest.types
 
 import io.mosip.vciclient.constants.CredentialFormat
 import io.mosip.vciclient.proof.jwt.JWTProof
-import io.mosip.vciclient.dto.IssuerMeta
+import io.mosip.vciclient.dto.IssuerMetaData
 import okhttp3.Request
 import okhttp3.internal.http2.Header
 import okhttp3.internal.toHeaderList
@@ -18,7 +18,7 @@ class LdpVcCredentialRequestTest {
 
         val ldpVcRequest: Request = LdpVcCredentialRequest(
             "accessToken",
-            IssuerMeta(
+            IssuerMetaData(
                 "/credentialAudience",
                 credentialEndpoint,
                 30000,
