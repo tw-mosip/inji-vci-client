@@ -1,7 +1,6 @@
 package com.example.vciclient
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.security.keystore.KeyGenParameterSpec
@@ -12,15 +11,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.vciclient.util.PemConverter
 import com.example.vciclient.ui.theme.VCIClientTheme
 import com.example.vciclient.util.Constants
+import com.example.vciclient.util.PemConverter
 import io.mosip.vciclient.VCIClient
 import io.mosip.vciclient.credentialResponse.CredentialResponse
 import io.mosip.vciclient.dto.IssuerMeta
@@ -78,26 +76,25 @@ class MainActivity : ComponentActivity() {
         Log.d(javaClass.simpleName, "About to call credential api")
         val thread = Thread {
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
-                        issuerMeta = IssuerMeta(
-                            Constants.CREDENTIAL_AUDIENCE,
-                            Constants.CREDENTIAL_ENDPOINT,
-                            Constants.DOWNLOAD_TIMEOUT,
-                            Constants.CREDENTIAL_TYPE,
-                            Constants.CREDENTIAL_FORMAT
-                        ),
-                        signer = ::signer,
-                        accessToken = accessToken,
-                        publicKeyPem = publicKeyInPem
-                    )
-                    if (credentialResponse != null) {
-                        val text = "Download success"
-                        val duration = Toast.LENGTH_LONG
-                        Looper.prepare()
-                        val toast = Toast.makeText(this, text, duration) // in Activity
-                        toast.show()
-                    }
+                val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
+                    issuerMeta = IssuerMeta(
+                        Constants.CREDENTIAL_AUDIENCE,
+                        Constants.CREDENTIAL_ENDPOINT,
+                        Constants.DOWNLOAD_TIMEOUT,
+                        Constants.CREDENTIAL_TYPE,
+                        Constants.CREDENTIAL_FORMAT
+                    ),
+                    signer = ::signer,
+                    accessToken = accessToken,
+                    publicKeyPem = publicKeyInPem
+                )
+                if (credentialResponse != null) {
+                    val text = "Download success"
+                    println(credentialResponse.toString())
+                    val duration = Toast.LENGTH_LONG
+                    Looper.prepare()
+                    val toast = Toast.makeText(this, text, duration) // in Activity
+                    toast.show()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -146,7 +143,6 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun signer(inputByteArray: ByteArray): ByteArray {
     val signature: Signature = Signature.getInstance("SHA256withRSA")
     signature.initSign(keyPair.private)

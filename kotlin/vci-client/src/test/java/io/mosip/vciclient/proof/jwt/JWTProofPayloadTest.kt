@@ -1,12 +1,13 @@
-package io.mosip.vciclient.jwt
+package io.mosip.vciclient.proof.jwt
 
+import io.mosip.vciclient.proof.jwt.JWTProofPayload
 import org.junit.Assert.*
 import org.junit.Test
 
-class JWTPayloadTest {
+class JWTProofPayloadTest {
     @Test
     fun `should construct payload with issuer, nonce,audience, issuance and expiration compulsory`() {
-        val jwtPayLoad: String = JWTPayload(
+        val jwtProofPayLoad: String = JWTProofPayload(
             "45453XDF",
             "O0Ar8K73Ws3Ors9NzlO",
             "https://domai.env.net",
@@ -21,7 +22,7 @@ class JWTPayloadTest {
     "exp": 1713250631,
     "nonce": "O0Ar8K73Ws3Ors9NzlO",
     "iat": 1713232631
-}""", jwtPayLoad
+}""", jwtProofPayLoad
         )
     }
 }

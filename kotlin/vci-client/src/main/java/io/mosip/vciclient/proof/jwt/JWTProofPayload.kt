@@ -1,8 +1,8 @@
-package io.mosip.vciclient.jwt
+package io.mosip.vciclient.proof.jwt
 
 import org.json.JSONObject
 
-class JWTPayload(iss: String, nonce: String, aud: String, iat: Long, exp: Long) {
+class JWTProofPayload(iss: String, nonce: String, aud: String, iat: Long, exp: Long) {
     private val payload = JSONObject(
         (mutableMapOf(
             "iss" to iss,

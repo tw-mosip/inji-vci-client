@@ -5,13 +5,15 @@ import io.mosip.vciclient.credentialResponse.types.ldpVc.LdpVcCredentialResponse
 
 interface CredentialResponseFactory {
     companion object {
-        fun createCredentialResponse(formatType: CredentialFormat, response: String): CredentialResponse? {
+        fun createCredentialResponse(
+            formatType: CredentialFormat,
+            response: String,
+        ): CredentialResponse {
             when (formatType) {
                 CredentialFormat.LDP_VC -> return LdpVcCredentialResponseFactory().constructResponse(
                     response
                 )
             }
-            return null
         }
     }
 

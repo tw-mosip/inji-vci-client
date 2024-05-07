@@ -1,9 +1,6 @@
 package io.mosip.vciclient
 
 import android.util.Log
-import com.nimbusds.jwt.JWT
-import com.nimbusds.jwt.JWTClaimsSet
-import com.nimbusds.jwt.JWTParser
 import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.constants.JWTProofType
 import io.mosip.vciclient.credentialRequest.CredentialRequestFactory
@@ -13,20 +10,14 @@ import io.mosip.vciclient.dto.IssuerMeta
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidAccessTokenException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
-import io.mosip.vciclient.jwt.JWKBuilder
-import io.mosip.vciclient.jwt.JWTPayload
-import io.mosip.vciclient.jwt.JWTProof
-import io.mosip.vciclient.jwt.JWTProofHeader
+import io.mosip.vciclient.proof.Proof
+import io.mosip.vciclient.proof.jwt.JWTProof
 import okhttp3.OkHttpClient
-import org.json.JSONObject
 import java.io.InterruptedIOException
-import java.util.Date
 import java.util.concurrent.TimeUnit
-import kotlin.math.floor
 
 
 class VCIClient {
-    private val tokenExpirationPeriodInMilliseconds = 18000
     private val logTag = Util.getLogTag(javaClass.simpleName)
 
     @Throws(
@@ -43,9 +34,13 @@ class VCIClient {
 
 
         try {
-            val header: String = buildHeader(publicKeyPem)
-            val payload: String = buildPayload(accessToken, issuerMeta)
-            val proofJWT = JWTProof().generateProofJWT(header, payload, signer)
+            val proof: Proof = JWTProof().generate(
+                publicKeyPem,
+                accessToken,
+                issuerMeta,
+                signer,
+                JWTProofType.Algorithms.RS256
+            )
 
             val client = OkHttpClient.Builder()
                 .callTimeout(
@@ -58,8 +53,8 @@ class VCIClient {
                 issuerMeta.credentialFormat,
                 accessToken,
                 issuerMeta,
-                proofJWT
-            )!!
+                proof
+            )
 
             val response = client.newCall(request).execute()
 
@@ -101,31 +96,6 @@ class VCIClient {
                 "Downloading credential failed due to ${exception.message}"
             )
             throw DownloadFailedException(exception.message!!)
-        }
-    }
-
-    private fun buildHeader(publicKeyPem: String): String {
-        val jwk: JSONObject = JWKBuilder().build(publicKeyPem)
-        return JWTProofHeader(JWTProofType.Algorithms.RS256.name, jwk).build()
-    }
-
-    private fun buildPayload(accessToken: String, issuerMeta: IssuerMeta): String {
-        try {
-            val decodedAccessToken: JWT = JWTParser.parse(accessToken)
-            val jwtClaimsSet: JWTClaimsSet = decodedAccessToken.jwtClaimsSet
-            val issuanceTime: Long = floor((Date().time / 1000).toDouble()).toLong()
-
-            return JWTPayload(
-                jwtClaimsSet.getClaim("client_id").toString(),
-                jwtClaimsSet.getClaim("c_nonce").toString(),
-                issuerMeta.credentialAudience,
-                issuanceTime,
-                issuanceTime + tokenExpirationPeriodInMilliseconds
-            )
-                .build()
-        } catch (exception: Exception) {
-            Log.e(logTag, "Error while parsing access token - $exception")
-            throw InvalidAccessTokenException(exception.message!!)
         }
     }
 

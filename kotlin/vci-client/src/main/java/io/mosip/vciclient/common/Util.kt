@@ -1,6 +1,7 @@
 package io.mosip.vciclient.common
 
 import java.nio.charset.StandardCharsets
+import java.util.Date
 
 class  Util {
    companion object {

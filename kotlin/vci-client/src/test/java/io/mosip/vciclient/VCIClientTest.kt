@@ -5,20 +5,24 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.JWTParser
 import io.mockk.clearAllMocks
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import io.mosip.vciclient.constants.CredentialFormat
+import io.mosip.vciclient.constants.JWTProofType
+import io.mosip.vciclient.constants.ProofType
+import io.mosip.vciclient.proof.jwt.JWTProof
 import io.mosip.vciclient.credentialResponse.types.ldpVc.LdpVcCredentialResponse
 import io.mosip.vciclient.dto.IssuerMeta
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidAccessTokenException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
-import io.mosip.vciclient.jwt.JWTProof
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
@@ -93,13 +97,18 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         mockWebServer.start()
 
         mockkConstructor(JWTProof::class)
+        val jwtProof = mockk<JWTProof>()
+        every { jwtProof.proofType } returns ProofType.JWT.value
+        every { jwtProof.jwt } returns "headerEncoded.payloadEncoded.signature"
         every {
-            anyConstructed<JWTProof>().generateProofJWT(
+            anyConstructed<JWTProof>().generate(
                 any(),
                 any(),
-                any()
+                any(),
+                any(),
+                JWTProofType.Algorithms.RS256
             )
-        } returns "headerEncoded.payloadEncoded.signature"
+        } returns jwtProof
 
         mockkStatic(JWTParser::class)
         every { JWTParser.parse(accessToken).jwtClaimsSet } returns JWTClaimsSet.parse(
@@ -118,7 +127,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
 
 
     @Test
-    fun `should make api call to credential endpoint with the right params`() {
+    fun `should make api call to credential endpoint with the right params in case of ldpVc`() {
         mockWebServer.enqueue(mockCredentialRequestSuccessResponse)
 
         VCIClient().requestCredential(
@@ -147,7 +156,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
     }
 
     @Test
-    fun `should return credential when valid access token, public key PEM is passed and credential endpoint api is success`() {
+    fun `should return credential when valid access token, public key PEM is passed and credential endpoint api is success in case of ldpVc`() {
         mockWebServer.enqueue(mockCredentialRequestSuccessResponse)
 
         val credentialResponse = VCIClient().requestCredential(
@@ -169,6 +178,25 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         )
     }
 
+    @Test
+    fun `should return null when credential endpoint responded with empty body`() {
+        mockWebServer.enqueue(mockCredentialRequestSuccessResponse.setBody(""))
+
+        val credentialResponse = VCIClient().requestCredential(
+            IssuerMeta(
+                credentialAudience,
+                mockWebServer.url(credentialEndpoint).toString(),
+                downloadTimeout,
+                credentialType = arrayOf("VerifiableCredential"),
+                credentialFormat = CredentialFormat.LDP_VC
+            ),
+            ::signer,
+            accessToken,
+            publicKey
+        )
+
+        assertNull(credentialResponse)
+    }
     @Test
     fun `should throw download failure exception when credential endpoint api response is not 200`() {
         val mockCredentialRequestFailureResponse: MockResponse = MockResponse().setResponseCode(500)
@@ -218,6 +246,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
     @Test
     fun `should throw invalid access token exception when invalid access token is passed`() {
         val invalidAccessToken = "invalid-access-token"
+        clearAllMocks()
         mockkStatic(JWTParser::class)
         every { JWTParser.parse(invalidAccessToken) } throws ParseException(
             "Invalid JWT serialization: Missing dot delimiter(s)",
@@ -249,7 +278,15 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
     @Test
     fun `should throw download failed exception with message when download fails`() {
         mockkConstructor(JWTProof::class)
-        every { anyConstructed<JWTProof>().generateProofJWT(any(), any(), any()) } throws Exception(
+        every {
+            anyConstructed<JWTProof>().generate(
+                any(),
+                any(),
+                any(),
+                any(),
+                JWTProofType.Algorithms.RS256
+            )
+        } throws Exception(
             "Unknown exception"
         )
 
