@@ -17,8 +17,8 @@ import java.io.InterruptedIOException
 import java.util.concurrent.TimeUnit
 
 
-class VCIClient {
-    private val logTag = Util.getLogTag(javaClass.simpleName)
+class VCIClient(traceabilityId: String) {
+    private val logTag = Util.getLogTag(javaClass.simpleName, traceabilityId)
 
     @Throws(
         DownloadFailedException::class,

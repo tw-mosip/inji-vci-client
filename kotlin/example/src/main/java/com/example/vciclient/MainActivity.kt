@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
         Log.d(javaClass.simpleName, "About to call credential api")
         val thread = Thread {
             try {
-                val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
+                val credentialResponse: CredentialResponse? = VCIClient("example-vci-client").requestCredential(
                     issuerMetaData = IssuerMetaData(
                         Constants.CREDENTIAL_AUDIENCE,
                         Constants.CREDENTIAL_ENDPOINT,

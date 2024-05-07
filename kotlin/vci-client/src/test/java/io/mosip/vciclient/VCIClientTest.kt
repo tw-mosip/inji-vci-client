@@ -130,7 +130,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
     fun `should make api call to credential endpoint with the right params in case of ldpVc`() {
         mockWebServer.enqueue(mockCredentialRequestSuccessResponse)
 
-        VCIClient().requestCredential(
+        VCIClient("test-vci-client").requestCredential(
             IssuerMetaData(
                 credentialAudience,
                 mockWebServer.url(credentialEndpoint).toString(),
@@ -159,7 +159,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
     fun `should return credential when valid access token, public key PEM is passed and credential endpoint api is success in case of ldpVc`() {
         mockWebServer.enqueue(mockCredentialRequestSuccessResponse)
 
-        val credentialResponse = VCIClient().requestCredential(
+        val credentialResponse = VCIClient("test-vci-client").requestCredential(
             IssuerMetaData(
                 credentialAudience,
                 mockWebServer.url(credentialEndpoint).toString(),
@@ -182,7 +182,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
     fun `should return null when credential endpoint responded with empty body`() {
         mockWebServer.enqueue(mockCredentialRequestSuccessResponse.setBody(""))
 
-        val credentialResponse = VCIClient().requestCredential(
+        val credentialResponse = VCIClient("test-vci-client").requestCredential(
             IssuerMetaData(
                 credentialAudience,
                 mockWebServer.url(credentialEndpoint).toString(),
@@ -205,7 +205,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         val thrown: DownloadFailedException = assertThrows(
             DownloadFailedException::class.java,
         ) {
-            VCIClient().requestCredential(
+            VCIClient("test-vci-client").requestCredential(
                 IssuerMetaData(
                     credentialAudience,
                     mockWebServer.url(credentialEndpoint).toString(),
@@ -232,7 +232,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         val networkRequestTimeoutException = assertThrows(
             NetworkRequestTimeoutException::class.java,
         ) {
-            VCIClient().requestCredential(
+            VCIClient("test-vci-client").requestCredential(
                 issuerWithLessTimeout,
                 ::signer,
                 accessToken,
@@ -256,7 +256,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         val invalidAccessTokenException = assertThrows(
             InvalidAccessTokenException::class.java,
         ) {
-            VCIClient().requestCredential(
+            VCIClient("test-vci-client").requestCredential(
                 IssuerMetaData(
                     credentialAudience,
                     mockWebServer.url(credentialEndpoint).toString(),
@@ -293,7 +293,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         val downloadFailedException = assertThrows(
             DownloadFailedException::class.java,
         ) {
-            VCIClient().requestCredential(
+            VCIClient("test-vci-client").requestCredential(
                 IssuerMetaData(
                     credentialAudience,
                     mockWebServer.url(credentialEndpoint).toString(),
