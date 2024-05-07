@@ -12,7 +12,7 @@ TODO: add installation guide
 
 ##### Request Credential
 
-Initiates a credential request to the credential issuer and returns back the credential.
+Request for credential from the providers (credential issuer), and receive the credential back.
 
 ```
 val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
@@ -28,7 +28,7 @@ val credentialResponse: CredentialResponse? = VCIClient().requestCredential(
 |--------------|------------------------------------|--------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
 | issuerMeta   | IssuerMeta                         | Data object of the issuer details                                                                            | `IssuerMeta(credentialAudience, credentialEndpoint, downloadTimeout, credentialType, credentialFormat)` |
 | signer       | Function  (ByteArray) -> ByteArray | Function which is called to get the signature passing the preHash (Base64EncodedHeader.Base64EncodedPayload) | `fun signer(preHash: ByteArray): ByteArray {//Signing logic}`                                           |
-| accessToken  | String                             | Token provided by the credential issuer post authorization and token request                                 |                                                                                                         |
+| accessToken  | String                             | token issued by providers based on auth code                                                                 |                                                                                                         |
 | publicKeyPem | String                             | Public key in PEM format is passed from the keypair generated                                                |                                                                                                         |
 
 
