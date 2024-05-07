@@ -1,0 +1,18 @@
+fileignoreconfig:
+- filename: kotlin/example/src/main/java/com/example/vciclient/util/PemConverter.kt
+  checksum: 2e05cd2db4234be060ca69ac3aa26841fc40cd86255325df5913a5903cae31b1
+- filename: kotlin/example/src/main/res/xml/backup_rules.xml
+  checksum: 00d72dfeff6c859b511c1a589ffb94be2be1580dbc16958e4212ec1be3a2dd5d
+- filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/VCIClientTest.kt
+  checksum: 86acbfe21d01afd0111ef86d75866ccc5d13fb295f244be9d29366965238f6a3
+- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/VCIClient.kt
+  checksum: 069c69286dd33700d5795ac0f42936618afe13863c3c6f88b140e8d4e4529368
+- filename: kotlin/readme.md
+  checksum: 34e93864cf9bfdc27dbcead01e8c193bc91511bb77654a5e5a0dec80c384729e
+- filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/proof/jwt/JWTProofTest.kt
+  checksum: 4c7535e5446fc315ba2ccedc81745c20bb3014531cfe6feaf9213e75885063a3
+- filename: kotlin/example/src/main/java/com/example/vciclient/MainActivity.kt
+  checksum: 0d4482ca46e7c6447daa42d80ce2b2da501adf99982070c4fe348cefe62073d6
+- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/proof/jwt/JWTProof.kt
+  checksum: 125f699a57272a3f4fef55e5d7afe6d7b0b4b046743a9f6d342df122b9c6930f
+version: ""
