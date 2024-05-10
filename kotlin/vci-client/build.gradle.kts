@@ -1,6 +1,8 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("maven-publish")
+
     jacoco
 }
 
@@ -87,6 +89,10 @@ tasks {
     }
 }
 
-tasks.build{
+tasks.build {
     finalizedBy("jacocoTestReport")
+}
+
+apply {
+    from( "publish-artifact.gradle")
 }
