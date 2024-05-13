@@ -1,0 +1,26 @@
+fileignoreconfig:
+- filename: kotlin/example/src/main/java/com/example/vciclient/util/PemConverter.kt
+  checksum: 2e05cd2db4234be060ca69ac3aa26841fc40cd86255325df5913a5903cae31b1
+- filename: kotlin/example/src/main/res/xml/backup_rules.xml
+  checksum: 00d72dfeff6c859b511c1a589ffb94be2be1580dbc16958e4212ec1be3a2dd5d
+- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/VCIClient.kt
+  checksum: 069c69286dd33700d5795ac0f42936618afe13863c3c6f88b140e8d4e4529368
+- filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/proof/jwt/JWTProofTest.kt
+  checksum: 4c7535e5446fc315ba2ccedc81745c20bb3014531cfe6feaf9213e75885063a3
+- filename: kotlin/example/src/main/java/com/example/vciclient/MainActivity.kt
+  checksum: 0d4482ca46e7c6447daa42d80ce2b2da501adf99982070c4fe348cefe62073d6
+- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/proof/jwt/JWTProof.kt
+  checksum: 125f699a57272a3f4fef55e5d7afe6d7b0b4b046743a9f6d342df122b9c6930f
+- filename: .github/workflows/android-publish.yml
+  checksum: 2026dc650225c0c597381f313adaceaa40526c07147507502d129cce8bbfa448
+- filename: kotlin/vci-client/publish-artifact.gradle
+  checksum: e98200f0ee91421adb1ae3c9c0d0c0107094d8ddb5d62a8ddb9d11078203f17b
+- filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/proof/jwt/JWTProofHeaderTest.kt
+  checksum: f9d78f75cf91b45b87f582f57a4817cb2d54169dea092bc4b677ee33a1abb241
+- filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/VCIClientTest.kt
+  checksum: d910d0ab42c13e8ae0cd4f065a1dcdc377ae2bcfa4739e9cb4e6af7f18e93f9a
+- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/proof/jwt/JWTProofHeader.kt
+  checksum: bc9fb41af89b0f6c6ab126ab62e050f8c96020a1c07e570573f7ed983ac24448
+- filename: kotlin/readme.md
+  checksum: fa94864a42be5559b42c00cfde2e8c9fc20e966dc96df8cfeac468843abf10ed
+version: ""

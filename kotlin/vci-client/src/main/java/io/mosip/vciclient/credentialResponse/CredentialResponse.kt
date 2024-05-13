@@ -1,0 +1,3 @@
+package io.mosip.vciclient.credentialResponse
+
+interface CredentialResponse
