@@ -8,9 +8,6 @@ on:
         required: false
         default: 'Triggered for inji-vc-client Updates'
         type: string
-  push:
-    branches:
-    - develop
   pull_request:
     types: [opened, reopened, synchronize]
     branches:
@@ -22,6 +19,7 @@ jobs:
     with:
       SERVICE_LOCATION: '.'
       ANDROID_SERVICE_LOCATION: 'kotlin'
+      JAVA_VERSION: 21
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
       OSSRH_URL: ${{secrets.OSSRH_SNAPSHOT_URL }}
