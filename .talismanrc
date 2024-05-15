@@ -23,4 +23,6 @@ fileignoreconfig:
   checksum: bc9fb41af89b0f6c6ab126ab62e050f8c96020a1c07e570573f7ed983ac24448
 - filename: kotlin/readme.md
   checksum: fa94864a42be5559b42c00cfde2e8c9fc20e966dc96df8cfeac468843abf10ed
+- filename: .github/workflows/push-trigger.yml
+  checksum: 4ab139884b630ed8fc5d646332f81df2a46b15ca1c9e1da1b38ae6871deab952
 version: ""
