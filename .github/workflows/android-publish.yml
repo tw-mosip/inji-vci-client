@@ -17,8 +17,8 @@ jobs:
   maven-publish:
     uses: mosip/kattu/.github/workflows/maven-publish-android.yml@master
     with:
-      SERVICE_LOCATION: '.'
-      ANDROID_SERVICE_LOCATION: 'kotlin'
+      SERVICE_LOCATION: 'kotlin'
+      ANDROID_SERVICE_LOCATION: 'vci-client'
       JAVA_VERSION: 21
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
