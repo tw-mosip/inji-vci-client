@@ -94,5 +94,5 @@ tasks.build {
 }
 
 apply {
-    from( "publish-artifact.gradle")
+    from("publish-artifact.gradle")
 }
