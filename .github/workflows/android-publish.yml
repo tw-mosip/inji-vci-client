@@ -8,10 +8,6 @@ on:
         required: false
         default: 'Triggered for inji-vc-client Updates'
         type: string
-  pull_request:
-    types: [opened, reopened, synchronize]
-    branches:
-    - develop
 
 jobs:
   maven-publish:
