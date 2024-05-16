@@ -1,8 +1,9 @@
 package io.mosip.vciclient.proof.jwt
 
 import io.mosip.vciclient.constants.JWTProofType
-import io.mosip.vciclient.proof.jwt.JWTProofHeader
+import io.mosip.vciclient.exception.InvalidPublicKeyException
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class JWTProofHeaderTest {
@@ -39,6 +40,22 @@ ptxWSQnlPIXZbrtSYFkPQOHN8Ba0o1b4iNK3AX43WFy8srpOkEPqGJcCAwEAAQ==
 }""", jwtHeader
         )
 
+    }
+
+    @Test
+    fun `should throw Invalid PublicKey Exception when provided public key PEM is invalid`() {
+        val invalidPublicKeyPem = "invalid"
+
+        val invalidPublicKeyException = assertThrows(
+            InvalidPublicKeyException::class.java,
+        ) {
+            JWTProofHeader(JWTProofType.Algorithms.RS256.name, invalidPublicKeyPem)
+        }
+
+        assertEquals(
+            "Invalid public key passed io.fusionauth.pem.PEMDecoderException: java.security.InvalidParameterException: Unexpected PEM Format",
+            invalidPublicKeyException.message
+        )
     }
 
 

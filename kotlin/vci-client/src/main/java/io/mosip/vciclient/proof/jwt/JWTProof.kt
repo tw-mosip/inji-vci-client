@@ -15,9 +15,9 @@ import io.mosip.vciclient.proof.Proof
 import kotlin.math.floor
 
 private const val TOKEN_EXPIRATION_PERIOD_IN_MILLISECONDS = 18000
-private val logTag = Util.getLogTag(JWTProof::javaClass.name)
 
 class JWTProof : Proof {
+    private val logTag = Util.getLogTag(javaClass.simpleName)
     override val proofType: String = ProofType.JWT.value
     var jwt: String = ""
     override fun generate(
@@ -29,6 +29,7 @@ class JWTProof : Proof {
     ): Proof {
         val header: String =
             JWTProofHeader(JWTProofType.Algorithms.RS256.name, publicKeyPem).build()
+
         val payload: String = buildPayload(accessToken, issuerMetaData)
         this.jwt = generateJWT(header, payload, signer)
         return this

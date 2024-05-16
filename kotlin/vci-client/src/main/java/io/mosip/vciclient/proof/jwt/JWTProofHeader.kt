@@ -1,13 +1,18 @@
 package io.mosip.vciclient.proof.jwt
 
+import android.util.Log
 import io.fusionauth.jwks.domain.JSONWebKey
+import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.constants.JWTProofType
+import io.mosip.vciclient.exception.InvalidPublicKeyException
 import org.json.JSONObject
 
 
 private const val ALGORITHM = "alg"
 
 class JWTProofHeader(algorithm: String, publicKeyPem: String) {
+    private val logTag = Util.getLogTag(javaClass.simpleName)
+
     private val header = JSONObject(
         (mutableMapOf(
             ALGORITHM to algorithm,
@@ -17,7 +22,14 @@ class JWTProofHeader(algorithm: String, publicKeyPem: String) {
     )
 
     private fun pemToJWK(publicKeyPem: String): JSONObject {
-        val jwkJson = JSONObject(JSONWebKey.build(publicKeyPem).toJSON())
+        val publicKeyJWK: JSONWebKey
+        try {
+            publicKeyJWK = JSONWebKey.build(publicKeyPem)
+        } catch (exception: Exception) {
+            Log.e(logTag, "Error occurred due to Invalid public key passed ${exception.message}")
+            throw InvalidPublicKeyException(exception.toString())
+        }
+        val jwkJson = JSONObject(publicKeyJWK.toJSON())
         jwkJson.put(ALGORITHM, JWTProofType.Algorithms.RS256)
         return jwkJson
     }
