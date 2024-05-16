@@ -1,11 +1,10 @@
 package io.mosip.vciclient.credentialRequest.types
 
-import com.google.gson.FieldNamingPolicy
-import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
+import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.credentialRequest.CredentialRequest
-import io.mosip.vciclient.proof.Proof
 import io.mosip.vciclient.dto.IssuerMetaData
+import io.mosip.vciclient.proof.Proof
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -42,9 +41,7 @@ private data class CredentialRequestBody(
     val proof: Proof,
 ) {
     fun toJson(): String {
-        val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .create()
-        return gson.toJson(this)!!
+        return JsonUtils.serialize(this)
     }
 }
 

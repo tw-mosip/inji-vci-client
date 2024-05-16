@@ -9,6 +9,7 @@ import io.mosip.vciclient.credentialResponse.CredentialResponseFactory
 import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidAccessTokenException
+import io.mosip.vciclient.exception.InvalidPublicKeyException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
 import io.mosip.vciclient.proof.Proof
 import io.mosip.vciclient.proof.jwt.JWTProof
@@ -16,14 +17,14 @@ import okhttp3.OkHttpClient
 import java.io.InterruptedIOException
 import java.util.concurrent.TimeUnit
 
-
 class VCIClient(traceabilityId: String) {
     private val logTag = Util.getLogTag(javaClass.simpleName, traceabilityId)
 
     @Throws(
         DownloadFailedException::class,
         InvalidAccessTokenException::class,
-        NetworkRequestTimeoutException::class
+        NetworkRequestTimeoutException::class,
+        InvalidPublicKeyException::class
     )
     fun requestCredential(
         issuerMetaData: IssuerMetaData,
@@ -89,7 +90,7 @@ class VCIClient(traceabilityId: String) {
             )
             throw NetworkRequestTimeoutException()
         } catch (exception: Exception) {
-            if (exception is DownloadFailedException || exception is InvalidAccessTokenException)
+            if (exception is DownloadFailedException || exception is InvalidAccessTokenException || exception is InvalidPublicKeyException)
                 throw exception
             Log.e(
                 logTag,

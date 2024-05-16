@@ -16,11 +16,13 @@ fileignoreconfig:
 - filename: kotlin/vci-client/publish-artifact.gradle
   checksum: e98200f0ee91421adb1ae3c9c0d0c0107094d8ddb5d62a8ddb9d11078203f17b
 - filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/proof/jwt/JWTProofHeaderTest.kt
-  checksum: f9d78f75cf91b45b87f582f57a4817cb2d54169dea092bc4b677ee33a1abb241
+  checksum: c484c29e5599b1191c54be3585299015a5cdabc8fe8e9bc7eb158cbfbc01d831
 - filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/VCIClientTest.kt
   checksum: d910d0ab42c13e8ae0cd4f065a1dcdc377ae2bcfa4739e9cb4e6af7f18e93f9a
 - filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/proof/jwt/JWTProofHeader.kt
-  checksum: bc9fb41af89b0f6c6ab126ab62e050f8c96020a1c07e570573f7ed983ac24448
+  checksum: d85c80946b099dfed7ea7042f8efc0a8663dfb2ed0d6efe3ebc86b24d565da09
+- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/exception/InvalidPublicKeyException.kt
+  checksum: 58928af3e2ec3b2bbb1de5488f5812940f4845748496f998cd90ff5e370e55de
 - filename: kotlin/readme.md
   checksum: fa94864a42be5559b42c00cfde2e8c9fc20e966dc96df8cfeac468843abf10ed
 - filename: .github/workflows/push-trigger.yml
