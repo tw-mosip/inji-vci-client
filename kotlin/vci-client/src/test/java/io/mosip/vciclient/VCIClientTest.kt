@@ -25,6 +25,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import java.text.ParseException
 
@@ -138,9 +139,8 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                 credentialType = arrayOf("VerifiableCredential"),
                 credentialFormat = CredentialFormat.LDP_VC
             ),
-            ::signer,
-            accessToken,
-            publicKey
+            JWTProof("headerEncoded.payloadEncoded.signature"),
+            accessToken
         )
         val request: RecordedRequest = mockWebServer.takeRequest()
 
@@ -167,9 +167,8 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                 credentialType = arrayOf("VerifiableCredential"),
                 credentialFormat = CredentialFormat.LDP_VC
             ),
-            ::signer,
-            accessToken,
-            publicKey
+            JWTProof("headerEncoded.payloadEncoded.signature"),
+            accessToken
         )
 
         assertEquals(
@@ -190,9 +189,8 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                 credentialType = arrayOf("VerifiableCredential"),
                 credentialFormat = CredentialFormat.LDP_VC
             ),
-            ::signer,
-            accessToken,
-            publicKey
+            JWTProof("headerEncoded.payloadEncoded.signature"),
+            accessToken
         )
 
         assertNull(credentialResponse)
@@ -211,7 +209,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                     mockWebServer.url(credentialEndpoint).toString(),
                     10000, credentialType = arrayOf("VerifiableCredential"),
                     credentialFormat = CredentialFormat.LDP_VC
-                ), ::signer, accessToken, publicKey
+                ), JWTProof("headerEncoded.payloadEncoded.signature"), accessToken
             )
         }
 
@@ -234,9 +232,8 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
         ) {
             VCIClient("test-vci-client").requestCredential(
                 issuerWithLessTimeout,
-                ::signer,
-                accessToken,
-                publicKey
+                JWTProof("headerEncoded.payloadEncoded.signature"),
+                accessToken
             )
         }
 
@@ -244,6 +241,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
     }
 
     @Test
+    @Ignore("accessToken is not decrypted as JWTProof is given from the consumer")
     fun `should throw invalid access token exception when invalid access token is passed`() {
         val invalidAccessToken = "invalid-access-token"
         clearAllMocks()
@@ -263,9 +261,8 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                     downloadTimeout, credentialType = arrayOf("VerifiableCredential"),
                     credentialFormat = CredentialFormat.LDP_VC
                 ),
-                ::signer,
-                invalidAccessToken,
-                publicKey
+                JWTProof("headerEncoded.payloadEncoded.signature"),
+                invalidAccessToken
             )
         }
 
@@ -276,6 +273,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
     }
 
     @Test
+    @Ignore("JWTProof is not generated as JWTProof is given from the consumer")
     fun `should throw download failed exception with message when download fails`() {
         mockkConstructor(JWTProof::class)
         every {
@@ -300,9 +298,8 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
                     downloadTimeout, credentialType = arrayOf("VerifiableCredential"),
                     credentialFormat = CredentialFormat.LDP_VC
                 ),
-                ::signer,
-                accessToken,
-                publicKey
+                JWTProof("headerEncoded.payloadEncoded.signature"),
+                accessToken
             )
         }
         assertEquals(

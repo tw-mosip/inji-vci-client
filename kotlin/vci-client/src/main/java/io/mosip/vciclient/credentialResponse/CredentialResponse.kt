@@ -1,3 +1,5 @@
 package io.mosip.vciclient.credentialResponse
 
-interface CredentialResponse
+interface CredentialResponse {
+    fun toJsonString(): String
+}

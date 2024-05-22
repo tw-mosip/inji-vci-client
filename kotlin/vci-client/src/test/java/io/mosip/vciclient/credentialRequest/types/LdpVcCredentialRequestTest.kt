@@ -24,7 +24,7 @@ class LdpVcCredentialRequestTest {
                 30000,
                 credentialType = arrayOf("VerifiableCredential"),
                 credentialFormat = CredentialFormat.LDP_VC
-            ), JWTProof()
+            ), JWTProof("headerEncoded.payloadEncoded.signature")
         ).constructRequest()
 
         assertTrue(

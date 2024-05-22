@@ -22,6 +22,7 @@ import com.example.vciclient.util.PemConverter
 import io.mosip.vciclient.VCIClient
 import io.mosip.vciclient.credentialResponse.CredentialResponse
 import io.mosip.vciclient.dto.IssuerMetaData
+import io.mosip.vciclient.proof.jwt.JWTProof
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
@@ -76,6 +77,8 @@ class MainActivity : ComponentActivity() {
         Log.d(javaClass.simpleName, "About to call credential api")
         val thread = Thread {
             try {
+                //TODO: Create JWT
+                val jwtValue = ""
                 val credentialResponse: CredentialResponse? = VCIClient("example-vci-client").requestCredential(
                     issuerMetaData = IssuerMetaData(
                         Constants.CREDENTIAL_AUDIENCE,
@@ -84,9 +87,8 @@ class MainActivity : ComponentActivity() {
                         Constants.CREDENTIAL_TYPE,
                         Constants.CREDENTIAL_FORMAT
                     ),
-                    signer = ::signer,
-                    accessToken = accessToken,
-                    publicKeyPem = publicKeyInPem
+                    proof = JWTProof(jwtValue),
+                    accessToken = accessToken
                 )
                 if (credentialResponse != null) {
                     val text = "Download success"

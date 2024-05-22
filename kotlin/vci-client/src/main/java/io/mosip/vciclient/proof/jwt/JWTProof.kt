@@ -1,6 +1,7 @@
 package io.mosip.vciclient.proof.jwt
 
 import android.util.Log
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.nimbusds.jwt.JWT
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.JWTParser
@@ -16,10 +17,19 @@ import kotlin.math.floor
 
 private const val TOKEN_EXPIRATION_PERIOD_IN_MILLISECONDS = 18000
 
+private val logTag = Util.getLogTag(JWTProof::javaClass.name)
+
 class JWTProof : Proof {
-    private val logTag = Util.getLogTag(javaClass.simpleName)
     override val proofType: String = ProofType.JWT.value
     var jwt: String = ""
+
+    constructor()
+
+    constructor(jwt: String) {
+        this.jwt = jwt
+    }
+
+
     override fun generate(
         publicKeyPem: String,
         accessToken: String,

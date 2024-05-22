@@ -2,7 +2,6 @@ package io.mosip.vciclient
 
 import android.util.Log
 import io.mosip.vciclient.common.Util
-import io.mosip.vciclient.constants.JWTProofType
 import io.mosip.vciclient.credentialRequest.CredentialRequestFactory
 import io.mosip.vciclient.credentialResponse.CredentialResponse
 import io.mosip.vciclient.credentialResponse.CredentialResponseFactory
@@ -10,10 +9,12 @@ import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidAccessTokenException
 import io.mosip.vciclient.exception.InvalidPublicKeyException
+import io.mosip.vciclient.exception.NetworkRequestFailedException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
 import io.mosip.vciclient.proof.Proof
-import io.mosip.vciclient.proof.jwt.JWTProof
 import okhttp3.OkHttpClient
+import okhttp3.Response
+import java.io.IOException
 import java.io.InterruptedIOException
 import java.util.concurrent.TimeUnit
 
@@ -28,21 +29,11 @@ class VCIClient(traceabilityId: String) {
     )
     fun requestCredential(
         issuerMetaData: IssuerMetaData,
-        signer: (ByteArray) -> ByteArray,
+        proof: Proof,
         accessToken: String,
-        publicKeyPem: String,
     ): CredentialResponse? {
 
-
         try {
-            val proof: Proof = JWTProof().generate(
-                publicKeyPem,
-                accessToken,
-                issuerMetaData,
-                signer,
-                JWTProofType.Algorithms.RS256
-            )
-
             val client = OkHttpClient.Builder()
                 .callTimeout(
                     issuerMetaData.downloadTimeoutInMillSeconds.toLong(),
@@ -57,13 +48,18 @@ class VCIClient(traceabilityId: String) {
                 proof
             )
 
-            val response = client.newCall(request).execute()
+            val response: Response = client.newCall(request).execute()
 
             if (response.code != 200) {
+                val errorResponse: String? = response.body?.string()
                 Log.e(
                     logTag,
-                    "Downloading credential failed with response code ${response.code} - ${response.message}"
+                    "Downloading credential failed with response code ${response.code} - ${response.message}. Error - $errorResponse"
                 )
+                if (response.body != null) {
+                    Log.d(logTag,"Error - $errorResponse")
+                    throw DownloadFailedException(errorResponse!!)
+                }
                 throw DownloadFailedException(response.message)
             }
 
@@ -89,6 +85,12 @@ class VCIClient(traceabilityId: String) {
                 "Network request for ${issuerMetaData.credentialEndpoint} took more than expected time(${issuerMetaData.downloadTimeoutInMillSeconds / 1000}s). Exception - $exception"
             )
             throw NetworkRequestTimeoutException()
+        } catch (exception: IOException) {
+            Log.e(
+                logTag,
+                "Network request failed due to Exception - $exception"
+            )
+            throw NetworkRequestFailedException("${exception.message} ${exception.cause}")
         } catch (exception: Exception) {
             if (exception is DownloadFailedException || exception is InvalidAccessTokenException || exception is InvalidPublicKeyException)
                 throw exception
