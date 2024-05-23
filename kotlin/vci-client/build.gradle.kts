@@ -47,8 +47,6 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.nimbusds:nimbus-jose-jwt:9.37.3")
     implementation("io.fusionauth:fusionauth-jwt:5.3.2")
