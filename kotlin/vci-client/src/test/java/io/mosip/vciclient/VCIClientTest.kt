@@ -237,7 +237,7 @@ IGZojdVF+LrGiwRBRUvZMlSKUdsoYVAxz/a5ISGIrWCOd9PgDO5RNNUCAwEAAQ==
             )
         }
 
-        assertEquals("Download failed due to timeout", networkRequestTimeoutException.message)
+        assertEquals("Download failed due to request timeout", networkRequestTimeoutException.message)
     }
 
     @Test

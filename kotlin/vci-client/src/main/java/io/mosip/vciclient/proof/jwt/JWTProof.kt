@@ -1,7 +1,6 @@
 package io.mosip.vciclient.proof.jwt
 
 import android.util.Log
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.nimbusds.jwt.JWT
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.JWTParser
@@ -28,8 +27,7 @@ class JWTProof : Proof {
     constructor(jwt: String) {
         this.jwt = jwt
     }
-
-
+    
     override fun generate(
         publicKeyPem: String,
         accessToken: String,

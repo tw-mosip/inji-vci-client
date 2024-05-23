@@ -56,9 +56,8 @@ class VCIClient(traceabilityId: String) {
                     logTag,
                     "Downloading credential failed with response code ${response.code} - ${response.message}. Error - $errorResponse"
                 )
-                if (response.body != null) {
-                    Log.d(logTag,"Error - $errorResponse")
-                    throw DownloadFailedException(errorResponse!!)
+                if (errorResponse != "" && errorResponse != null) {
+                    throw DownloadFailedException(errorResponse)
                 }
                 throw DownloadFailedException(response.message)
             }
