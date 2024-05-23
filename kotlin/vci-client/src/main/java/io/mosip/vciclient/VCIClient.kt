@@ -36,7 +36,7 @@ class VCIClient(traceabilityId: String) {
         try {
             val client = OkHttpClient.Builder()
                 .callTimeout(
-                    issuerMetaData.downloadTimeoutInMillSeconds.toLong(),
+                    issuerMetaData.downloadTimeoutInMilliSeconds.toLong(),
                     TimeUnit.MILLISECONDS
                 )
                 .build()
@@ -81,7 +81,7 @@ class VCIClient(traceabilityId: String) {
         } catch (exception: InterruptedIOException) {
             Log.e(
                 logTag,
-                "Network request for ${issuerMetaData.credentialEndpoint} took more than expected time(${issuerMetaData.downloadTimeoutInMillSeconds / 1000}s). Exception - $exception"
+                "Network request for ${issuerMetaData.credentialEndpoint} took more than expected time(${issuerMetaData.downloadTimeoutInMilliSeconds / 1000}s). Exception - $exception"
             )
             throw NetworkRequestTimeoutException()
         } catch (exception: IOException) {
