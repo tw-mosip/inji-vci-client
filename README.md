@@ -1,2 +1,9 @@
-# inji-vci-client
-Contains OpenId4VCI specificationrelated source code and documentation
+# INJI VCI Client
+
+Contains OpenId4VCI specification related source code and documentation
+
+## Features
+
+- Request credential to Credential issuer
+
+
