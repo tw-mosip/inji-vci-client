@@ -9,7 +9,7 @@
 Snapshot builds are available [here](https://oss.sonatype.org/content/repositories/snapshots/io/mosip/inji-vci-client/).
 
 ```
-implementation "io.mosip:inji-vci-client:1.2-SNAPSHOT"
+implementation "io.mosip:inji-vci-client:0.1.0-SNAPSHOT"
 ```
 
 ## APIs
