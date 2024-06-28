@@ -36,6 +36,7 @@ data class Credential(
     val context: ArrayList<Any>,
     @SerializedName("issuanceDate")
     val issuanceDate: String,
+    @SerializedName("expirationDate")
     val expirationDate: String?,
     @SerializedName("credentialSubject")
     val credentialSubject: Map<String, Any>
@@ -44,6 +45,7 @@ data class Credential(
 data class CredentialProof(
     val type: String,
     val created: String,
+    @SerializedName("proofValue")
     val proofValue: String?,
     @SerializedName("proofPurpose")
     val proofPurpose: String,
