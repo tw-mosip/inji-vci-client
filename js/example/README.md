@@ -1,0 +1,2 @@
+# example
+A JavaScript project
