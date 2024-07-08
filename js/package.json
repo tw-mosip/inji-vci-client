@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "type": "commonjs",
   "scripts": {
-    "test": "jest"
+    "test": "jest --coverage",
+    "verify": "npm test"
   },
   "repository": {
     "type": "git",

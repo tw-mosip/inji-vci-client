@@ -16,7 +16,7 @@ on:
     - 'release-**'
 
 jobs:
-  build-kotlin:
+  build-kotlin-js:
     runs-on: ubuntu-latest
     steps:
       - name: Set up JDK 21
@@ -37,10 +37,17 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle-
 
       - uses: actions/checkout@v3.1.0
-      - name: Run tests
+      - name: Run kotlin tests
         run: |
           cd kotlin
           ./gradlew test
+      
+      - uses: actions/checkout@v3.1.0
+      - name: Run js tests
+        run: |
+          cd js
+          npm ci
+          npm test
 
       - uses: 8398a7/action-slack@v3
         with:
