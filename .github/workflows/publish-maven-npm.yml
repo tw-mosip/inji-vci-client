@@ -1,4 +1,4 @@
-name: Android Artifact Publish
+name: Artifacts Publish
 
 on:
   workflow_dispatch:
