@@ -2,7 +2,7 @@ const CredentialResponse = require("../../CredentialResponse");
 
 class LdpVcCredentialResponse extends CredentialResponse {
 
-    toJsonString(response) {
+    toJson(response) {
         return JSON.parse(response);
     }
 }

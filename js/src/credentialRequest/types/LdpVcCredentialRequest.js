@@ -47,7 +47,7 @@ class CredentialRequestBody {
         this.credential_definition = credentialDefinition;
         this.proof = proof;
     }
-    toJson() {
+    toJsonString() {
         return JSON.stringify(this);
     }
 }
