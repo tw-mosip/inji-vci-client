@@ -5,7 +5,7 @@ import io.mosip.vciclient.constants.JWTProofType
 import io.mosip.vciclient.dto.IssuerMetaData
 
 interface Proof {
-    @get:SerializedName("proof_jwt")
+    @get:SerializedName("proof_type")
     val proofType: String
     fun generate(
         publicKeyPem: String,

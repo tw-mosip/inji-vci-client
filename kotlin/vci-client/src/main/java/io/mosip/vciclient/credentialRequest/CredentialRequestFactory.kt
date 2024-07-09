@@ -20,6 +20,12 @@ class CredentialRequestFactory {
                     issuerMetaData,
                     proof
                 ).constructRequest()
+
+                CredentialFormat.MSO_MDOC -> return LdpVcCredentialRequest(
+                    accessToken,
+                    issuerMetaData,
+                    proof
+                ).constructRequest()
             }
         }
     }

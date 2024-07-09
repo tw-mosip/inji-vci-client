@@ -14,7 +14,7 @@ fileignoreconfig:
 - filename: .github/workflows/android-publish.yml
   checksum: edbd3e2d8abebe83505f7dd14a6a21cc6ef5ee7cffc0dfe1db105aee88447a31
 - filename: kotlin/vci-client/publish-artifact.gradle
-  checksum: 0fd8f7b02c302182c4b4ad1a6ef77f31d5f6e0b560cf1d6c10d8dcb16a4600d9
+  checksum: 565f2e26585bd759839ec41a3945e800746ac37f827bb1c539097be34e82bdc6
 - filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/proof/jwt/JWTProofHeaderTest.kt
   checksum: c484c29e5599b1191c54be3585299015a5cdabc8fe8e9bc7eb158cbfbc01d831
 - filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/VCIClientTest.kt
@@ -29,4 +29,6 @@ fileignoreconfig:
   checksum: fa94864a42be5559b42c00cfde2e8c9fc20e966dc96df8cfeac468843abf10ed
 - filename: .github/workflows/push-trigger.yml
   checksum: 34101f249b8fd7794a845193b1b5075111df56efa2e39e670302c6110e6444fa
+- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/credentialResponse/types/mdocVc/MdocVcCredentialResponse.kt
+  checksum: c0f4f56a5d094999e87b1a6173e4e8049b3f2a45b6a44bd960a2a3cef9448bc5
 version: ""

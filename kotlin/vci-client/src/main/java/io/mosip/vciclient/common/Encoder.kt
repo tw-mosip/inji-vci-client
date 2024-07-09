@@ -25,6 +25,15 @@ class Encoder {
         return encodedContentByteArray!!
     }
 
+    fun decodeBase64UrlFormat(content: String): ByteArray? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return Base64.getUrlDecoder().decode(content.toByteArray())
+        } else {
+            println("else")
+            return "".toByteArray()
+        }
+    }
+
     @SuppressLint("NewApi")
     fun encodeToBase64UrlFormat(content: ByteArray): String {
         val encodedContentByteArray: String =
