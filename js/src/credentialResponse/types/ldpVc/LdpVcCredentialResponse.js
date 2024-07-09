@@ -1,8 +1,10 @@
-import { CredentialResponse } from "../../CredentialResponse";
+const CredentialResponse = require("../../CredentialResponse");
 
-export class LdpVcCredentialResponse extends CredentialResponse {
+class LdpVcCredentialResponse extends CredentialResponse {
 
     toJsonString(response) {
         return JSON.parse(response);
     }
 }
+
+module.exports = LdpVcCredentialResponse;

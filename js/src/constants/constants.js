@@ -1,2 +1,2 @@
-export const EMPTY_RESPONSE = "";
-export const NETWORK_TIMEOUT = "ECONNABORTED";
+exports.EMPTY_RESPONSE = "";
+exports.NETWORK_TIMEOUT = "ECONNABORTED";

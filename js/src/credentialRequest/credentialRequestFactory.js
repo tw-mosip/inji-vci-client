@@ -1,8 +1,8 @@
-import { LdpVcCredentialRequest } from "./types/LdpVcCredentialRquest";
-import { CredentialFormat } from "../constants/CredentialFormat";
+const LdpVcCredentialRequest = require("./types/LdpVcCredentialRequest");
+const {CredentialFormat} = require("../constants/CredentialFormat");
 
-export class CredentialRequestFactory {
-  static createCredentialRequest(
+class CredentialRequestFactory {
+   static createCredentialRequest(
     credentialFormat,
     accessToken,
     issuerMetaData,
@@ -10,13 +10,11 @@ export class CredentialRequestFactory {
   ) {
     switch (credentialFormat) {
       case CredentialFormat.LDP_VC:
-        return new LdpVcCredentialRequest(
-          accessToken,
-          issuerMetaData,
-          proof
-        ).constructRequest();
+        return new LdpVcCredentialRequest(accessToken, issuerMetaData, proof).constructRequest();
       default:
         throw new Error("Unsupported credential format");
     }
   }
 }
+
+module.exports = CredentialRequestFactory; 

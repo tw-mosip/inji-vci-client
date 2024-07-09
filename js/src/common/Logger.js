@@ -1,4 +1,4 @@
-export class Logger {
+class Logger {
   static logTag = "INJI-VCI-Client : ";
 
   static getLogTag(className, traceId) {
@@ -13,3 +13,5 @@ export class Logger {
     console.warn(`${Logger.logTag} ${message}`);
   }
 }
+
+module.exports = Logger;

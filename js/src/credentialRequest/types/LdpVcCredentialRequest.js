@@ -1,7 +1,7 @@
-import { ProofType } from "../../constants/ProofType";
-import { CredentialRequest } from "../credentialRequest";
+const {ProofType} = require("../../constants/ProofType");
+const CredentialRequest = require("../credentialRequest");
 
-export class LdpVcCredentialRequest extends CredentialRequest {
+class LdpVcCredentialRequest extends CredentialRequest {
     constructor(accessToken, issuerMetaData, proof) {
         super();
         this.accessToken = accessToken;
@@ -54,3 +54,5 @@ class CredentialDefinition {
         this["@context"] = ["https://www.w3.org/2018/credentials/v1"];
     }
 }
+
+module.exports = LdpVcCredentialRequest;

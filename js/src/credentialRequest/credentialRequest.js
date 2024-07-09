@@ -1,4 +1,4 @@
-export class CredentialRequest {
+class CredentialRequest {
     constructor(accessToken, issuerMetaData, proof) {
         this.accessToken = accessToken;
         this.issuerMetaData = issuerMetaData;
@@ -7,3 +7,5 @@ export class CredentialRequest {
 
     constructRequest(){}
 }
+
+module.exports = CredentialRequest;

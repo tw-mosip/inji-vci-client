@@ -1,4 +1,4 @@
-import { Logger } from "../../src/common/Logger";
+const Logger =  require("../../src/common/Logger");
 
 test('should return log tag with library name and provided class name', () => {
   const className = 'UtilTest';

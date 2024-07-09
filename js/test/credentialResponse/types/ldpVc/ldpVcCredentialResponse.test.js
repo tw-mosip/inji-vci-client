@@ -1,4 +1,4 @@
-import { LdpVcCredentialResponse } from "../../../../src/credentialResponse/types/ldpVc/LdpVcCredentialResponse";
+const LdpVcCredentialResponse = require("../../../../src/credentialResponse/types/ldpVc/LdpVcCredentialResponse");
 
 test("should return JSON string of the LdpVc credential response", () => {
   const credentialResponse = `{

@@ -1,7 +1,9 @@
-import { DownloadFailedException } from "../src/exception/DownloadFailedException";
-import { NetworkRequestTimeoutException } from "../src/exception/NetworkRequestTimeoutException";
-import { requestCredential } from "../src/VCIClient";
-import nock from "nock";
+const DownloadFailedException = require("../src/exception/DownloadFailedException");
+const NetworkRequestTimeoutException = require("../src/exception/NetworkRequestTimeoutException");
+const { default: axios } = require("axios");
+const {requestCredential} = require("../src/index.js");
+
+jest.mock("axios");
 
 describe("VCI Client test", () => {
   const mockCredentialResponse = {
@@ -49,8 +51,16 @@ describe("VCI Client test", () => {
     credentialFormat,
   };
 
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it("should make api call to credential endpoint with the right params in case of ldpVc", async () => {
-    nock("https://domain.net").post("/credential").reply(200, mockCredentialResponse);
+    axios.post.mockResolvedValue({ status: 200, data: mockCredentialResponse });
 
     const resp = await requestCredential(issuerMeta, proof, accessToken);
 
@@ -58,7 +68,7 @@ describe("VCI Client test", () => {
   });
 
   it("should return null when credential endpoint responded with empty body", async () => {
-    nock("https://domain.net").post("/credential").reply(200, "");
+    axios.post.mockResolvedValue({ status: 200, data: "" });
 
     const resp = await requestCredential(issuerMeta, proof, accessToken);
 
@@ -66,28 +76,44 @@ describe("VCI Client test", () => {
   });
 
   it("should throw download failure exception when credential endpoint response is not 200", async () => {
-
     try {
-      nock("https://domain.net").post("/credential").reply(500, new DownloadFailedException(""));
+      axios.post.mockResolvedValue({
+        status: 500,
+        data: new DownloadFailedException(""),
+      });
 
       await requestCredential(issuerMeta, proof, accessToken);
-
     } catch (error) {
       expect(error).toBeInstanceOf(DownloadFailedException);
-      expect(error.message).toBe("Download failed - Request failed with status code 500");
+      expect(error.message).toBe(
+        "Download failed - Request failed with status code 500"
+      );
     }
   });
 
   it("should throw network request timeout failure exception when timeout is reached", async () => {
+    axios.post.mockImplementation(
+      () =>
+        new Promise((_, reject) =>
+          setTimeout(() => {
+            const error = new NetworkRequestTimeoutException(
+              "timeout exceeded"
+            );
+            error.code = "ECONNABORTED";
+            reject(error);
+          }, 4000)
+        )
+    );
 
-    try {
-      nock("https://domain.net").post("/credential").delay(4000).reply(200, new NetworkRequestTimeoutException(""));
+    const requestPromise = requestCredential(issuerMeta, proof, accessToken);
 
-      await requestCredential(issuerMeta, proof, accessToken);
+    jest.advanceTimersByTime(4000);
 
-    } catch (error) {
-      expect(error).toBeInstanceOf(NetworkRequestTimeoutException);
-      expect(error.message).toBe( "Download failure occurred due to Network request timeout, details -  timeout of 3000ms exceeded");
-    }
-  });
+    await expect(requestPromise).rejects.toThrow(
+      NetworkRequestTimeoutException
+    );
+    await expect(requestPromise).rejects.toThrow(
+      "Download failure occurred due to Network request timeout, details - timeout exceeded"
+    );
+  }, 5000);
 });

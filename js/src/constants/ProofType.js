@@ -1,3 +1,3 @@
-export const ProofType = Object.freeze({
+exports.ProofType = Object.freeze({
     JWT: "jwt"
 });

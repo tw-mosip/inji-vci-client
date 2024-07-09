@@ -1,4 +1,4 @@
-import { LdpVcCredentialRequest } from "../../../src/credentialRequest/types/LdpVcCredentialRquest";
+const LdpVcCredentialRequest = require("../../../src/credentialRequest/types/LdpVcCredentialRequest");
 
 test("should create JSON in expected format", () => {
   const credentialEndpoint = "https://domain.net/credential";

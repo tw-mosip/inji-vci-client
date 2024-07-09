@@ -1,7 +1,7 @@
-import { CredentialFormat } from "../constants/CredentialFormat";
-import { LdpVcCredentialResponse } from "./types/ldpVc/LdpVcCredentialResponse";
+const {CredentialFormat} = require("../constants/CredentialFormat");
+const LdpVcCredentialResponse = require("./types/ldpVc/LdpVcCredentialResponse");
 
-export class CredentialResponseFactory {
+class CredentialResponseFactory {
     static createCredentialResponse(formatType, response) {
         switch (formatType) {
             case CredentialFormat.LDP_VC:
@@ -11,3 +11,5 @@ export class CredentialResponseFactory {
         }
     }
 }
+
+module.exports = CredentialResponseFactory;
