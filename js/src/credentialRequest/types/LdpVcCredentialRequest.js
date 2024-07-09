@@ -31,7 +31,7 @@ class LdpVcCredentialRequest extends CredentialRequest {
                 proof_type: ProofType.JWT,
                 jwt: this.proof,
               },
-            ).toJson();
+            ).toJsonString();
             return requestBody;
         } catch (error) {
             const errorMessage = "RequestGenerationFailed";

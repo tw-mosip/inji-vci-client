@@ -6,7 +6,7 @@ class CredentialResponseFactory {
     static createCredentialResponse(formatType, response) {
         switch (formatType) {
             case CredentialFormat.LDP_VC:
-                return new LdpVcCredentialResponse().toJsonString(response);
+                return new LdpVcCredentialResponse().toJson(response);
             default:
                 const errorMessage = `Unsupported credential format type: ${formatType}`;
                 Logger.error(errorMessage);

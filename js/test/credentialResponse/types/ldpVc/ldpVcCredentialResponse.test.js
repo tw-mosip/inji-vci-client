@@ -34,7 +34,7 @@ test("should return JSON string of the LdpVc credential response", () => {
       }
     }`;
 
-  const ldpVcCredentialResponse = new LdpVcCredentialResponse().toJsonString(
+  const ldpVcCredentialResponse = new LdpVcCredentialResponse().toJson(
     credentialResponse
   );
 
