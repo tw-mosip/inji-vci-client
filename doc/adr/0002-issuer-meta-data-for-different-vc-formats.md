@@ -4,11 +4,15 @@ Date: 2024-06-27
 
 ## Status
 
-Pending confirmation
+Approved - Approach 1
+
+## Consequences of selected approach
+
+We are going with updating issuerMetaData to avoid breaking changes and we will be managing validation based on VC formats
+
 
 ## Context
 
-[//]: # (The issue motivating this decision, and any context that influences or constrains the decision.)
 For making a credential request to download mdoc VC we are required with other details like claims, doctype which are not available in the current IssuerMetaData entity.
 For this reason, we are looking for a design that can accommodate the process of credential request based on any VC format in smooth way. 
 
@@ -27,7 +31,7 @@ Add any newly required properties to the Issuer metadata entity when required, k
 #### Pros
 
 
-- 
+- Not a breaking change
 
 
 #### Cons
@@ -50,6 +54,3 @@ Create IssuerMetadata interface which holds only the format independent properti
 
 - Since this is like breaking change the consumers would be required to adapt it
 
-## Consequences
-
-[//]: # (What becomes easier or more difficult to do and any risks introduced by the change that will need to be mitigated.)
