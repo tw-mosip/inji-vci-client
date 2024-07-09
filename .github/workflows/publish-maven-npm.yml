@@ -6,7 +6,7 @@ on:
       message:
         description: 'Message for manually triggering'
         required: false
-        default: 'Triggered for inji-vc-client Updates'
+        default: 'Triggered for inji-vci-client Updates'
         type: string
       publish:
         description: 'Publish kotlin or js'

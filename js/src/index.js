@@ -7,25 +7,25 @@ const Logger = require("./common/Logger");
 const { default: axios } = require("axios");
 
 /**
- * @param {Object} issuerMeta
+ * @param {Object} issuerMetaData 
  * @param {string} proof
  * @param {string} accessToken
  */
 
-async function requestCredential(issuerMeta, proof, accessToken) {
+async function requestCredential(issuerMetaData, proof, accessToken) {
   const request = CredentialRequestFactory.createCredentialRequest(
-    issuerMeta.credentialFormat,
+    issuerMetaData.credentialFormat,
     accessToken,
-    issuerMeta,
+    issuerMetaData,
     proof
   );
 
   try {
     const response = await axios.post(
-      issuerMeta.credentialEndpoint,
+      issuerMetaData.credentialEndpoint,
       request.requestBody,
       {
-        timeout: issuerMeta.downloadTimeoutInMillSeconds,
+        timeout: issuerMetaData.downloadTimeoutInMillSeconds,
         headers: request.requestHeader,
       }
     );
@@ -33,7 +33,7 @@ async function requestCredential(issuerMeta, proof, accessToken) {
     if (response.data !== EMPTY_RESPONSE) {
       const responseBody = JSON.stringify(response.data);
       return CredentialResponseFactory.createCredentialResponse(
-        issuerMeta.credentialFormat,
+        issuerMetaData.credentialFormat,
         responseBody
       );
     } else {
@@ -44,8 +44,10 @@ async function requestCredential(issuerMeta, proof, accessToken) {
     }
   } catch (error) {
     if (error.code == NETWORK_TIMEOUT) {
+      Logger.error(`Network request timeout occured - ${error.message}`);
       throw new NetworkRequestTimeoutException(error.message);
     } else {
+      Logger.error(`Error occured while downloading the credential - ${error.message}`);
       throw new DownloadFailedException(error.message);
     }
   }

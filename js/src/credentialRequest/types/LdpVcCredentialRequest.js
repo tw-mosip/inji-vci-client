@@ -1,4 +1,6 @@
+const Logger = require("../../common/Logger");
 const {ProofType} = require("../../constants/ProofType");
+const DownloadFailedException = require("../../exception/DownloadFailedException");
 const CredentialRequest = require("../credentialRequest");
 
 class LdpVcCredentialRequest extends CredentialRequest {
@@ -32,7 +34,9 @@ class LdpVcCredentialRequest extends CredentialRequest {
             ).toJson();
             return requestBody;
         } catch (error) {
-            throw new Error('DownloadFailedError: requestGenerationFailed');
+            const errorMessage = "RequestGenerationFailed";
+            Logger.error(errorMessage);
+            throw new DownloadFailedException(errorMessage);
         }
     }
 }

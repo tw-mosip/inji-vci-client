@@ -1,4 +1,5 @@
 const {CredentialFormat} = require("../constants/CredentialFormat");
+const DownloadFailedException = require("../exception/DownloadFailedException");
 const LdpVcCredentialResponse = require("./types/ldpVc/LdpVcCredentialResponse");
 
 class CredentialResponseFactory {
@@ -7,7 +8,9 @@ class CredentialResponseFactory {
             case CredentialFormat.LDP_VC:
                 return new LdpVcCredentialResponse().toJsonString(response);
             default:
-                throw new Error('Unsupported credential format type');
+                const errorMessage = `Unsupported credential format type: ${formatType}`;
+                Logger.error(errorMessage);
+                throw new DownloadFailedException(errorMessage);
         }
     }
 }

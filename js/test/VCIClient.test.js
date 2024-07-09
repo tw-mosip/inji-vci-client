@@ -43,7 +43,7 @@ describe("VCI Client test", () => {
   const credentialFormat = "ldp_vc";
   const proof = "eyJhbdFQwRnFWZjIcQku5nL1E_d-uifyj84U3XU8TA";
   const accessToken = "eyJrahyw5Q_oeX7jXlHffwD2eBo3g";
-  const issuerMeta = {
+  const issuerMetaData = {
     credentialAudience,
     credentialEndpoint,
     downloadTimeoutInMillSeconds,
@@ -62,15 +62,41 @@ describe("VCI Client test", () => {
   it("should make api call to credential endpoint with the right params in case of ldpVc", async () => {
     axios.post.mockResolvedValue({ status: 200, data: mockCredentialResponse });
 
-    const resp = await requestCredential(issuerMeta, proof, accessToken);
+    const request = {
+      requestBody: {
+        format: "ldp_vc",
+        credential_definition: {
+          type: ["VerifiableCredential"],
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+        },
+        proof: {
+          proof_type: "jwt",
+          jwt: "eyJhbdFQwRnFWZjIcQku5nL1E_d-uifyj84U3XU8TA",
+        },
+      },
+      requestHeader: {
+        Authorization: "Bearer eyJrahyw5Q_oeX7jXlHffwD2eBo3g",
+        "Content-Type": "application/json",
+      },
+    };
 
+    const resp = await requestCredential(issuerMetaData, proof, accessToken);
+
+    expect(axios.post).toHaveBeenCalledWith(
+      issuerMetaData.credentialEndpoint,
+      JSON.stringify(request.requestBody),
+      {
+        timeout: issuerMetaData.downloadTimeoutInMillSeconds,
+        headers: request.requestHeader,
+      }
+    );
     expect(resp).toEqual(mockCredentialResponse);
   });
 
   it("should return null when credential endpoint responded with empty body", async () => {
     axios.post.mockResolvedValue({ status: 200, data: "" });
 
-    const resp = await requestCredential(issuerMeta, proof, accessToken);
+    const resp = await requestCredential(issuerMetaData, proof, accessToken);
 
     expect(resp).toEqual(null);
   });
@@ -82,7 +108,7 @@ describe("VCI Client test", () => {
         data: new DownloadFailedException(""),
       });
 
-      await requestCredential(issuerMeta, proof, accessToken);
+      await requestCredential(issuerMetaData, proof, accessToken);
     } catch (error) {
       expect(error).toBeInstanceOf(DownloadFailedException);
       expect(error.message).toBe(
@@ -105,7 +131,7 @@ describe("VCI Client test", () => {
         )
     );
 
-    const requestPromise = requestCredential(issuerMeta, proof, accessToken);
+    const requestPromise = requestCredential(issuerMetaData, proof, accessToken);
 
     jest.advanceTimersByTime(4000);
 
