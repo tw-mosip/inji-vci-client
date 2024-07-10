@@ -1,6 +1,6 @@
 class Proof {
-    constructor(proofType) {
-      this.proofType = proofType;
+    constructor(proof_type) {
+      this.proof_type = proof_type;
     }
 }
 

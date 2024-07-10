@@ -26,10 +26,7 @@ class LdpVcCredentialRequest extends CredentialRequest {
             const requestBody = new CredentialRequestBody(
               this.issuerMetaData.credentialFormat,
               new CredentialDefinition(this.issuerMetaData.credentialType),
-              {
-                proof_type: this.proof.proofType,
-                jwt: this.proof.jwt,
-              },
+              this.proof
             ).toJsonString();
             return requestBody;
         } catch (error) {
