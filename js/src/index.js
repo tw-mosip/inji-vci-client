@@ -5,10 +5,12 @@ const NetworkRequestTimeoutException = require("./exception/NetworkRequestTimeou
 const { NETWORK_TIMEOUT, EMPTY_RESPONSE } = require("./constants/constants");
 const Logger = require("./common/Logger");
 const { default: axios } = require("axios");
+const IssuerMetaData = require('./dto/issuerMetaData');
+const Proof = require('./proof/Proof');
 
 /**
- * @param {Object} issuerMetaData 
- * @param {string} proof
+ * @param {IssuerMetaData} issuerMetaData 
+ * @param {Proof} proof
  * @param {string} accessToken
  */
 

@@ -2,6 +2,8 @@ const DownloadFailedException = require("../src/exception/DownloadFailedExceptio
 const NetworkRequestTimeoutException = require("../src/exception/NetworkRequestTimeoutException");
 const { default: axios } = require("axios");
 const {requestCredential} = require("../src/index.js");
+const JWTProof = require("../src/proof/jwt/JWTProof.js");
+const IssuerMetaData = require("../src/dto/issuerMetaData.js");
 
 jest.mock("axios");
 
@@ -41,15 +43,15 @@ describe("VCI Client test", () => {
   const downloadTimeoutInMillSeconds = 3000;
   const credentialType = ["VerifiableCredential"];
   const credentialFormat = "ldp_vc";
-  const proof = "eyJhbdFQwRnFWZjIcQku5nL1E_d-uifyj84U3XU8TA";
+  const proof = new JWTProof("eyJhbdFQwRnFWZjIcQku5nL1E_d-uifyj84U3XU8TA");
   const accessToken = "eyJrahyw5Q_oeX7jXlHffwD2eBo3g";
-  const issuerMetaData = {
+  const issuerMetaData = new IssuerMetaData(
     credentialAudience,
     credentialEndpoint,
     downloadTimeoutInMillSeconds,
     credentialType,
     credentialFormat,
-  };
+  );
 
   beforeEach(() => {
     jest.useFakeTimers();

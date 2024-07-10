@@ -1,5 +1,4 @@
 const Logger = require("../../common/Logger");
-const {ProofType} = require("../../constants/ProofType");
 const DownloadFailedException = require("../../exception/DownloadFailedException");
 const CredentialRequest = require("../credentialRequest");
 
@@ -28,8 +27,8 @@ class LdpVcCredentialRequest extends CredentialRequest {
               this.issuerMetaData.credentialFormat,
               new CredentialDefinition(this.issuerMetaData.credentialType),
               {
-                proof_type: ProofType.JWT,
-                jwt: this.proof,
+                proof_type: this.proof.proofType,
+                jwt: this.proof.jwt,
               },
             ).toJsonString();
             return requestBody;
