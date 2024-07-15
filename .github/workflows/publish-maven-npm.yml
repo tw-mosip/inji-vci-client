@@ -41,5 +41,5 @@ jobs:
       SERVICE_LOCATION: 'js'
     secrets:
       NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_INJI_TEAM }}
   
