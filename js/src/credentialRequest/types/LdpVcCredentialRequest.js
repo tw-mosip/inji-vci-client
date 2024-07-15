@@ -31,7 +31,6 @@ class LdpVcCredentialRequest extends CredentialRequest {
             return requestBody;
         } catch (error) {
             const errorMessage = "RequestGenerationFailed";
-            Logger.error(errorMessage);
             throw new DownloadFailedException(errorMessage);
         }
     }

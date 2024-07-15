@@ -1,6 +1,6 @@
 class DownloadFailedException extends Error {
     constructor(message) {
-        super(`Download failed - ${message}`);
+        super(`${message}`);
         this.name = "DownloadFailedException";
     }
 }

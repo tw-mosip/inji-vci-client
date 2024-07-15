@@ -8,18 +8,25 @@ const { default: axios } = require("axios");
 const IssuerMetaData = require('./dto/issuerMetaData');
 const Proof = require('./proof/Proof');
 
+class VCIClient {
+  constructor(traceId) {
+    this.traceId = traceId;
+  }
+
 /**
  * @param {IssuerMetaData} issuerMetaData 
  * @param {Proof} proof
  * @param {string} accessToken
+ * @returns {Promise<CredentialResponse | null>}
+ * @throws {NetworkRequestTimeoutException | DownloadFailedException}
  */
 
-async function requestCredential(issuerMetaData, proof, accessToken) {
+ async requestCredential(issuerMetaData, proof, accessToken) {
   const request = CredentialRequestFactory.createCredentialRequest(
     issuerMetaData.credentialFormat,
     accessToken,
     issuerMetaData,
-    proof
+    proof,
   );
 
   try {
@@ -36,25 +43,24 @@ async function requestCredential(issuerMetaData, proof, accessToken) {
       const responseBody = JSON.stringify(response.data);
       return CredentialResponseFactory.createCredentialResponse(
         issuerMetaData.credentialFormat,
-        responseBody
+        responseBody, 
       );
     } else {
       Logger.warn(
-        "The response body from credentialEndpoint is empty, returning null"
+        "The response body from credentialEndpoint is empty, returning null", this.traceId
       );
       return null;
     }
   } catch (error) {
     if (error.code == NETWORK_TIMEOUT) {
-      Logger.error(`Network request timeout occured - ${error.message}`);
+      Logger.error(`Network request timeout occured - ${error.message}`, this.traceId);
       throw new NetworkRequestTimeoutException(error.message);
     } else {
-      Logger.error(`Error occured while downloading the credential - ${error.message}`);
+      Logger.error(`Error occured while downloading the credential - ${error.message}`, this.traceId);
       throw new DownloadFailedException(error.message);
     }
   }
 }
+}
 
-module.exports = {
-  requestCredential,
-};
+module.exports = VCIClient;

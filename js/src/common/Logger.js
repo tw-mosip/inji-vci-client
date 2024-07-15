@@ -5,12 +5,12 @@ class Logger {
     return `INJI-VCI-Client : ${className} | traceID ${traceId}`;
   }
 
-  static error(message) {
-    console.error(`${Logger.logTag} ${message}`);
+  static error(message, traceId) {
+    console.error(`${Logger.logTag} ${message} | traceID ${traceId}`);
   }
 
-  static warn(message) {
-    console.warn(`${Logger.logTag} ${message}`);
+  static warn(message, traceId) {
+    console.warn(`${Logger.logTag} ${message} | traceID ${traceId}`);
   }
 }
 

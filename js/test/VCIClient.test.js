@@ -1,7 +1,7 @@
 const DownloadFailedException = require("../src/exception/DownloadFailedException");
 const NetworkRequestTimeoutException = require("../src/exception/NetworkRequestTimeoutException");
 const { default: axios } = require("axios");
-const {requestCredential} = require("../src/index.js");
+const VCIClient = require("../src/VCIClient.js");
 const JWTProof = require("../src/proof/jwt/JWTProof.js");
 const IssuerMetaData = require("../src/dto/issuerMetaData.js");
 
@@ -59,7 +59,10 @@ describe("VCI Client test", () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.resetAllMocks();
   });
+
+  const VCIClientTest = new VCIClient("AX12HG78XC78");
 
   it("should make api call to credential endpoint with the right params in case of ldpVc", async () => {
     axios.post.mockResolvedValue({ status: 200, data: mockCredentialResponse });
@@ -82,7 +85,7 @@ describe("VCI Client test", () => {
       },
     };
 
-    const resp = await requestCredential(issuerMetaData, proof, accessToken);
+    const resp = await VCIClientTest.requestCredential(issuerMetaData, proof, accessToken);
 
     expect(axios.post).toHaveBeenCalledWith(
       issuerMetaData.credentialEndpoint,
@@ -98,23 +101,24 @@ describe("VCI Client test", () => {
   it("should return null when credential endpoint responded with empty body", async () => {
     axios.post.mockResolvedValue({ status: 200, data: "" });
 
-    const resp = await requestCredential(issuerMetaData, proof, accessToken);
+    const resp = await VCIClientTest.requestCredential(issuerMetaData, proof, accessToken);
 
     expect(resp).toEqual(null);
   });
 
   it("should throw download failure exception when credential endpoint response is not 200", async () => {
     try {
-      axios.post.mockResolvedValue({
-        status: 500,
-        data: new DownloadFailedException(""),
+      axios.post.mockImplementation(() => {
+        const error = new DownloadFailedException("Request failed with status code 500");
+        error.response = { status: 500 };
+        return Promise.reject(error);
       });
 
-      await requestCredential(issuerMetaData, proof, accessToken);
+      await VCIClientTest.requestCredential(issuerMetaData, proof, accessToken);
     } catch (error) {
       expect(error).toBeInstanceOf(DownloadFailedException);
       expect(error.message).toBe(
-        "Download failed - Request failed with status code 500"
+        "Request failed with status code 500"
       );
     }
   });
@@ -133,7 +137,7 @@ describe("VCI Client test", () => {
         )
     );
 
-    const requestPromise = requestCredential(issuerMetaData, proof, accessToken);
+    const requestPromise = VCIClientTest.requestCredential(issuerMetaData, proof, accessToken);
 
     jest.advanceTimersByTime(4000);
 

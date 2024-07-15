@@ -9,7 +9,6 @@ class CredentialResponseFactory {
                 return new LdpVcCredentialResponse().toJson(response);
             default:
                 const errorMessage = `Unsupported credential format type: ${formatType}`;
-                Logger.error(errorMessage);
                 throw new DownloadFailedException(errorMessage);
         }
     }
