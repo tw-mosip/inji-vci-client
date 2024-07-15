@@ -1,16 +1,21 @@
 class Logger {
-  static logTag = "INJI-VCI-Client : ";
+  static logTag = "INJI-VCI-Client:";
+  static traceId = "";
 
-  static getLogTag(className, traceId) {
-    return `INJI-VCI-Client : ${className} | traceID ${traceId}`;
+  static setLogTag(traceId, className) {
+    Logger.logTag = `INJI-VCI-Client: ${className} | traceID: ${traceId} |`;
   }
 
-  static error(message, traceId) {
-    console.error(`${Logger.logTag} ${message} | traceID ${traceId}`);
+  static getLogTag() {
+    return Logger.logTag;
   }
 
-  static warn(message, traceId) {
-    console.warn(`${Logger.logTag} ${message} | traceID ${traceId}`);
+  static error(message) {
+    console.error(`${Logger.logTag} ${message}`);
+  }
+
+  static warn(message) {
+    console.warn(`${Logger.logTag} ${message}`);
   }
 }
 

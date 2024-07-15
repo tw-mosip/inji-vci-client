@@ -1,10 +1,10 @@
 const Logger =  require("../../src/common/Logger");
 
-test('should return log tag with library name and provided class name', () => {
-  const className = 'UtilTest';
-  const traceId = 'test-vci-client';
+test('should set and return log tag with library name and provided class name', () => {
   
-  const logTag = Logger.getLogTag(className,traceId);
+  Logger.setLogTag("AX123","UtilTest");
   
-  expect(logTag).toBe('INJI-VCI-Client : UtilTest | traceID test-vci-client');
+  const logTag = Logger.getLogTag();
+  
+  expect(logTag).toBe('INJI-VCI-Client: UtilTest | traceID: AX123 |');
 });

@@ -15,6 +15,7 @@ class CredentialRequestFactory {
         return new LdpVcCredentialRequest(accessToken, issuerMetaData, proof).constructRequest();
       default:
         const errorMessage = `Unsupported credential format type: ${credentialFormat}`;
+        Logger.error(errorMessage);
         throw new DownloadFailedException(errorMessage);
     }
   }
