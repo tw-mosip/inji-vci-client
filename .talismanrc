@@ -11,8 +11,8 @@ fileignoreconfig:
   checksum: 2812a7cc2cd30a37f35b201f2068e0f3dde4835bf8d3d7d8718edf293980a03d
 - filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/proof/jwt/JWTProof.kt
   checksum: 125f699a57272a3f4fef55e5d7afe6d7b0b4b046743a9f6d342df122b9c6930f
-- filename: .github/workflows/android-publish.yml
-  checksum: edbd3e2d8abebe83505f7dd14a6a21cc6ef5ee7cffc0dfe1db105aee88447a31
+- filename: .github/workflows/publish-maven-npm.yml
+  checksum: 5bd7ffa44eb74a67dd56f07d0d82ac8616aa8eeb177839841c135c4a519dbee1
 - filename: kotlin/vci-client/publish-artifact.gradle
   checksum: 0fd8f7b02c302182c4b4ad1a6ef77f31d5f6e0b560cf1d6c10d8dcb16a4600d9
 - filename: kotlin/vci-client/src/test/java/io/mosip/vciclient/proof/jwt/JWTProofHeaderTest.kt
