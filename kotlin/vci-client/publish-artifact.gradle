@@ -13,6 +13,10 @@ publishing {
         aar(MavenPublication) {
             pom {
                 withXml {
+                    asNode().appendNode('name', "Ini VCI Client")
+                    asNode().appendNode('url', "https://github.com/mosip/inji-vci-client")
+                    asNode().appendNode('description', "Kotlin library to implement OpenIdVCI specification")
+
                     def dependenciesNode = asNode().appendNode('dependencies')
                     project.configurations.implementation.allDependencies.each {
                         def dependencyNode = dependenciesNode.appendNode('dependency')
@@ -25,6 +29,13 @@ publishing {
                         appendNode('name', 'MIT')
                         appendNode('url', 'https://www.mit.edu/~amini/LICENSE.md')
                     }
+
+                   asNode().appendNode('scm').with {
+                        appendNode('connection', 'scm:git:git://github.com/mosip/inji-vci-client.git')
+                        appendNode('developerConnection', 'scm:git:ssh://github.com:mosip/inji-vci-client.git')
+                        appendNode('url', "https://github.com/mosip/inji-vci-client")
+                        appendNode('tag', "HEAD")
+                   }
 
                     asNode().appendNode('developers').appendNode('developer').with {
                         appendNode('id', 'Your developer ID')
