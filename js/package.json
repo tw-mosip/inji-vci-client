@@ -1,6 +1,6 @@
 {
   "name": "@mosip/inji-vci-client",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "JS library which can request for a credential from issuer. This module follows OpenID4VCI specification.",
   "main": "src/index.js",
   "type": "commonjs",
