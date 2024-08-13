@@ -2,16 +2,19 @@ package io.mosip.vciclient.credentialRequest.types
 
 import io.mosip.vciclient.constants.CredentialFormat
 import io.mosip.vciclient.credentialRequest.util.ValidatorResult
-import io.mosip.vciclient.proof.jwt.JWTProof
 import io.mosip.vciclient.dto.IssuerMetaData
+import io.mosip.vciclient.proof.jwt.JWTProof
 import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.internal.http2.Header
 import okhttp3.internal.toHeaderList
+import okio.Buffer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.net.URI
+
 
 class MsoMdocCredentialRequestTest {
     @Test
@@ -40,6 +43,10 @@ class MsoMdocCredentialRequestTest {
         )
         assertEquals(URI(credentialEndpoint), msoMdocCredentialRequest.url.toUri())
         assertEquals("POST", msoMdocCredentialRequest.method)
+        assertEquals(
+            "{\"format\":\"mso_mdoc\",\"doctype\":\"org.iso.18013.5.1.mDL\",\"claims\":{\"org.iso.18013.5.1\":{\"given_name\":{}}},\"proof\":{\"proof_type\":\"jwt\",\"jwt\":\"headerEncoded.payloadEncoded.signature\"}}",
+            getRequestBodyInJsonString(msoMdocCredentialRequest.body!!)
+        )
     }
 
     @Test
@@ -97,8 +104,15 @@ class MsoMdocCredentialRequestTest {
         assertFalse(validatorResult1.isValidated)
         assertFalse(validatorResult2.isValidated)
         assertFalse(validatorResult3.isValidated)
-        assertEquals(listOf("docType"),validatorResult1.invalidFields)
-        assertEquals(listOf("claims"),validatorResult2.invalidFields)
-        assertEquals(listOf("docType","claims"),validatorResult3.invalidFields)
+        assertEquals(listOf("docType"), validatorResult1.invalidFields)
+        assertEquals(listOf("claims"), validatorResult2.invalidFields)
+        assertEquals(listOf("docType", "claims"), validatorResult3.invalidFields)
+    }
+
+
+    private fun getRequestBodyInJsonString(requestBody: RequestBody): String {
+        val buffer = Buffer()
+        requestBody.writeTo(buffer)
+        return buffer.readUtf8()
     }
 }

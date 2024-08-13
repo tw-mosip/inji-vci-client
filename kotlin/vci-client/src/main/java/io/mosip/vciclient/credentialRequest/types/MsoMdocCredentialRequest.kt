@@ -1,8 +1,8 @@
 package io.mosip.vciclient.credentialRequest.types
 
-import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.credentialRequest.CredentialRequest
+import io.mosip.vciclient.credentialRequest.util.ValidatorResult
 import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.proof.Proof
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -10,7 +10,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
-class MdocCredentialRequest(
+class MsoMdocCredentialRequest(
     override val accessToken: String,
     override val issuerMetaData: IssuerMetaData,
     override val proof: Proof,
@@ -24,12 +24,25 @@ class MdocCredentialRequest(
             .build()
     }
 
+    override fun validateIssuerMetaData(): ValidatorResult {
+        val validatorResult = ValidatorResult()
+        if (issuerMetaData.docType.isNullOrEmpty()) {
+            validatorResult.addInvalidField("docType")
+            validatorResult.setIsInvalid()
+        }
+        if (issuerMetaData.claims.isNullOrEmpty()) {
+            validatorResult.addInvalidField("claims")
+            validatorResult.setIsInvalid()
+        }
+        return validatorResult
+    }
+
     private fun generateRequestBody(): RequestBody {
         val credentialRequestBody = MdocCredentialRequestBody(
-            claims = mapOf("issuerMetaData.doctype" to mapOf("issuerMetaData.claims" to {})),
+            claims = issuerMetaData.claims!!,
             proof = proof,
             format = this.issuerMetaData.credentialFormat.value,
-            doctype = "issuerMetaData.doctype"
+            doctype = issuerMetaData.docType!!
         ).toJson()
         return credentialRequestBody
             .toRequestBody("application/json".toMediaTypeOrNull())
