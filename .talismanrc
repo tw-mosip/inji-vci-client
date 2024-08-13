@@ -30,5 +30,5 @@ fileignoreconfig:
 - filename: .github/workflows/push-trigger.yml
   checksum: 34101f249b8fd7794a845193b1b5075111df56efa2e39e670302c6110e6444fa
 - filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/credentialResponse/types/mdocVc/MdocVcCredentialResponse.kt
-  checksum: c0f4f56a5d094999e87b1a6173e4e8049b3f2a45b6a44bd960a2a3cef9448bc5
+  checksum: 77a719bd1632b006eb1d9f744296452d4b20f780de419815b4b6fbc3d5a236e7
 version: ""

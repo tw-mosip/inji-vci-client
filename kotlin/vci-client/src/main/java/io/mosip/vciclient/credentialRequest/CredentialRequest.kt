@@ -1,5 +1,6 @@
 package io.mosip.vciclient.credentialRequest
 
+import io.mosip.vciclient.credentialRequest.util.ValidatorResult
 import io.mosip.vciclient.proof.Proof
 import io.mosip.vciclient.dto.IssuerMetaData
 import okhttp3.Request
@@ -10,4 +11,5 @@ interface CredentialRequest {
     val proof: Proof
 
     fun constructRequest(): Request
+    fun validateIssuerMetaData(): ValidatorResult
 }

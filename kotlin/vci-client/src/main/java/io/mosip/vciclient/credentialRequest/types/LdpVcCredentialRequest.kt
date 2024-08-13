@@ -3,6 +3,7 @@ package io.mosip.vciclient.credentialRequest.types
 import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.credentialRequest.CredentialRequest
+import io.mosip.vciclient.credentialRequest.util.ValidatorResult
 import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.proof.Proof
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -24,9 +25,18 @@ class LdpVcCredentialRequest(
             .build()
     }
 
+    override fun validateIssuerMetaData(): ValidatorResult {
+        val validatorResult = ValidatorResult()
+        if(issuerMetaData.credentialType.isNullOrEmpty()){
+            validatorResult.addInvalidField("credentialType")
+            validatorResult.setIsInvalid()
+        }
+        return validatorResult
+    }
+
     private fun generateRequestBody(): RequestBody {
         val credentialRequestBody = CredentialRequestBody(
-            credentialDefinition = CredentialDefinition(type = this.issuerMetaData.credentialType),
+            credentialDefinition = CredentialDefinition(type = this.issuerMetaData.credentialType!!),
             proof = proof,
             format = this.issuerMetaData.credentialFormat.value
         ).toJson()
