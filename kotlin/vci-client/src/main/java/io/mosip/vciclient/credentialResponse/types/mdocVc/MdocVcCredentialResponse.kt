@@ -3,24 +3,22 @@ package io.mosip.vciclient.credentialResponse.types.mdocVc
 
 import android.util.Base64
 import co.nstant.`in`.cbor.CborDecoder
-import co.nstant.`in`.cbor.model.ByteString
 import co.nstant.`in`.cbor.model.DataItem
 import co.nstant.`in`.cbor.model.MajorType
-import co.nstant.`in`.cbor.model.NegativeInteger
 import co.nstant.`in`.cbor.model.Special
+import co.nstant.`in`.cbor.model.UnicodeString
+import co.nstant.`in`.cbor.model.UnsignedInteger
 import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.credentialResponse.CredentialResponse
-import io.mosip.vciclient.credentialResponse.types.ldpVc.largeLog
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.io.ByteArrayInputStream
 import kotlin.collections.Map
 import kotlin.collections.forEach
@@ -41,6 +39,7 @@ private const val MSO = "mso"
 
 //TODO: Move parser to the factory
 //TODO: Move parser to the factory
+@Serializable
 class MdocParser {
 
 
@@ -65,12 +64,10 @@ class MdocParser {
                             run {
                                 println("cbor id -> $identifier")
                                 if (identifier.equals(DOCTYPE)) {
-                                    put(identifier, parseDocType(cbor[identifier] as CborMap))
+                                    put(identifier, parse(cbor[identifier]))
                                 } else if (identifier.equals(NAMESPACES)) {
                                     put(identifier, parseArray(cbor[identifier] as CborArray))
                                 } else if (identifier.equals(ISSUER_SIGNED)) {
-                                    println("parseIssuerSignedNamespaces(cbor[\"nameSpaces\"] ${cbor[ISSUER_SIGNED][NAMESPACES].majorType}")
-                                    println("parseIssuerSignedNamespaces(cbor[\"nameSpaces\"] ${cbor[ISSUER_SIGNED][NAMESPACES]}")
                                     put(ISSUER_SIGNED, buildJsonObject {
                                         put(
                                             NAMESPACES,
@@ -78,11 +75,13 @@ class MdocParser {
                                         )
                                         put(
                                             ISSUER_AUTH,
-                                            parseIssuerSignedIssuerAuth(cbor[ISSUER_SIGNED][ISSUER_AUTH] as CborMap)
+                                            parse(cbor[ISSUER_SIGNED][ISSUER_AUTH])
                                         )
                                     })
                                 } else if (identifier.equals(MSO)) {
                                     put(identifier, parseMap(cbor[identifier] as CborMap))
+                                } else {
+                                    put(identifier, parse(cbor[identifier]))
                                 }
                             }
                         }
@@ -95,14 +94,7 @@ class MdocParser {
         private fun parseArray(cbor: CborArray): JsonArray {
             val jsonArray = buildJsonArray {
                 cbor.dataItems.forEach { arrayElement ->
-                    println("array el major ${arrayElement.majorType}")
-                    if (arrayElement.majorType == MajorType.UNICODE_STRING)
-                        add(arrayElement.toString())
-                    else if (arrayElement.majorType == MajorType.MAP) {
-                        println("majorType = ${arrayElement.majorType}")
-                        add(parseMap(arrayElement as CborMap))
-                    }
-
+                    add(parse(arrayElement))
                 }
             }
             return jsonArray
@@ -122,37 +114,15 @@ class MdocParser {
                     decoded.keys.forEach { key ->
                         val element = decoded[key]
                         run {
-                            if (element.majorType == MajorType.UNICODE_STRING || element.majorType == MajorType.BYTE_STRING || element.majorType == MajorType.UNSIGNED_INTEGER)
-                                put(key.toString(), element.toString())
-                            else if (element.majorType == MajorType.ARRAY) {
-                                println("majorType = ${element.majorType}")
-                                put(key.toString(), parseArray(decoded[key] as CborArray))
-                            }
+                            println("majorType = ${element.majorType}")
+                            put(key.toString(), parse(element))
                         }
                     }
                 } else {
                     cbor.keys.forEach { key ->
                         val element = cbor[key]
                         run {
-                            when (element.majorType) {
-                                MajorType.UNICODE_STRING, MajorType.BYTE_STRING, MajorType.UNSIGNED_INTEGER -> put(
-                                    key.toString(),
-                                    element.toString()
-                                )
-
-                                MajorType.ARRAY -> {
-                                    println("majorType = ${element.majorType}")
-                                    put(key.toString(), parseArray(cbor[key] as CborArray))
-                                }
-
-                                MajorType.MAP -> {
-                                    put(key.toString(), parseMap(cbor[key] as CborMap))
-                                }
-
-                                else -> {
-                                    put(key.toString(), parse(cbor[key]))
-                                }
-                            }
+                            put(key.toString(), parse(element))
                         }
                     }
                 }
@@ -171,19 +141,29 @@ class MdocParser {
                 }
 
                 MajorType.SPECIAL -> {
-                    return JsonPrimitive(cbor.toString())
+                    return JsonPrimitive((cbor as Special).toString())
                 }
 
                 MajorType.BYTE_STRING -> {
-                    return JsonPrimitive(cbor.toString())
+                    try {
+                        val decoded =
+                            CborDecoder(ByteArrayInputStream((cbor as CborByteString).bytes)).decode()
+
+                        return parse(decoded[0])
+                    } catch (e: Exception) {
+                        return JsonPrimitive(String((cbor as CborByteString).bytes))
+                    } catch (e: OutOfMemoryError) {
+                        return JsonPrimitive(String((cbor as CborByteString).bytes))
+
+                    }
                 }
 
                 MajorType.UNSIGNED_INTEGER -> {
-                    return JsonPrimitive(cbor.toString())
+                    return JsonPrimitive((cbor as UnsignedInteger).toString())
                 }
 
                 MajorType.UNICODE_STRING -> {
-                    return JsonPrimitive(cbor.toString())
+                    return JsonPrimitive((cbor as UnicodeString).toString())
                 }
 
                 else -> return JsonPrimitive(null)
@@ -206,122 +186,6 @@ class MdocParser {
             return jsonObject
         }
 
-        private fun parseIssuerSignedIssuerAuth(cbor: CborMap): JsonObject {
-            println("issuer auth")
-            val keys = cbor.keys
-            val jsonObject: JsonObject = buildJsonObject {
-                keys.forEach { key ->
-                    run {
-                        println(cbor[key].majorType)
-                        when (cbor[key].majorType) {
-                            MajorType.ARRAY -> {
-                                put(key.toString(), parseArray(cbor[key] as CborArray))
-                            }
-
-                            MajorType.BYTE_STRING -> {
-                                put(key.toString(), (cbor[key] as ByteString).toString())
-                            }
-
-                            MajorType.NEGATIVE_INTEGER -> {
-                                put(key.toString(), (cbor[key] as NegativeInteger).toString())
-                            }
-
-                            MajorType.SPECIAL -> {
-                                put(key.toString(), (cbor[key] as Special).toString())
-                            }
-
-                            else -> {
-                                put(key.toString(), parse(cbor[key]))
-                            }
-                        }
-                    }
-                }
-            }
-            println("issuer signed issuer auth json - $jsonObject")
-            return jsonObject
-        }
-
-        private fun parseDocType(cbor: CborMap): JsonObject {
-            val docType = buildJsonObject {
-                cbor.keys.forEach { key ->
-                    if (key.toString() == "value")
-                        put(key.toString(), cbor[key].toString())
-                }
-            }
-            return docType
-        }
-
-
-        private fun parseCBOR(cbor: DataItem): Any {
-            println("cbor -> ${cbor.majorType}")
-            when (cbor.majorType) {
-                MajorType.ARRAY -> {
-                    return parseCBOR(cbor as CborArray)
-                }
-
-                MajorType.MAP -> {
-                    println("Map cbor type -> ${cbor.majorType}")
-                    return parseCBOR(cbor as CborMap)
-                }
-
-                MajorType.UNICODE_STRING -> {
-                    return cbor.toString()
-                }
-
-                MajorType.INVALID -> {}
-
-                MajorType.UNSIGNED_INTEGER -> {}
-
-                MajorType.NEGATIVE_INTEGER -> {}
-
-                MajorType.BYTE_STRING -> {}
-
-                MajorType.TAG -> {}
-
-                MajorType.SPECIAL -> {}
-            }
-            return cbor.toString()
-        }
-
-        private fun parseCBOR(cbor: CborMap): JsonObject {
-            println("parsing map")
-            var toBeParsed = cbor
-            println("assigned")
-            println("is it encodsed -> ${cbor.keys.toString().contains("type")}")
-            if (cbor.keys.toString().contains("type") && cbor["type"].equals("encodedCbor")) {
-                val decoded =
-                    CborDecoder(ByteArrayInputStream((cbor["value"] as CborByteString).bytes)).decode()
-                toBeParsed = (decoded[0] as CborMap)
-            }
-            val parsedMap = buildJsonObject {
-                toBeParsed.keys.forEach { key ->
-                    println("key -> $key")
-                    val identifier: String = key.toString()
-                    println("identifier -> $identifier")
-                    run {
-                        var cborValue = parseCBOR(toBeParsed[identifier])
-                        if (cborValue !is String) {
-                            cborValue = cborValue.toString()
-                        }
-                        largeLog(logTag, cborValue)
-                        put(
-                            identifier,
-                            cborValue
-                        )
-                    }
-                }
-            }
-            return parsedMap
-        }
-
-        private fun parseCBOR(cbor: CborArray): JsonObject {
-            return buildJsonObject {
-                cbor.dataItems.forEach { arrayValue: DataItem ->
-                    parseCBOR(arrayValue)
-                }
-            }
-        }
-
     }
 
 
@@ -340,10 +204,10 @@ operator fun DataItem.get(index: Int): DataItem {
 }
 
 data class MdocCredential(
-    @SerializedName("validityInfo")
-    val validityInfo: Map<String, Any>,
-    @SerializedName("credentialSubject")
-    val credentialSubject: Map<String, Any>,
+    @SerializedName("docType")
+    val docType: Map<String, Any>,
+    @SerializedName("issuerSigned")
+    val issuerSigned: Map<String, Any>,
 ) : CredentialResponse {
     override fun toJsonString(): String {
         return JsonUtils.serialize(this)
