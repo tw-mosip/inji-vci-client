@@ -57,10 +57,8 @@ dependencies {
 
     //Build Json Object
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.3")
 
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-    testImplementation ("androidx.test:core:1.4.0")
     testImplementation("io.mockk:mockk:1.13.10")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20231013")
