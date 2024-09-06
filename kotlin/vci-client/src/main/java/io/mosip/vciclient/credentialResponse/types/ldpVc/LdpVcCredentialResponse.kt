@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.credentialResponse.CredentialResponse
 
-data class LdpVcCredentialResponse(private val format: String, private val credential: Credential) : CredentialResponse {
+data class LdpVcCredentialResponse(private val credential: Credential) : CredentialResponse {
     override fun toJsonString(): String {
         return JsonUtils.serialize(this)
     }
@@ -14,15 +14,13 @@ data class LdpVcCredentialResponse(private val format: String, private val crede
 
         other as LdpVcCredentialResponse
 
-        if (format != other.format) return false
         if (credential != other.credential) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = format.hashCode()
-        result = 31 * result + credential.hashCode()
+        var result = 31  + credential.hashCode()
         return result
     }
 }
@@ -36,6 +34,7 @@ data class Credential(
     val context: ArrayList<Any>,
     @SerializedName("issuanceDate")
     val issuanceDate: String,
+    @SerializedName("expirationDate")
     val expirationDate: String?,
     @SerializedName("credentialSubject")
     val credentialSubject: Map<String, Any>
@@ -44,6 +43,7 @@ data class Credential(
 data class CredentialProof(
     val type: String,
     val created: String,
+    @SerializedName("proofValue")
     val proofValue: String?,
     @SerializedName("proofPurpose")
     val proofPurpose: String,

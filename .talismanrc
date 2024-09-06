@@ -28,7 +28,13 @@ fileignoreconfig:
 - filename: kotlin/readme.md
   checksum: fa94864a42be5559b42c00cfde2e8c9fc20e966dc96df8cfeac468843abf10ed
 - filename: .github/workflows/push-trigger.yml
-  checksum: 34101f249b8fd7794a845193b1b5075111df56efa2e39e670302c6110e6444fa
-- filename: kotlin/vci-client/src/main/java/io/mosip/vciclient/credentialResponse/types/mdocVc/MdocVcCredentialResponse.kt
-  checksum: 77a719bd1632b006eb1d9f744296452d4b20f780de419815b4b6fbc3d5a236e7
+  checksum: 0be23c82aeb8f6746b200645f64b4df81384ab7a61214b805607d0d2e2a35649
+- filename: js/yarn.lock
+  checksum: 93ff5a7a86aca9331789ba087c0288bfce3c708259bc178cc00cb0d347cffd6d
+- filename: js/package-lock.json
+  checksum: a092082d3929fedf476a9cbfed346b1f52f78353440f70c932488379dd2637d0
+- filename: js/example/package-lock.json
+  checksum: 5f658cf32ba71bd5664c1dfd2fd09113f62abdd50ac4682ad4c320e09f783942
+- filename: .github/workflows/publish-maven-npm.yml
+  checksum: 5f43cf25702e703658b0cc0a38ec6089631b3e8e86bd4a923658536389cf296d
 version: ""

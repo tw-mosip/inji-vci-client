@@ -1,0 +1,2 @@
+exports.EMPTY_RESPONSE = "";
+exports.NETWORK_TIMEOUT = "ECONNABORTED";
