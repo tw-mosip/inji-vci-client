@@ -15,7 +15,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.net.URI
 
-
 class MsoMdocCredentialRequestTest {
     @Test
     fun `should create JSON in expected format`() {
@@ -70,8 +69,8 @@ class MsoMdocCredentialRequestTest {
     }
 
     @Test
-    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata details are not available`() {
-        val validatorResult1: ValidatorResult = MsoMdocCredentialRequest(
+    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata detail - docType is not available`() {
+        val validatorResult: ValidatorResult = MsoMdocCredentialRequest(
             "accessToken",
             IssuerMetaData(
                 "/credentialAudience",
@@ -81,7 +80,14 @@ class MsoMdocCredentialRequestTest {
                 credentialFormat = CredentialFormat.MSO_MDOC
             ), JWTProof("headerEncoded.payloadEncoded.signature")
         ).validateIssuerMetaData()
-        val validatorResult2: ValidatorResult = MsoMdocCredentialRequest(
+
+        assertFalse(validatorResult.isValidated)
+        assertEquals(listOf("docType"), validatorResult.invalidFields)
+    }
+
+    @Test
+    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata detail - claims is not available`() {
+        val validatorResult: ValidatorResult = MsoMdocCredentialRequest(
             "accessToken",
             IssuerMetaData(
                 "/credentialAudience",
@@ -91,7 +97,14 @@ class MsoMdocCredentialRequestTest {
                 credentialFormat = CredentialFormat.MSO_MDOC
             ), JWTProof("headerEncoded.payloadEncoded.signature")
         ).validateIssuerMetaData()
-        val validatorResult3: ValidatorResult = MsoMdocCredentialRequest(
+
+        assertFalse(validatorResult.isValidated)
+        assertEquals(listOf("claims"), validatorResult.invalidFields)
+    }
+
+    @Test
+    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata details - claims, docType are not available`() {
+        val validatorResult: ValidatorResult = MsoMdocCredentialRequest(
             "accessToken",
             IssuerMetaData(
                 "/credentialAudience",
@@ -101,12 +114,8 @@ class MsoMdocCredentialRequestTest {
             ), JWTProof("headerEncoded.payloadEncoded.signature")
         ).validateIssuerMetaData()
 
-        assertFalse(validatorResult1.isValidated)
-        assertFalse(validatorResult2.isValidated)
-        assertFalse(validatorResult3.isValidated)
-        assertEquals(listOf("docType"), validatorResult1.invalidFields)
-        assertEquals(listOf("claims"), validatorResult2.invalidFields)
-        assertEquals(listOf("docType", "claims"), validatorResult3.invalidFields)
+        assertFalse(validatorResult.isValidated)
+        assertEquals(listOf("docType", "claims"), validatorResult.invalidFields)
     }
 
 
@@ -115,4 +124,5 @@ class MsoMdocCredentialRequestTest {
         requestBody.writeTo(buffer)
         return buffer.readUtf8()
     }
+
 }
