@@ -4,9 +4,9 @@ import android.os.Build
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mosip.vciclient.common.BuildConfig
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.jupiter.api.Assertions.assertEquals
 
 
 class MsoMdocVcCredentialResponseFactoryTest {
