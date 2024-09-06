@@ -15,7 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.net.URI
 
-class MsoMdocCredentialRequestTest {
+class MsoMsoMdocCredentialRequestTest {
     @Test
     fun `should create JSON in expected format`() {
         val credentialEndpoint = "https://credentialendpoint/"

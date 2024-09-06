@@ -1,4 +1,4 @@
-package io.mosip.vciclient.credentialResponse.types.mdocVc
+package io.mosip.vciclient.credentialResponse.types.msoMdocVc
 
 import co.nstant.`in`.cbor.CborDecoder
 import co.nstant.`in`.cbor.model.DataItem
@@ -23,15 +23,15 @@ import co.nstant.`in`.cbor.model.ByteString as CborByteString
 import co.nstant.`in`.cbor.model.Map as CborMap
 import co.nstant.`in`.cbor.model.UnicodeString as CborUnicodeString
 
-class MdocVcCredentialResponseFactory : CredentialResponseFactory {
+class MsoMdocVcCredentialResponseFactory : CredentialResponseFactory {
     override fun constructResponse(response: String): CredentialResponse {
         val deserializedResponse = JsonUtils.deserialize(response, HashMap::class.java)
         val mdocJson: JsonObject = decodeAndParseMDocData(
             deserializedResponse?.get("credential")
                 .toString()
         )
-        val mdocCredential = MdocCredential(credential = mdocJson)
-        return mdocCredential
+        val msoMdocCredential = MsoMdocCredential(credential = mdocJson)
+        return msoMdocCredential
     }
 
     private fun decodeAndParseMDocData(base64EncodedUrl: String): JsonObject {

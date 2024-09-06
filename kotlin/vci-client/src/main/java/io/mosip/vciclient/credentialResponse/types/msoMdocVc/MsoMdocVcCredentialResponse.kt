@@ -1,11 +1,11 @@
-package io.mosip.vciclient.credentialResponse.types.mdocVc
+package io.mosip.vciclient.credentialResponse.types.msoMdocVc
 
 
 import io.mosip.vciclient.credentialResponse.CredentialResponse
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 
-data class MdocCredential(
+data class MsoMdocCredential(
     val credential: JsonObject,
 ) : CredentialResponse {
     override fun toJsonString(): String {

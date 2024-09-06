@@ -2,7 +2,7 @@ package io.mosip.vciclient.credentialResponse
 
 import io.mosip.vciclient.constants.CredentialFormat
 import io.mosip.vciclient.credentialResponse.types.ldpVc.LdpVcCredentialResponseFactory
-import io.mosip.vciclient.credentialResponse.types.mdocVc.MdocVcCredentialResponseFactory
+import io.mosip.vciclient.credentialResponse.types.msoMdocVc.MsoMdocVcCredentialResponseFactory
 
 interface CredentialResponseFactory {
     companion object {
@@ -15,7 +15,7 @@ interface CredentialResponseFactory {
                     response
                 )
 
-                CredentialFormat.MSO_MDOC -> return MdocVcCredentialResponseFactory().constructResponse(
+                CredentialFormat.MSO_MDOC -> return MsoMdocVcCredentialResponseFactory().constructResponse(
                     response
                 )
             }
