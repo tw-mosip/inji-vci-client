@@ -26,7 +26,7 @@ class MsoMsoMdocCredentialRequestTest {
                 "/credentialAudience",
                 credentialEndpoint,
                 30000,
-                docType = "org.iso.18013.5.1.mDL",
+                doctype = "org.iso.18013.5.1.mDL",
                 claims = mapOf("org.iso.18013.5.1" to mapOf("given_name" to emptyMap<String, Any>())),
                 credentialFormat = CredentialFormat.MSO_MDOC
             ), JWTProof("headerEncoded.payloadEncoded.signature")
@@ -56,7 +56,7 @@ class MsoMsoMdocCredentialRequestTest {
                 "/credentialAudience",
                 "https://credentialendpoint/",
                 30000,
-                docType = "org.iso.18013.5.1.mDL",
+                doctype = "org.iso.18013.5.1.mDL",
                 claims = mapOf("org.iso.18013.5.1" to mapOf("given_name" to emptyMap<String, Any>())),
                 credentialFormat = CredentialFormat.MSO_MDOC
             ), JWTProof("headerEncoded.payloadEncoded.signature")
@@ -69,7 +69,7 @@ class MsoMsoMdocCredentialRequestTest {
     }
 
     @Test
-    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata detail - docType is not available`() {
+    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata detail - doctype is not available`() {
         val validatorResult: ValidatorResult = MsoMdocCredentialRequest(
             "accessToken",
             IssuerMetaData(
@@ -82,7 +82,7 @@ class MsoMsoMdocCredentialRequestTest {
         ).validateIssuerMetaData()
 
         assertFalse(validatorResult.isValidated)
-        assertEquals(listOf("docType"), validatorResult.invalidFields)
+        assertEquals(listOf("doctype"), validatorResult.invalidFields)
     }
 
     @Test
@@ -93,7 +93,7 @@ class MsoMsoMdocCredentialRequestTest {
                 "/credentialAudience",
                 "https://credentialendpoint/",
                 30000,
-                docType = "org.iso.18013.5.1.mDL",
+                doctype = "org.iso.18013.5.1.mDL",
                 credentialFormat = CredentialFormat.MSO_MDOC
             ), JWTProof("headerEncoded.payloadEncoded.signature")
         ).validateIssuerMetaData()
@@ -103,7 +103,7 @@ class MsoMsoMdocCredentialRequestTest {
     }
 
     @Test
-    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata details - claims, docType are not available`() {
+    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata details - claims, doctype are not available`() {
         val validatorResult: ValidatorResult = MsoMdocCredentialRequest(
             "accessToken",
             IssuerMetaData(
@@ -115,7 +115,7 @@ class MsoMsoMdocCredentialRequestTest {
         ).validateIssuerMetaData()
 
         assertFalse(validatorResult.isValidated)
-        assertEquals(listOf("docType", "claims"), validatorResult.invalidFields)
+        assertEquals(listOf("doctype", "claims"), validatorResult.invalidFields)
     }
 
 

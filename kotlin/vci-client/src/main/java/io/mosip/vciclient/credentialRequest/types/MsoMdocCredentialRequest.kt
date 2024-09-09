@@ -26,8 +26,8 @@ class MsoMdocCredentialRequest(
 
     override fun validateIssuerMetaData(): ValidatorResult {
         val validatorResult = ValidatorResult()
-        if (issuerMetaData.docType.isNullOrEmpty()) {
-            validatorResult.addInvalidField("docType")
+        if (issuerMetaData.doctype.isNullOrEmpty()) {
+            validatorResult.addInvalidField("doctype")
             validatorResult.setIsInvalid()
         }
         if (issuerMetaData.claims.isNullOrEmpty()) {
@@ -42,7 +42,7 @@ class MsoMdocCredentialRequest(
             claims = issuerMetaData.claims!!,
             proof = proof,
             format = this.issuerMetaData.credentialFormat.value,
-            doctype = issuerMetaData.docType!!
+            doctype = issuerMetaData.doctype!!
         ).toJson()
         return credentialRequestBody
             .toRequestBody("application/json".toMediaTypeOrNull())
