@@ -29,7 +29,6 @@ class LdpVcCredentialRequest(
         val validatorResult = ValidatorResult()
         if(issuerMetaData.credentialType.isNullOrEmpty()){
             validatorResult.addInvalidField("credentialType")
-            validatorResult.setIsInvalid()
         }
         return validatorResult
     }

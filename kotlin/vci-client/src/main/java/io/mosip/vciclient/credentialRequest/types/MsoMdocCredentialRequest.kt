@@ -28,11 +28,9 @@ class MsoMdocCredentialRequest(
         val validatorResult = ValidatorResult()
         if (issuerMetaData.doctype.isNullOrEmpty()) {
             validatorResult.addInvalidField("doctype")
-            validatorResult.setIsInvalid()
         }
         if (issuerMetaData.claims.isNullOrEmpty()) {
             validatorResult.addInvalidField("claims")
-            validatorResult.setIsInvalid()
         }
         return validatorResult
     }
