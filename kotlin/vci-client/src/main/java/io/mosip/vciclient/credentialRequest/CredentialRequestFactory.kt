@@ -41,7 +41,7 @@ class CredentialRequestFactory {
 
         private fun validateAndConstructRequest(credentialRequest: CredentialRequest): Request {
             val issuerMetaDataValidatorResult = credentialRequest.validateIssuerMetaData()
-            if (issuerMetaDataValidatorResult.isValidated)
+            if (issuerMetaDataValidatorResult.isValid)
                 return credentialRequest.constructRequest()
             throw InvalidDataProvidedException(issuerMetaDataValidatorResult.invalidFields.toString())
         }

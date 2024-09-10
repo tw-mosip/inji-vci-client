@@ -49,7 +49,7 @@ class MsoMsoMdocCredentialRequestTest {
     }
 
     @Test
-    fun `should return isValidated as true when required issuerMetadata details are available`() {
+    fun `should return isValid as true when required issuerMetadata details are available`() {
         val msoMdocCredentialRequest = MsoMdocCredentialRequest(
             "accessToken",
             IssuerMetaData(
@@ -64,12 +64,12 @@ class MsoMsoMdocCredentialRequestTest {
 
         val validatorResult: ValidatorResult = msoMdocCredentialRequest.validateIssuerMetaData()
 
-        assertTrue(validatorResult.isValidated)
+        assertTrue(validatorResult.isValid)
         assertTrue(validatorResult.invalidFields.isEmpty())
     }
 
     @Test
-    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata detail - doctype is not available`() {
+    fun `should return validator result with isValid as false & invalidFields when required issuerMetadata detail - doctype is not available`() {
         val validatorResult: ValidatorResult = MsoMdocCredentialRequest(
             "accessToken",
             IssuerMetaData(
@@ -81,12 +81,12 @@ class MsoMsoMdocCredentialRequestTest {
             ), JWTProof("headerEncoded.payloadEncoded.signature")
         ).validateIssuerMetaData()
 
-        assertFalse(validatorResult.isValidated)
+        assertFalse(validatorResult.isValid)
         assertEquals(listOf("doctype"), validatorResult.invalidFields)
     }
 
     @Test
-    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata detail - claims is not available`() {
+    fun `should return validator result with isValid as false & invalidFields when required issuerMetadata detail - claims is not available`() {
         val validatorResult: ValidatorResult = MsoMdocCredentialRequest(
             "accessToken",
             IssuerMetaData(
@@ -98,12 +98,12 @@ class MsoMsoMdocCredentialRequestTest {
             ), JWTProof("headerEncoded.payloadEncoded.signature")
         ).validateIssuerMetaData()
 
-        assertFalse(validatorResult.isValidated)
+        assertFalse(validatorResult.isValid)
         assertEquals(listOf("claims"), validatorResult.invalidFields)
     }
 
     @Test
-    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata details - claims, doctype are not available`() {
+    fun `should return validator result with isValid as false & invalidFields when required issuerMetadata details - claims, doctype are not available`() {
         val validatorResult: ValidatorResult = MsoMdocCredentialRequest(
             "accessToken",
             IssuerMetaData(
@@ -114,7 +114,7 @@ class MsoMsoMdocCredentialRequestTest {
             ), JWTProof("headerEncoded.payloadEncoded.signature")
         ).validateIssuerMetaData()
 
-        assertFalse(validatorResult.isValidated)
+        assertFalse(validatorResult.isValid)
         assertEquals(listOf("doctype", "claims"), validatorResult.invalidFields)
     }
 

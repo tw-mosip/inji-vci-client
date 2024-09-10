@@ -42,7 +42,7 @@ class LdpVcCredentialRequestTest {
     }
 
     @Test
-    fun `should return isValidated as true when required issuerMetadata details are available`() {
+    fun `should return isValid as true when required issuerMetadata details are available`() {
 
         val ldpVcRequest: LdpVcCredentialRequest = LdpVcCredentialRequest(
             "accessToken",
@@ -57,12 +57,12 @@ class LdpVcCredentialRequestTest {
 
         val validatorResult: ValidatorResult = ldpVcRequest.validateIssuerMetaData()
 
-        assertTrue(validatorResult.isValidated)
+        assertTrue(validatorResult.isValid)
         assertTrue(validatorResult.invalidFields.isEmpty())
     }
 
     @Test
-    fun `should return validator result with isValidated as false & invalidFields when required issuerMetadata details are not available`() {
+    fun `should return validator result with isValid as false & invalidFields when required issuerMetadata details are not available`() {
 
         val ldpVcRequest = LdpVcCredentialRequest(
             "accessToken",
@@ -76,7 +76,7 @@ class LdpVcCredentialRequestTest {
 
         val validatorResult: ValidatorResult = ldpVcRequest.validateIssuerMetaData()
 
-        assertFalse(validatorResult.isValidated)
+        assertFalse(validatorResult.isValid)
         assertTrue(validatorResult.invalidFields.containsAll(listOf("credentialType")))
     }
 }
