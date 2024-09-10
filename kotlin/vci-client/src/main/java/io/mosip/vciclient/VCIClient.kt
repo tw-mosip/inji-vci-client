@@ -61,7 +61,6 @@ class VCIClient(traceabilityId: String) {
                 }
                 throw DownloadFailedException(response.message)
             }
-
             val responseBody: String =
                 response.body?.byteStream()?.bufferedReader().use { it?.readText() } ?: ""
             Log.d(logTag, "credential downloaded successfully!")

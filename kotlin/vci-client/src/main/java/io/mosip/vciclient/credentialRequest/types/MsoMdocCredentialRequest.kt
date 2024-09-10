@@ -1,6 +1,5 @@
 package io.mosip.vciclient.credentialRequest.types
 
-import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.credentialRequest.CredentialRequest
 import io.mosip.vciclient.credentialRequest.util.ValidatorResult
@@ -11,7 +10,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
-class LdpVcCredentialRequest(
+class MsoMdocCredentialRequest(
     override val accessToken: String,
     override val issuerMetaData: IssuerMetaData,
     override val proof: Proof,
@@ -27,35 +26,34 @@ class LdpVcCredentialRequest(
 
     override fun validateIssuerMetaData(): ValidatorResult {
         val validatorResult = ValidatorResult()
-        if(issuerMetaData.credentialType.isNullOrEmpty()){
-            validatorResult.addInvalidField("credentialType")
+        if (issuerMetaData.doctype.isNullOrEmpty()) {
+            validatorResult.addInvalidField("doctype")
+        }
+        if (issuerMetaData.claims.isNullOrEmpty()) {
+            validatorResult.addInvalidField("claims")
         }
         return validatorResult
     }
 
     private fun generateRequestBody(): RequestBody {
-        val credentialRequestBody = CredentialRequestBody(
-            credentialDefinition = CredentialDefinition(type = this.issuerMetaData.credentialType!!),
+        val credentialRequestBody = MdocCredentialRequestBody(
+            claims = issuerMetaData.claims!!,
             proof = proof,
-            format = this.issuerMetaData.credentialFormat.value
+            format = this.issuerMetaData.credentialFormat.value,
+            doctype = issuerMetaData.doctype!!
         ).toJson()
         return credentialRequestBody
             .toRequestBody("application/json".toMediaTypeOrNull())
     }
 }
 
-private data class CredentialRequestBody(
+private data class MdocCredentialRequestBody(
     val format: String,
-    val credentialDefinition: CredentialDefinition,
+    val doctype: String,
+    val claims: Map<String, Any>,
     val proof: Proof,
 ) {
     fun toJson(): String {
         return JsonUtils.serialize(this)
     }
 }
-
-private data class CredentialDefinition(
-    @SerializedName("@context")
-    val context: Array<String>? = arrayOf("https://www.w3.org/2018/credentials/v1"),
-    val type: Array<String>,
-)
