@@ -10,12 +10,12 @@ interface CredentialResponseFactory {
             formatType: CredentialFormat,
             response: String,
         ): CredentialResponse {
-            when (formatType) {
-                CredentialFormat.LDP_VC -> return LdpVcCredentialResponseFactory().constructResponse(
+            return when (formatType) {
+                CredentialFormat.LDP_VC -> LdpVcCredentialResponseFactory().constructResponse(
                     response
                 )
 
-                CredentialFormat.MSO_MDOC -> return MsoMdocVcCredentialResponseFactory().constructResponse(
+                CredentialFormat.MSO_MDOC -> MsoMdocVcCredentialResponseFactory().constructResponse(
                     response
                 )
             }

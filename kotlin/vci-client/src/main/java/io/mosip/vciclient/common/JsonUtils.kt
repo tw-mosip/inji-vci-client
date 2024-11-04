@@ -12,6 +12,7 @@ class JsonUtils {
     companion object {
         private val gsonForSerialization: Gson = GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .disableHtmlEscaping()
             .create()
 
         private val gsonForDeserialization: Gson = GsonBuilder()
