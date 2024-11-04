@@ -9,7 +9,7 @@ Accepted
 ## Context
 This document describes about the decision made regarding the output (Credential response) of the requestCredential method
 
-In case of mso_mdoc format VC, issuer provides the credential in base 64 encoded CBOR data & in our inji-vci-client library the credential response from the issuer is decoded and 
+In case of mso_mdoc format VC, issuer provides the credential in base 64 encoded CBOR data & in inji-vci-client library the credential response from the issuer is decoded and 
 converted into JSON format (processed JSON) for the consumer app to perform rendering. If the consumer app, wants to perform any other processes which involves CBOR format conversion it becomes a tedious process to 
 construct back the CBOR from the processed JSON.
 
