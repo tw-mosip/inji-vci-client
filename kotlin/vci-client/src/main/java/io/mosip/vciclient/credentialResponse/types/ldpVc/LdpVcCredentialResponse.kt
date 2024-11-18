@@ -37,7 +37,8 @@ data class Credential(
     @SerializedName("expirationDate")
     val expirationDate: String?,
     @SerializedName("credentialSubject")
-    val credentialSubject: Map<String, Any>
+    val credentialSubject: Map<String, Any>,
+    val holder: Holder
 )
 
 data class CredentialProof(
@@ -51,3 +52,7 @@ data class CredentialProof(
     val verificationMethod: String,
     val jws: String?
 )
+
+data class Holder {
+    val id: string
+}
