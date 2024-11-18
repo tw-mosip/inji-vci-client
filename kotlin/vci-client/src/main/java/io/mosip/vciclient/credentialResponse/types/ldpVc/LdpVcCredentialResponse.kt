@@ -53,6 +53,4 @@ data class CredentialProof(
     val jws: String?
 )
 
-data class Holder {
-    val id: string
-}
+data class Holder(val id: String)
