@@ -16,6 +16,8 @@ import io.mosip.vciclient.exception.NetworkRequestFailedException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
 import io.mosip.vciclient.exception.VCIClientException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
+import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
+import io.mosip.vciclient.networkManager.NetworkManager
 import io.mosip.vciclient.proof.Proof
 import okhttp3.OkHttpClient
 import okhttp3.Response
@@ -24,10 +26,30 @@ import java.io.InterruptedIOException
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 
+//TODO: Do we need to add support for accepting NetworkManager as a parameter to VCIClient constructor?
 class VCIClient(private val traceabilityId: String?) {
+    private val issuerMetadataService: IssuerMetadataService =
+        IssuerMetadataService(NetworkManager, Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS)
 
     private val logTag = Util.getLogTag(javaClass.simpleName, traceabilityId)
     private val logger = Logger.getLogger(logTag)
+
+    fun getIssuerMetadata(credentialIssuerUri: String) : Map<String, Any> {
+        try {
+            return issuerMetadataService.fetchAndParseIssuerMetadata(credentialIssuerUri)
+        } catch (exception: VCIClientException) {
+            logger.severe(
+                "Fetching issuer metadata failed due to ${exception.message}"
+            )
+            throw exception
+        } catch (e: Exception) {
+            logger.severe(
+                "Fetching issuer metadata failed due to ${e.message}"
+            )
+            throw VCIClientException("VCI-010", "Unknown Exception - ${e.message}")
+        }
+    }
+
     suspend fun requestCredentialByCredentialOffer(
         credentialOffer: String,
         clientMetadata: ClientMetadata,
@@ -169,6 +191,12 @@ class VCIClient(private val traceabilityId: String?) {
                 "Downloading credential failed due to ${exception.message}"
             )
             throw DownloadFailedException(exception.message!!)
+        }
+    }
+
+    init {
+        if (traceabilityId != null) {
+            this.traceabilityId = traceabilityId
         }
     }
 

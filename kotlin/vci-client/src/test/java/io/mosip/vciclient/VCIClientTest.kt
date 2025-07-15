@@ -13,6 +13,7 @@ import io.mosip.vciclient.credentialRequestFlowHandlers.TrustedIssuerHandler
 import io.mosip.vciclient.credentialResponse.CredentialResponse
 import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.exception.VCIClientException
+import io.mosip.vciclient.issuerMetadata.IssuerMetadata
 import io.mosip.vciclient.proof.Proof
 import kotlinx.coroutines.runBlocking
 import net.bytebuddy.matcher.ElementMatchers.any
@@ -27,7 +28,7 @@ class VCIClientTest {
 
     private val mockCredentialResponse = mockk<CredentialResponse>()
 
-    private lateinit var getTxCode: suspend (String?,String?,Int?) -> String
+    private lateinit var getTxCode: suspend (String?, String?, Int?) -> String
     private lateinit var getProofJwt: suspend (
         accessToken: String,
         cNonce: String?,
@@ -35,7 +36,8 @@ class VCIClientTest {
         credentialConfigurationId: String?,
     ) -> String
     private lateinit var getAuthCode: suspend (authorizationEndpoint: String) -> String
-    val  mockContext = mockk<Context>(relaxed = true)
+    val mockContext = mockk<Context>(relaxed = true)
+
     @Before
     fun setup() {
 
@@ -45,18 +47,18 @@ class VCIClientTest {
 
         coEvery {
             anyConstructed<CredentialOfferHandler>().downloadCredentials(
-                any(), any(), any(), any(), any(), any(),any(),any()
+                any(), any(), any(), any(), any(), any(), any(), any()
             )
         } returns mockCredentialResponse
 
         coEvery {
             anyConstructed<TrustedIssuerHandler>().downloadCredentials(
-                any(), any(), any(), any(),any(),any()
+                any(), any(), any(), any(), any(), any()
             )
         } returns mockCredentialResponse
 
-        getTxCode = object : suspend (String?,String?,Int?) -> String {
-             override suspend fun invoke(p1:String?,p2:String?,p3:Int?): String = "mockTxCode"
+        getTxCode = object : suspend (String?, String?, Int?) -> String {
+            override suspend fun invoke(p1: String?, p2: String?, p3: Int?): String = "mockTxCode"
         }
 
         getProofJwt = object : suspend (String, String?, Map<String, *>?, String?) -> String {
@@ -79,6 +81,18 @@ class VCIClientTest {
     fun tearDown() {
         unmockkAll()
     }
+
+    //TODO: Fix me
+//    @Test
+//    fun `should return issuer metadata when fetchIssuerMetadata succeeds`() = runBlocking {
+//        //TODO: Mock network manager and response
+//        val mockIssuerMetaData = mockk<IssuerMetadata>(relaxed = true)
+//        val result = VCIClient("trace-id").getIssuerMetadata(
+//            credentialIssuerUri = "https://example.com/issuer"
+//        )
+//
+//        assertEquals(mockIssuerMetaData, result)
+//    }
 
     @Test
     fun `should return credential when credential offer flow succeeds`() = runBlocking {
@@ -109,7 +123,7 @@ class VCIClientTest {
     fun `should throw VCIClientException when credential offer flow throws`(): Unit = runBlocking {
         coEvery {
             anyConstructed<CredentialOfferHandler>().downloadCredentials(
-                any(), any(), any(), any(), any(),any(),any(),any()
+                any(), any(), any(), any(), any(), any(), any(), any()
             )
         } throws Exception("flow error")
 
@@ -128,7 +142,7 @@ class VCIClientTest {
     fun `should throw VCIClientException when trusted issuer flow throws`(): Unit = runBlocking {
         coEvery {
             anyConstructed<TrustedIssuerHandler>().downloadCredentials(
-                any(), any(), any(), any(),any(),any()
+                any(), any(), any(), any(), any(), any()
             )
         } throws Exception("flow error")
 
@@ -163,7 +177,12 @@ class VCIClientTest {
         val mockResponseBody = mockk<okhttp3.ResponseBody>(relaxed = true)
         val mockResponse = mockk<okhttp3.Response>()
 
-        every { anyConstructed<OkHttpClient.Builder>().callTimeout(any<Long>(), any()) } returns OkHttpClient.Builder()
+        every {
+            anyConstructed<OkHttpClient.Builder>().callTimeout(
+                any<Long>(),
+                any()
+            )
+        } returns OkHttpClient.Builder()
         every { anyConstructed<OkHttpClient.Builder>().build() } returns mockClient
         every { mockClient.newCall(any()) } returns mockCall
         every { mockCall.execute() } returns mockResponse

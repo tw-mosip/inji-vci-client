@@ -100,7 +100,7 @@ class AuthorizationCodeFlowServiceTest {
     @Test
     fun `should return credential when flow is successful`() = runBlocking {
         val result = AuthorizationCodeFlowService().requestCredentials(
-            IssuerMetadataResult(resolvedMeta, issuerMetadata),
+            IssuerMetadataResult(resolvedMeta, issuerMetadata, "https://example.com/issuer"),
             clientMetadata,
             credentialOffer,
             getAuthCode,
@@ -121,7 +121,7 @@ class AuthorizationCodeFlowServiceTest {
 
         val ex = assertThrows<DownloadFailedException> {
             AuthorizationCodeFlowService().requestCredentials(
-                IssuerMetadataResult(resolvedMeta, issuerMetadata),
+                IssuerMetadataResult(resolvedMeta, issuerMetadata, "https://example.com/issuer"),
                 clientMetadata,
                 credentialOffer,
                 getAuthCode,

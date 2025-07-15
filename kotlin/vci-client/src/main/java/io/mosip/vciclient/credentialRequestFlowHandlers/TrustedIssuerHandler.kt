@@ -24,7 +24,8 @@ class TrustedIssuerHandler {
         return AuthorizationCodeFlowService().requestCredentials(
             issuerMetadataResult = IssuerMetadataResult(
                 issuerMetadata = resolvedMeta,
-                raw = emptyMap()
+                raw = emptyMap(),
+                issuerUri = ""
             ),
             clientMetadata = clientMetadata,
             getAuthCode = getAuthCode,

@@ -44,7 +44,7 @@ class CredentialOfferHandlerTest {
         mockkConstructor(AuthorizationCodeFlowService::class)
         coEvery { anyConstructed<CredentialOfferService>().fetchCredentialOffer(any()) } returns mockCredentialOffer
         coEvery {
-            anyConstructed<IssuerMetadataService>().fetch(
+            anyConstructed<IssuerMetadataService>().fetchIssuerMetadataResult(
                 any(),
                 any()
             )

@@ -24,7 +24,7 @@ class CredentialOfferHandler {
         traceabilityId: String? = null,
     ): CredentialResponse {
         val offer: CredentialOffer = CredentialOfferService().fetchCredentialOffer(credentialOffer)
-        val issuerMetaData = IssuerMetadataService().fetch(
+        val issuerMetaData = IssuerMetadataService().fetchIssuerMetadataResult(
             offer.credentialIssuer, offer.credentialConfigurationIds[0]
         )
         ensureIssuerTrust(

@@ -105,7 +105,7 @@ class PreAuthFlowServiceTest {
         )
 
         val result = PreAuthFlowService().requestCredentials(
-            IssuerMetadataResult(resolvedIssuerMetaData,issuerMetadata),
+            IssuerMetadataResult(resolvedIssuerMetaData,issuerMetadata, "https://example.com/issuer"),
             offer,
             getTxCode,
             getProofJwt,
@@ -132,7 +132,7 @@ class PreAuthFlowServiceTest {
 
             val exception = assertThrows<DownloadFailedException> {
                 PreAuthFlowService().requestCredentials(
-                    IssuerMetadataResult(resolvedIssuerMetaData,issuerMetadata),
+                    IssuerMetadataResult(resolvedIssuerMetaData,issuerMetadata, "https://example.com/issuer"),
                     offer,
                     getTxCode = null,
                     getProofJwt,
@@ -155,7 +155,7 @@ class PreAuthFlowServiceTest {
 
         val exception = assertThrows<InvalidDataProvidedException> {
             PreAuthFlowService().requestCredentials(
-                IssuerMetadataResult(resolvedIssuerMetaData,issuerMetadata),
+                IssuerMetadataResult(resolvedIssuerMetaData,issuerMetadata, "https://example.com/issuer"),
                 offer,
                 getTxCode,
                 getProofJwt,

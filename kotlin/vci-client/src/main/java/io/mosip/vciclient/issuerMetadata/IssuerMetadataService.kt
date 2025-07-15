@@ -1,41 +1,77 @@
 package io.mosip.vciclient.issuerMetadata
 
-import android.util.Log
 import io.mosip.vciclient.common.JsonUtils
+import io.mosip.vciclient.constants.Constants
 import io.mosip.vciclient.constants.CredentialFormat
+import io.mosip.vciclient.constants.NetworkContentType.APPLICATION_JSON
+import io.mosip.vciclient.constants.NetworkHeader.ACCEPT
 import io.mosip.vciclient.exception.IssuerMetadataFetchException
 import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+
+private const val WELL_KNOWN_OPENID_CREDENTIAL_ISSUER = "/.well-known/openid-credential-issuer"
 
 class IssuerMetadataService {
+    private var cachedIssuerMetadataResult: IssuerMetadataResult? = null
+    private var timeoutMillis: Long
+    private var session: NetworkManager
 
-    suspend fun fetch(issuerUrl: String, credentialConfigurationId: String): IssuerMetadataResult =
-        withContext(Dispatchers.IO) {
-            val wellKnownUrl = "$issuerUrl/.well-known/openid-credential-issuer"
+    constructor(){
+        this.session = NetworkManager
+        this.timeoutMillis = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS // Default timeout in milliseconds
+    }
 
-            try {
-                val response = NetworkManager.sendRequest(
-                    url = wellKnownUrl, method = HttpMethod.GET, timeoutMillis = 10_000
-                )
+    constructor(session: NetworkManager = NetworkManager, timeoutMillis: Long){
+        this.session = session
+        this.timeoutMillis = timeoutMillis
+    }
 
-                val body = response.body
-                if (body.isBlank()) {
-                    throw IssuerMetadataFetchException("Issuer metadata response is empty.")
-                }
+    fun fetchAndParseIssuerMetadata(credentialIssuerUri: String): Map<String, Any> {
+        val wellKnownUrl = "$credentialIssuerUri$WELL_KNOWN_OPENID_CREDENTIAL_ISSUER"
+        val response = NetworkManager.sendRequest(
+            url = wellKnownUrl,
+            method = HttpMethod.GET,
+            headers = mapOf(ACCEPT.value to APPLICATION_JSON.value),
+            timeoutMillis = this.timeoutMillis
+        )
 
-                val raw: Map<String, Any> = JsonUtils.toMap(body)
-                val resolved = resolveMetadata(credentialConfigurationId, raw)
+        val body = response.body
+        if (body.isBlank()) {
+            throw IssuerMetadataFetchException("Issuer metadata response is empty.")
+        }
 
-                return@withContext IssuerMetadataResult(issuerMetadata = resolved, raw = raw)
+        return try {
+            JsonUtils.toMap(body)
+        } catch (e: Exception) {
+            throw IssuerMetadataFetchException("Issuer metadata is not valid JSON.")
+        }
+    }
 
-            } catch (e: IssuerMetadataFetchException) {
-                throw e
-            } catch (e: Exception) {
-                throw IssuerMetadataFetchException("Failed to fetch issuer metadata: ${e.message}")
+    /**
+     * Fetches and resolves issuer metadata for a given issuer URI and credential configuration ID.
+     * Stores the result in a cache (member property) to avoid redundant network calls.
+     */
+    fun fetchIssuerMetadataResult(
+        issuerUri: String,
+        credentialConfigurationId: String
+    ): IssuerMetadataResult {
+        cachedIssuerMetadataResult?.let { cached ->
+            if (cached.issuerUri == issuerUri) {
+                return cached
             }
         }
+
+        val rawIssuerMetadata = fetchAndParseIssuerMetadata(issuerUri)
+        val resolved = resolveMetadata(credentialConfigurationId, rawIssuerMetadata)
+
+        val result = IssuerMetadataResult(
+            issuerMetadata = resolved,
+            raw = rawIssuerMetadata,
+            issuerUri = issuerUri
+        )
+        cachedIssuerMetadataResult = result
+        return result
+    }
 
     private fun resolveMetadata(
         credentialConfigurationId: String,
