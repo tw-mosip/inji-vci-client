@@ -116,16 +116,18 @@ class IssuerMetadataService {
                 )
             }
 
-            CredentialFormat.SD_JWT.value -> {
+            CredentialFormat.VC_SD_JWT.value, CredentialFormat.DC_SD_JWT.value -> {
                 val vct = credentialType["vct"] as? String
                     ?: throw IssuerMetadataFetchException("Missing vct for SD-JWT")
 
                 val claims = credentialType["claims"] as? Map<String, Any>
+                val resolvedFormat = CredentialFormat.values().firstOrNull { it.value == format }
+                    ?: throw IssuerMetadataFetchException("Unrecognized credential format: $format")
 
                 IssuerMetadata(
                     credentialIssuer = credentialIssuer,
                     credentialEndpoint = credentialEndpoint,
-                    credentialFormat = CredentialFormat.SD_JWT,
+                    credentialFormat = resolvedFormat,
                     vct = vct,
                     claims = claims,
                     scope = scope,
