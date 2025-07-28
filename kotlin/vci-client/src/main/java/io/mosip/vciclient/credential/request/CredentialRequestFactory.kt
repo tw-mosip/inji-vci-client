@@ -38,7 +38,7 @@ class CredentialRequestFactory {
                     )
                 }
 
-                CredentialFormat.SD_JWT -> validateAndConstructRequest(
+                CredentialFormat.VC_SD_JWT ->
                     return validateAndConstructRequest(
                         SdJwtCredentialRequest(
                             accessToken,
@@ -46,7 +46,16 @@ class CredentialRequestFactory {
                             proof
                         )
                     )
-                )
+                CredentialFormat.DC_SD_JWT ->
+                    return validateAndConstructRequest(
+                        SdJwtCredentialRequest(
+                            accessToken,
+                            issuerMetadata,
+                            proof
+                        )
+                    )
+
+                else -> throw InvalidDataProvidedException("Unsupported or missing credential format in configuration")
             }
         }
 
