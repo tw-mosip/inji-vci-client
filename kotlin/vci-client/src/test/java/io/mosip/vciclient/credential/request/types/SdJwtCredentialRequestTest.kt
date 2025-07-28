@@ -28,7 +28,7 @@ class SdJwtCredentialRequestTest {
         issuerMetadata = mockk(relaxed = true)
         every { issuerMetadata.credentialEndpoint } returns sampleCredentialEndpoint
         every { issuerMetadata.vct } returns sampleVct
-        every { issuerMetadata.credentialFormat } returns CredentialFormat.SD_JWT
+        every { issuerMetadata.credentialFormat } returns CredentialFormat.VC_SD_JWT
         every { issuerMetadata.claims } returns sampleClaims
     }
 
