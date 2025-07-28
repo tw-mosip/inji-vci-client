@@ -40,11 +40,11 @@ class CredentialRequestFactoryTest {
             InvalidDataProvidedException::class.java,
         ) {
             CredentialRequestFactory.createCredentialRequest(
-                CredentialFormat.SD_JWT, "access-token",
+                CredentialFormat.VC_SD_JWT, "access-token",
                 IssuerMetadata(
                     "/credentialAudience",
                     "https://credentialendpoint/",
-                    credentialFormat = CredentialFormat.SD_JWT,
+                    credentialFormat = CredentialFormat.VC_SD_JWT,
                     claims = mapOf("name" to "Alice") // vct missing
                 ), JWTProof("headerEncoded.payloadEncoded.signature")
             )
