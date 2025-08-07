@@ -1,6 +1,5 @@
 package io.mosip.vciclient.credential.request
 
-import android.util.Log
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.credential.response.CredentialResponse
