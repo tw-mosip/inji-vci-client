@@ -38,7 +38,7 @@ class CredentialRequestFactory {
                     )
                 }
 
-                CredentialFormat.VC_SD_JWT ->
+                CredentialFormat.VC_SD_JWT, CredentialFormat.DC_SD_JWT ->
                     return validateAndConstructRequest(
                         SdJwtCredentialRequest(
                             accessToken,
