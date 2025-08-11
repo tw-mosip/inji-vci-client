@@ -1,18 +1,16 @@
 publishing {
     repositories {
         maven {
-            name = "LocalMavenWithChecksums"
-            url = uri(layout.buildDirectory.dir("staging"))
+            url = System.getenv("OSSRH_URL")
+            name = "inji-vci-client"
+            credentials {
+                username = System.getenv("OSSRH_USER")
+                password = System.getenv("OSSRH_SECRET")
+            }
         }
     }
     publications {
         aar(MavenPublication) {
-            groupId = "io.mosip"
-            artifactId = "inji-vci-client-aar"
-            version = "0.4.0-SNAPSHOT"
-
-            artifact("build/outputs/aar/${artifactId}-${version}-release.aar")
-
             pom {
                 withXml {
                     asNode().appendNode('name', "Inji VCI Client")
@@ -91,8 +89,21 @@ publishing {
                     gpgArgumentsNode.appendNode('arg', 'loopback')
                 }
             }
+            groupId = "io.mosip"
+            artifactId = "inji-vci-client-aar"
+            version = "0.4.0-SNAPSHOT"
+            archivesBaseName = "${artifactId}-${version}"
+            if (project.gradle.startParameter.taskNames.any { it.contains('assembleRelease') }) {
+                artifacts {
+                    aar {
+                        archivesBaseName = archivesBaseName
+                    }
+                }
+            }
+            afterEvaluate {
+                artifact(tasks.named("bundleReleaseAar").get())
+            }
         }
-
         jarRelease(MavenPublication) {
             artifact(tasks.named("jarRelease").get())
             groupId = "io.mosip"
