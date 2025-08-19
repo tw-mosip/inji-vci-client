@@ -98,7 +98,7 @@ publishing {
             }
             groupId = "io.mosip"
             artifactId = "inji-vci-client-aar"
-            version = "0.4.0-rc1"
+            version = "0.4.0"
             archivesBaseName = "${artifactId}-${version}"
             if (project.gradle.startParameter.taskNames.any { it.contains('assembleRelease') }) {
                 artifacts {
@@ -115,7 +115,7 @@ publishing {
             artifact(tasks.named("jarRelease").get())
             groupId = "io.mosip"
             artifactId = "inji-vci-client-jar"
-            version = "0.4.0-rc1"
+            version = "0.4.0"
             artifact(tasks.named("javadocJar").get())
             artifact(tasks.named("sourcesJar").get())
             pom {
