@@ -156,7 +156,6 @@ class IssuerMetadataServiceTest {
         assertEquals("urn:example:degree", resolved.vct)
         assertEquals("openid", resolved.scope)
         assertTrue(resolved.authorizationServers!!.contains("https://auth"))
-        assertTrue(resolved.claims!!.containsKey("given_name"))
     }
 
     @Test

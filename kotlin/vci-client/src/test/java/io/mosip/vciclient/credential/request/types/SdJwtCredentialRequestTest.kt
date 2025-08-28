@@ -16,7 +16,6 @@ class SdJwtCredentialRequestTest {
     private val sampleAccessToken = "test-access-token"
     private val sampleCredentialEndpoint = "https://issuer.example.com/credential"
     private val sampleVct = "IdentityCredential"
-    private val sampleClaims = mapOf("name" to "Alice", "birthdate" to "1990-01-01")
 
     private lateinit var sampleProof: Proof
     private lateinit var issuerMetadata: IssuerMetadata
@@ -29,7 +28,6 @@ class SdJwtCredentialRequestTest {
         every { issuerMetadata.credentialEndpoint } returns sampleCredentialEndpoint
         every { issuerMetadata.vct } returns sampleVct
         every { issuerMetadata.credentialFormat } returns CredentialFormat.VC_SD_JWT
-        every { issuerMetadata.claims } returns sampleClaims
     }
 
     @After
@@ -104,7 +102,6 @@ class SdJwtCredentialRequestTest {
         val requestBodyString = buffer.readUtf8()
 
         assertTrue(requestBodyString.contains("IdentityCredential"))
-        assertTrue(requestBodyString.contains("given_name").or(requestBodyString.contains("name")))
         assertTrue(requestBodyString.contains("proof"))
     }
 }
