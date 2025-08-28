@@ -13,7 +13,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 class SdJwtCredentialRequest(
     override val accessToken: String,
     override val issuerMetadata: IssuerMetadata,
-    override val proof: Proof,
+    override val proof: Proof
 ) : CredentialRequest {
 
     override fun constructRequest(): Request {
@@ -37,8 +37,7 @@ class SdJwtCredentialRequest(
         val request = SdJwtRequestBody(
             format = issuerMetadata.credentialFormat.value,
             vct = issuerMetadata.vct!!,
-            proof = proof,
-            claims = issuerMetadata.claims
+            proof = proof
         ).toJson()
 
         return request.toRequestBody("application/json".toMediaTypeOrNull())
@@ -48,8 +47,7 @@ class SdJwtCredentialRequest(
 private data class SdJwtRequestBody(
     val format: String,
     val vct: String,
-    val proof: Proof,
-    val claims: Map<String, Any>? = null
+    val proof: Proof
 ) {
     fun toJson(): String = JsonUtils.serialize(this)
 }
