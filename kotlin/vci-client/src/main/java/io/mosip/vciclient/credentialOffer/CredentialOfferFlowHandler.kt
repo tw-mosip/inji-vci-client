@@ -2,6 +2,7 @@ package io.mosip.vciclient.credentialOffer
 
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.AuthorizationHandler
 import io.mosip.vciclient.constants.Constants
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.exception.CredentialOfferFetchFailedException
@@ -20,9 +21,10 @@ class CredentialOfferFlowHandler {
         credentialOffer: String,
         clientMetadata: ClientMetadata,
         getTxCode: TxCodeCallback?,
-        authorizeUser: AuthorizeUserCallback,
+        authorizeUser: AuthorizeUserCallback? = null,
         getTokenResponse: TokenResponseCallback,
         getProofJwt: ProofJwtCallback,
+        interactiveAuthorizationCallbacks: List<AuthorizationHandler>? = null,
         onCheckIssuerTrust: CheckIssuerTrustCallback? = null,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
     ): CredentialResponse {
@@ -72,7 +74,8 @@ class CredentialOfferFlowHandler {
                     downloadTimeOutInMillis = downloadTimeoutInMillis,
                     jwtProofAlgorithmsSupported = issuerMetadataResult.extractJwtProofSigningAlgorithms(
                         credentialConfigurationId
-                    )
+                    ),
+                    interactiveAuthorizationCallbacks = interactiveAuthorizationCallbacks
                 )
             }
 

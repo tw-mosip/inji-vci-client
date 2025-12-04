@@ -1,6 +1,6 @@
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.android") version "1.9.23"
     id("maven-publish")
     id("signing")
     id("org.jetbrains.dokka") version "1.9.20"
@@ -60,6 +60,7 @@ dependencies {
     testImplementation("org.json:json:20231013")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     implementation("com.squareup.okio:okio:3.6.0")
+    implementation("io.mosip:inji-openid4vp-aar:0.6.0.2-SNAPSHOT")
 }
 
 tasks {
