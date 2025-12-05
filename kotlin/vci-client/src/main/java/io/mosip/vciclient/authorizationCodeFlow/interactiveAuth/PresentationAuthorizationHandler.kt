@@ -89,7 +89,10 @@ class PresentationAuthorizationHandler(
         }
 
         val vpResponse = try {
-            openId4vp.constructVPResponse(vpTokenSigningResults = signedVpTokens, responseModeAlias = ResponseMode.IAR_POST)
+            openId4vp.constructVPResponse(
+                vpTokenSigningResults = signedVpTokens,
+                responseModeAlias = ResponseMode.IAR_POST
+            )
         } catch (ex: Exception) {
             throw InteractiveAuthorizationException("Failed to construct VP response. ${ex.message}")
         }
@@ -123,7 +126,7 @@ class PresentationAuthorizationHandler(
                 method = HttpMethod.POST,
                 bodyParams = mapOf(
                     "openid4vp_response" to JsonUtils.serialize(vpResponse),
-                    authSession to authSession
+                    "auth_session" to authSession
                 )
             )
         } catch (ex: Exception) {

@@ -1,14 +1,19 @@
 package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth
 
 import android.util.Base64
+import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlin.collections.get
 
 data class OpenId4VpPresentationResponse(
+    @SerializedName("status")
     override val status: String,
+    @SerializedName("type")
     override val type: String,
+    @SerializedName("auth_session")
     override val authSession: String,
+    @SerializedName("openid4vp_request")
     val openid4vpRequest: Map<String, Any>
 ) : InteractiveAuthorizationResponse(status, type, authSession) {
 
