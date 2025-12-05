@@ -114,6 +114,7 @@ class PresentationAuthorizationHandler(
     }
 
     private fun handlePresentation(request: Map<String, Any>): AuthorizationRequest {
+
         return openId4vp.authenticateVerifier(request, trustedVerifiers, shouldValidateClient)
     }
 

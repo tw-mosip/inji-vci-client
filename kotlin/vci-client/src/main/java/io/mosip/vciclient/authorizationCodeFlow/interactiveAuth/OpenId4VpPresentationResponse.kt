@@ -8,16 +8,16 @@ import kotlin.collections.get
 
 data class OpenId4VpPresentationResponse(
     @SerializedName("status")
-    override val status: String,
+    val status: String,
     @SerializedName("type")
-    override val type: String,
+    val type: String,
     @SerializedName("auth_session")
-    override val authSession: String,
+    val authSession: String,
     @SerializedName("openid4vp_request")
     val openid4vpRequest: Map<String, Any>
-) : InteractiveAuthorizationResponse(status, type, authSession) {
+) {
 
-    override fun validate() {
+    fun validate() {
         // Top-level checks
         if (status != "require_interaction") {
             throw IllegalArgumentException("Invalid status: expected 'require_interaction'")
@@ -51,18 +51,10 @@ data class OpenId4VpPresentationResponse(
 
         val responseMode = openid4vpRequest["response_mode"] as? String
             ?: throw IllegalArgumentException("Missing or invalid 'response_mode'")
-        if (responseMode !in listOf("iar-post", "iar-post.jwt")) {
+        if (responseMode !in listOf("iar_post", "iar_post.jwt")) {
             throw IllegalArgumentException("response_mode must be 'iar-post' or 'iar-post.jwt'")
         }
 
-        val presentationDefinition = openid4vpRequest["presentation_definition"] as? Map<*, *>
-            ?: throw IllegalArgumentException("Missing or invalid 'presentation_definition'")
-
-        val inputDescriptors = presentationDefinition["input_descriptors"] as? List<*>
-            ?: throw IllegalArgumentException("Missing 'input_descriptors' in presentation_definition")
-        if (inputDescriptors.isEmpty()) {
-            throw IllegalArgumentException("presentation_definition.input_descriptors must not be empty")
-        }
 
         val nonce = openid4vpRequest["nonce"] as? String
             ?: throw IllegalArgumentException("Missing or invalid 'nonce'")
