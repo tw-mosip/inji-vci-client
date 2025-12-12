@@ -1,15 +1,15 @@
 package io.mosip.vciclient.credentialOffer
 
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
+import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.AuthorizationHandler
+import io.mosip.vciclient.constants.AuthorizeUserCallback
 import io.mosip.vciclient.constants.Constants
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.exception.CredentialOfferFetchFailedException
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
 import io.mosip.vciclient.preAuthCodeFlow.PreAuthCodeFlowService
-import io.mosip.vciclient.constants.AuthorizeUserCallback
 import io.mosip.vciclient.constants.CheckIssuerTrustCallback
 import io.mosip.vciclient.constants.ProofJwtCallback
 import io.mosip.vciclient.constants.TokenResponseCallback
@@ -21,10 +21,10 @@ class CredentialOfferFlowHandler {
         credentialOffer: String,
         clientMetadata: ClientMetadata,
         getTxCode: TxCodeCallback?,
-        authorizeUser: AuthorizeUserCallback? = null,
         getTokenResponse: TokenResponseCallback,
         getProofJwt: ProofJwtCallback,
-        interactiveAuthorizationCallbacks: List<AuthorizationHandler>? = null,
+        authorizeUser: AuthorizeUserCallback? = null,
+        interactiveAuthorizationCallbacks: List<AuthorizationMethod>? = null,
         onCheckIssuerTrust: CheckIssuerTrustCallback? = null,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
     ): CredentialResponse {
@@ -67,7 +67,6 @@ class CredentialOfferFlowHandler {
                     issuerMetadata = issuerMetadataResult.issuerMetadata,
                     credentialConfigurationId = offer.credentialConfigurationIds.first(),
                     clientMetadata = clientMetadata,
-                    authorizeUser = authorizeUser,
                     getTokenResponse = getTokenResponse,
                     getProofJwt = getProofJwt,
                     credentialOffer = offer,
@@ -75,7 +74,8 @@ class CredentialOfferFlowHandler {
                     jwtProofAlgorithmsSupported = issuerMetadataResult.extractJwtProofSigningAlgorithms(
                         credentialConfigurationId
                     ),
-                    interactiveAuthorizationCallbacks = interactiveAuthorizationCallbacks
+                    authorizeUser = authorizeUser,
+                    authorizationMethods = interactiveAuthorizationCallbacks
                 )
             }
 

@@ -1,4 +1,4 @@
-package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth
+package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.response
 
 import com.google.gson.annotations.SerializedName
 

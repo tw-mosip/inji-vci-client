@@ -1,6 +1,6 @@
-package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth
+package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.response
 
-sealed class InteractiveAuthorizationResponse(
+abstract class InteractiveAuthorizationResponse(
     open val status: String?,
     open val type: String?,
     open val authSession: String?,

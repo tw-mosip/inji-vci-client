@@ -1,7 +1,7 @@
 package io.mosip.vciclient
 
+import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.AuthorizationHandler
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.constants.Constants
@@ -133,7 +133,7 @@ class VCIClient(traceabilityId: String) {
         credentialConfigurationId: String,
         clientMetadata: ClientMetadata,
         getTokenResponse: TokenResponseCallback,
-        authorizations: List<AuthorizationHandler>,
+        authorizations: List<AuthorizationMethod>,
         getProofJwt: ProofJwtCallback,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
     ): CredentialResponse {
@@ -143,7 +143,7 @@ class VCIClient(traceabilityId: String) {
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
                 getTokenResponse = getTokenResponse,
-                interactiveAuthorizationCallbacks = authorizations,
+                authorizationMethods = authorizations,
                 getProofJwt = getProofJwt,
                 downloadTimeoutInMillis = downloadTimeoutInMillis,
             )
@@ -160,7 +160,7 @@ class VCIClient(traceabilityId: String) {
         credentialOffer: String,
         clientMetadata: ClientMetadata,
         getTxCode: TxCodeCallback?,
-        authorizations: List<AuthorizationHandler>,
+        authorizations: List<AuthorizationMethod>,
         getTokenResponse: TokenResponseCallback,
         getProofJwt: ProofJwtCallback,
         onCheckIssuerTrust: CheckIssuerTrustCallback? = null,

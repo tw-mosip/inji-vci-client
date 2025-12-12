@@ -1,8 +1,8 @@
 package io.mosip.vciclient.trustedIssuer
 
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
+import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.AuthorizationHandler
 import io.mosip.vciclient.constants.Constants
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataResult
@@ -21,7 +21,7 @@ class TrustedIssuerFlowHandler {
         clientMetadata: ClientMetadata,
         getTokenResponse: TokenResponseCallback,
         getProofJwt: ProofJwtCallback,
-        interactiveAuthorizationCallbacks: List<AuthorizationHandler>? = null,
+        authorizationMethods: List<AuthorizationMethod>? = null,
         authorizeUser: AuthorizeUserCallback? = null,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
     ): CredentialResponse {
@@ -35,14 +35,14 @@ class TrustedIssuerFlowHandler {
             issuerMetadata = issuerMetadataResult.issuerMetadata,
             credentialConfigurationId = credentialConfigurationId,
             clientMetadata = clientMetadata,
-            authorizeUser = authorizeUser,
             getTokenResponse = getTokenResponse,
             getProofJwt = getProofJwt,
             downloadTimeOutInMillis = downloadTimeoutInMillis,
             jwtProofAlgorithmsSupported = issuerMetadataResult.extractJwtProofSigningAlgorithms(
                 credentialConfigurationId
             ),
-            interactiveAuthorizationCallbacks = interactiveAuthorizationCallbacks
+            authorizeUser = authorizeUser,
+            authorizationMethods = authorizationMethods
         )
     }
 }

@@ -1,34 +1,32 @@
-package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth
+package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.presentationDuringIssuance
 
-import android.util.Base64
 import com.google.gson.annotations.SerializedName
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.response.InteractiveAuthorizationResponse
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
-import kotlin.collections.get
+import kotlinx.serialization.json.jsonPrimitive
+import okio.ByteString
+import okio.ByteString.Companion.decodeBase64
 
 data class OpenId4VpPresentationResponse(
     @SerializedName("status")
-    val status: String,
+    override val status: String,
     @SerializedName("type")
-    val type: String,
+    override val type: String,
     @SerializedName("auth_session")
-    val authSession: String,
+    override val authSession: String,
     @SerializedName("openid4vp_request")
     val openid4vpRequest: Map<String, Any>
-) {
+) : InteractiveAuthorizationResponse(status, type, authSession) {
 
-    fun validate() {
-        // Top-level checks
-        if (status != "require_interaction") {
-            throw IllegalArgumentException("Invalid status: expected 'require_interaction'")
-        }
+    override fun validate() {
 
         if (type != "openid4vp_presentation") {
             throw IllegalArgumentException("Invalid type: expected 'openid4vp_presentation'")
-        }
-
-        if (authSession.isBlank()) {
-            throw IllegalArgumentException("authSession must not be blank")
         }
 
         if (openid4vpRequest.isEmpty()) {
@@ -52,7 +50,7 @@ data class OpenId4VpPresentationResponse(
         val responseMode = openid4vpRequest["response_mode"] as? String
             ?: throw IllegalArgumentException("Missing or invalid 'response_mode'")
         if (responseMode !in listOf("iar_post", "iar_post.jwt")) {
-            throw IllegalArgumentException("response_mode must be 'iar-post' or 'iar-post.jwt'")
+            throw IllegalArgumentException("response_mode must be 'iar_post' or 'iar_post.jwt'")
         }
 
 
@@ -83,16 +81,16 @@ data class OpenId4VpPresentationResponse(
     }
 
     private fun decodeJwtPayload(jwt: String): Map<String, Any?> {
-        val parts = jwt.split(".")
-        if (parts.size != 3) throw IllegalArgumentException("Malformed JWT")
+        val payloadJson: ByteString =
+            jwt.split(".")[1].decodeBase64() ?: throw IllegalArgumentException("Invalid JWT format")
+        val json = Json.parseToJsonElement(payloadJson.utf8()).jsonObject
 
-        val payloadJson = String(
-            Base64.decode(
-                parts[1], Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
-            )
-        )
-
-        val jsonElement = Json.Default.parseToJsonElement(payloadJson).jsonObject
-        return jsonElement.mapValues { it.value.toString() }
+        return json.mapValues { (_, value) ->
+            when (value) {
+                is JsonPrimitive -> value.contentOrNull
+                is JsonArray -> value.map { it.jsonPrimitive.contentOrNull }
+                is JsonObject -> value.toMap()
+            }
+        }
     }
 }
