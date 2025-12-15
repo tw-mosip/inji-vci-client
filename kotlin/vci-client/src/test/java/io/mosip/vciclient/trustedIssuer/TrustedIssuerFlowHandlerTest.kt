@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.authorizationServer.AuthorizationServerResolver
 import io.mosip.vciclient.authorizationServer.AuthorizationUrlBuilder
@@ -43,7 +44,7 @@ class TrustedIssuerFlowHandlerTest {
 
     private lateinit var authorizeUser: AuthorizeUserCallback
     private lateinit var getProofJwt: ProofJwtCallback
-
+    private lateinit var authorization: AuthorizationMethod.RedirectToWeb
     @Before
     fun setup() {
         mockkConstructor(AuthorizationServerResolver::class)
@@ -56,7 +57,12 @@ class TrustedIssuerFlowHandlerTest {
         every { anyConstructed<PKCESessionManager>().createSession() } returns pkceSession
         mockkObject(Util.Companion)
         every { Util.getLogTag(any(), any()) } returns "TestLogTag"
-        coEvery { anyConstructed<IssuerMetadataService>().fetchIssuerMetadataResult(credentialIssuer, credentialConfigurationId) } returns IssuerMetadataResult(
+        coEvery {
+            anyConstructed<IssuerMetadataService>().fetchIssuerMetadataResult(
+                credentialIssuer,
+                credentialConfigurationId
+            )
+        } returns IssuerMetadataResult(
             issuerMetadata = mockk<IssuerMetadata>(relaxed = true),
             raw = wellKnownResponseMap
         )
@@ -73,12 +79,21 @@ class TrustedIssuerFlowHandlerTest {
             ): String = "mock-auth-code"
         }
 
+        authorization = AuthorizationMethod.RedirectToWeb(
+            openWebPage = {
+                val code = authorizeUser.invoke("dummy-endpoint")
+                mapOf(
+                    "code" to code,
+                )
+            }
+        )
+
         getProofJwt = object : ProofJwtCallback {
             override suspend fun invoke(
                 acredentialIssuer: String,
                 cNonce: String?,
                 proofSigningAlgorithmsSupported: List<String>
-                ): String = "mock.jwt.proof"
+            ): String = "mock.jwt.proof"
         }
 
         coEvery {
@@ -94,7 +109,13 @@ class TrustedIssuerFlowHandlerTest {
         } returns TokenResponse(accessToken, "jwt", cNonce = cNonce)
 
         every {
-            anyConstructed<CredentialRequestExecutor>().requestCredential(any(), any(), any(), any(), any())
+            anyConstructed<CredentialRequestExecutor>().requestCredential(
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } returns mockCredentialResponse
     }
 
@@ -108,8 +129,8 @@ class TrustedIssuerFlowHandlerTest {
             credentialConfigurationId = credentialConfigurationId,
             clientMetadata = clientMetadata,
             getTokenResponse = mockk(relaxed = true),
-            authorizeUser = authorizeUser,
             getProofJwt = getProofJwt,
+            authorizationMethods = listOf(authorization),
             downloadTimeoutInMillis = 10000
         )
         assertEquals(mockCredentialResponse, result)
@@ -117,9 +138,11 @@ class TrustedIssuerFlowHandlerTest {
 
     @Test
     fun `should throw when getAuthCode throws`() = runBlocking {
-        val failingAuthorizeUser: AuthorizeUserCallback = {
-            throw IllegalStateException("User canceled")
-        }
+        val failingAuthorizeUser: AuthorizationMethod = AuthorizationMethod.RedirectToWeb(
+            openWebPage = {
+                throw DownloadFailedException("User canceled")
+            }
+        )
 
         val ex = assertThrows<DownloadFailedException> {
             TrustedIssuerFlowHandler().downloadCredentials(
@@ -127,8 +150,8 @@ class TrustedIssuerFlowHandlerTest {
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
                 getTokenResponse = mockk(relaxed = true),
-                authorizeUser = failingAuthorizeUser,
                 getProofJwt = getProofJwt,
+                authorizationMethods = listOf(failingAuthorizeUser),
                 downloadTimeoutInMillis = 10000
             )
         }
@@ -149,8 +172,8 @@ class TrustedIssuerFlowHandlerTest {
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
                 getTokenResponse = mockk(relaxed = true),
-                authorizeUser = authorizeUser,
                 getProofJwt = failingProof,
+                authorizationMethods = listOf(authorization),
                 downloadTimeoutInMillis = 10000,
             )
         }
@@ -170,7 +193,7 @@ class TrustedIssuerFlowHandlerTest {
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
                 getTokenResponse = mockk(relaxed = true),
-                authorizeUser = authorizeUser,
+                authorizationMethods = listOf(authorization),
                 getProofJwt = getProofJwt,
                 downloadTimeoutInMillis = 10000
             )
@@ -182,7 +205,13 @@ class TrustedIssuerFlowHandlerTest {
     @Test
     fun `should throw when credential request executor fails`() = runBlocking {
         every {
-            anyConstructed<CredentialRequestExecutor>().requestCredential(any(), any(), any(), any(), any())
+            anyConstructed<CredentialRequestExecutor>().requestCredential(
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } throws DownloadFailedException("Credential request failed")
 
         val ex = assertThrows<DownloadFailedException> {
@@ -191,8 +220,8 @@ class TrustedIssuerFlowHandlerTest {
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
                 getTokenResponse = mockk(relaxed = true),
-                authorizeUser = authorizeUser,
                 getProofJwt = getProofJwt,
+                authorizationMethods = listOf(authorization),
                 downloadTimeoutInMillis = 10000
             )
         }

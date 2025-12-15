@@ -1,10 +1,10 @@
-package io.mosip.vciclient.authorizationCodeFlow
+package io.mosip.vciclient.authorizationCodeFlow.implicitAuthorization
 
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationRequestData
 import io.mosip.vciclient.pkce.PKCESessionManager
 
-data class StandardAuthorizationRequestData(
+data class ImplicitAuthorizationRequestData(
     val authorizeUrl: String,
     val clientMetadata: ClientMetadata,
     val pkceSession: PKCESessionManager.PKCESession,

@@ -1,11 +1,10 @@
 package io.mosip.vciclient.authorizationCodeFlow
 
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
-import io.mosip.vciclient.constants.CredentialSelectionCallback
+import io.mosip.vciclient.constants.SelectCredentialsForPresentationCallback
 import io.mosip.vciclient.constants.OpenWebPageCallback
-import io.mosip.vciclient.constants.SignPresentationCallback
+import io.mosip.vciclient.constants.SignVerifiablePresentationCallback
 
-//TODO: check if type property is required here
 sealed class AuthorizationMethod(val type: InteractionType) {
 
     class RedirectToWeb(
@@ -13,7 +12,7 @@ sealed class AuthorizationMethod(val type: InteractionType) {
     ) : AuthorizationMethod(InteractionType.RedirectToWeb)
 
     class PresentationDuringIssuance(
-        val selectCredentialsForPresentation: CredentialSelectionCallback,
-        val signVerifiablePresentation: SignPresentationCallback
-    ) : AuthorizationMethod(InteractionType.OpenId4VpPresentation)
+        val selectCredentialsForPresentation: SelectCredentialsForPresentationCallback,
+        val signVerifiablePresentation: SignVerifiablePresentationCallback
+    ) : AuthorizationMethod(type = InteractionType.OpenId4VpPresentation)
 }

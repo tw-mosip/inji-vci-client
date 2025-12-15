@@ -8,6 +8,8 @@ import io.mosip.vciclient.issuerMetadata.IssuerMetadata
 import io.mosip.vciclient.proof.Proof
 import io.mosip.vciclient.constants.CredentialFormat
 import io.mockk.mockk
+import io.mosip.vciclient.constants.Constants.APPLICATION_JSON
+import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -50,7 +52,7 @@ class CredentialRequestExecutorTest {
     fun `should return CredentialResponse on successful fetch`() {
         val json = """{"credential": "mock"}"""
         mockWebServer.enqueue(
-            MockResponse().setBody(json).setResponseCode(200).addHeader("Content-Type", "application/json")
+            MockResponse().setBody(json).setResponseCode(200).addHeader(CONTENT_TYPE, APPLICATION_JSON)
         )
         val response = CredentialRequestExecutor().requestCredential(
             issuerMetadata = resolvedMeta,

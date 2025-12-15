@@ -1,6 +1,7 @@
 package io.mosip.vciclient.credentialOffer
 
 import io.mosip.vciclient.common.JsonUtils
+import io.mosip.vciclient.constants.Constants.APPLICATION_JSON
 import io.mosip.vciclient.exception.CredentialOfferFetchFailedException
 import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
@@ -55,7 +56,7 @@ internal class CredentialOfferService {
     internal suspend fun handleByReferenceOffer(url: String): CredentialOffer {
         val responseBody = withContext(Dispatchers.IO) {
             val response = NetworkManager.sendRequest(
-                url = url, method = HttpMethod.GET, headers = mapOf("Accept" to "application/json")
+                url = url, method = HttpMethod.GET, headers = mapOf("Accept" to APPLICATION_JSON)
             )
 
             if (response.body.isBlank()) {

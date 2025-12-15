@@ -7,7 +7,6 @@ import io.mosip.vciclient.constants.Constants
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataResult
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
-import io.mosip.vciclient.constants.AuthorizeUserCallback
 import io.mosip.vciclient.constants.ProofJwtCallback
 import io.mosip.vciclient.constants.TokenResponseCallback
 
@@ -21,8 +20,7 @@ class TrustedIssuerFlowHandler {
         clientMetadata: ClientMetadata,
         getTokenResponse: TokenResponseCallback,
         getProofJwt: ProofJwtCallback,
-        authorizationMethods: List<AuthorizationMethod>? = null,
-        authorizeUser: AuthorizeUserCallback? = null,
+        authorizationMethods: List<AuthorizationMethod>,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
     ): CredentialResponse {
         val issuerMetadataResult: IssuerMetadataResult =
@@ -41,7 +39,6 @@ class TrustedIssuerFlowHandler {
             jwtProofAlgorithmsSupported = issuerMetadataResult.extractJwtProofSigningAlgorithms(
                 credentialConfigurationId
             ),
-            authorizeUser = authorizeUser,
             authorizationMethods = authorizationMethods
         )
     }

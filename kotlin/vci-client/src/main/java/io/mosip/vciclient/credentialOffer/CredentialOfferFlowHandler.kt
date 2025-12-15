@@ -23,10 +23,10 @@ class CredentialOfferFlowHandler {
         getTxCode: TxCodeCallback?,
         getTokenResponse: TokenResponseCallback,
         getProofJwt: ProofJwtCallback,
-        authorizeUser: AuthorizeUserCallback? = null,
-        interactiveAuthorizationCallbacks: List<AuthorizationMethod>? = null,
+        authorizationMethods: List<AuthorizationMethod>,
         onCheckIssuerTrust: CheckIssuerTrustCallback? = null,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
+        traceabilityId: String? = null
     ): CredentialResponse {
         val offer = CredentialOfferService().fetchCredentialOffer(credentialOffer)
         if (offer.credentialConfigurationIds.size > 1) {
@@ -74,8 +74,8 @@ class CredentialOfferFlowHandler {
                     jwtProofAlgorithmsSupported = issuerMetadataResult.extractJwtProofSigningAlgorithms(
                         credentialConfigurationId
                     ),
-                    authorizeUser = authorizeUser,
-                    authorizationMethods = interactiveAuthorizationCallbacks
+                    authorizationMethods = authorizationMethods,
+                    traceabilityId = traceabilityId,
                 )
             }
 

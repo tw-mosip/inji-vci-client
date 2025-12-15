@@ -1,7 +1,7 @@
 package io.mosip.vciclient.authorizationCodeFlow
 
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
+import io.mosip.vciclient.authorizationCodeFlow.implicitAuthorization.ImplicitAuthorizationRequestData
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractiveAuthorizationHandler
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.redirectToWeb.RedirectToWebAuthorizationMethodService
 import io.mosip.vciclient.authorizationServer.AuthorizationServerMetadata
@@ -36,13 +36,14 @@ internal class AuthorizationCodeFlowService(
         clientMetadata: ClientMetadata,
         getTokenResponse: TokenResponseCallback,
         getProofJwt: ProofJwtCallback,
+        authorizationMethods: List<AuthorizationMethod>,
         credentialOffer: CredentialOffer? = null,
         downloadTimeOutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
         jwtProofAlgorithmsSupported: List<String>,
-        authorizeUser: AuthorizeUserCallback? = null,
-        authorizationMethods: List<AuthorizationMethod>? = emptyList()
+        traceabilityId: String? = null
     ): CredentialResponse {
         try {
+
             val pkceSession = pkceSessionManager.createSession()
 
             val authorizationServerMetadata = try {
@@ -61,8 +62,8 @@ internal class AuthorizationCodeFlowService(
                     pkceSession = pkceSession,
                     getTokenResponse = getTokenResponse,
                     credentialConfigurationId = credentialConfigurationId,
-                    authorizeUser = authorizeUser,
-                    authorizationMethods = authorizationMethods
+                    authorizationMethods = authorizationMethods,
+                    traceabilityId = traceabilityId
                 )
             } catch (e: DownloadFailedException) {
                 throw e
@@ -113,8 +114,8 @@ internal class AuthorizationCodeFlowService(
         pkceSession: PKCESessionManager.PKCESession,
         getTokenResponse: TokenResponseCallback,
         credentialConfigurationId: String,
-        authorizeUser: AuthorizeUserCallback? = null,
-        authorizationMethods: List<AuthorizationMethod>? = emptyList()
+        authorizationMethods: List<AuthorizationMethod>,
+        traceabilityId: String? = null
     ): TokenResponse {
         val tokenEndpoint = issuerMetadata.tokenEndpoint
             ?: authorizationServerMetadata.tokenEndpoint
@@ -128,8 +129,8 @@ internal class AuthorizationCodeFlowService(
             clientMetadata = clientMetadata,
             pkceSession = pkceSession,
             credentialConfigurationId = credentialConfigurationId,
-            authorizeUser = authorizeUser,
-            authorizationMethods = authorizationMethods
+            authorizationMethods = authorizationMethods,
+            traceabilityId = traceabilityId
         )
 
         return try {
@@ -148,50 +149,69 @@ internal class AuthorizationCodeFlowService(
         }
     }
 
+    internal fun normalizeAuthorizationMethods(
+        authorizeUser: AuthorizeUserCallback?,
+        authorizationMethods: List<AuthorizationMethod> = emptyList()
+    ): List<AuthorizationMethod> {
+        if (authorizeUser == null) return authorizationMethods
+
+        val redirectToWeb = AuthorizationMethod.RedirectToWeb(
+            openWebPage = { authUrl ->
+                val code = authorizeUser.invoke(authUrl)
+                mapOf("code" to code)
+            }
+        )
+
+        return (authorizationMethods + redirectToWeb)
+    }
+
+
     private suspend fun obtainAuthorizationCode(
         authorizationServerMetadata: AuthorizationServerMetadata,
         issuerMetadata: IssuerMetadata,
         clientMetadata: ClientMetadata,
         pkceSession: PKCESessionManager.PKCESession,
         credentialConfigurationId: String,
-        authorizeUser: AuthorizeUserCallback? = null,
-        authorizationMethods: List<AuthorizationMethod>?
+        authorizationMethods: List<AuthorizationMethod>,
+        traceabilityId: String? = null
     ): String {
         val interactiveEndpoint = authorizationServerMetadata.interactiveAuthorizationEndpoint
-        val hasInteractiveAuthorizationMethods = !authorizationMethods.isNullOrEmpty()
 
         return when {
-            interactiveEndpoint != null && hasInteractiveAuthorizationMethods -> {
-                obtainAuthorizationCodeViaInteractiveEndpoint(
+            interactiveEndpoint != null -> {
+                obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
                     endpoint = interactiveEndpoint,
                     issuerMetadata = issuerMetadata,
                     clientMetadata = clientMetadata,
                     pkceSession = pkceSession,
                     credentialConfigurationId = credentialConfigurationId,
-                    authorizationMethods = authorizationMethods!!
+                    authorizationMethods = authorizationMethods,
+                    authorizationServerMetadata = authorizationServerMetadata,
+                    traceabilityId = traceabilityId
                 )
             }
 
             else -> {
-                obtainAuthorizationCodeViaStandardRedirectToWeb(
+                obtainAuthorizationCodeViaAuthorizationEndpoint(
                     authorizationServerMetadata = authorizationServerMetadata,
                     issuerMetadata = issuerMetadata,
                     clientMetadata = clientMetadata,
                     pkceSession = pkceSession,
-                    authorizeUser = authorizeUser,
                     authorizationMethods = authorizationMethods
                 )
             }
         }
     }
 
-    private suspend fun obtainAuthorizationCodeViaInteractiveEndpoint(
+    private suspend fun obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
         endpoint: String,
         issuerMetadata: IssuerMetadata,
         clientMetadata: ClientMetadata,
         pkceSession: PKCESessionManager.PKCESession,
         credentialConfigurationId: String,
-        authorizationMethods: List<AuthorizationMethod>
+        authorizationServerMetadata: AuthorizationServerMetadata,
+        authorizationMethods: List<AuthorizationMethod>,
+        traceabilityId: String? = null
     ): String {
         logger.info(
             "Using Interactive Authorization Endpoint: $endpoint for issuer=${issuerMetadata.credentialIssuer}"
@@ -204,12 +224,26 @@ internal class AuthorizationCodeFlowService(
                 clientMetadata = clientMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 authorizationMethods = authorizationMethods,
-                pkceSession = pkceSession
+                pkceSession = pkceSession,
+                traceabilityId = traceabilityId
             )
         } catch (e: Exception) {
-            throw DownloadFailedException(
-                "Interactive authorization failed at endpoint $endpoint : ${e.message}"
-            )
+            //TODO:: TBD later
+            if (e.message?.contains("missing_interaction_type") == true || e.message?.contains("No supported interaction types") == true) {
+                logger.info("Falling back to authorization via authorization endpoint as interactive authorization endpoint $endpoint does not support required interaction types.")
+                return obtainAuthorizationCodeViaAuthorizationEndpoint(
+                    authorizationServerMetadata = authorizationServerMetadata,
+                    issuerMetadata = issuerMetadata,
+                    clientMetadata = clientMetadata,
+                    pkceSession = pkceSession,
+                    authorizationMethods = authorizationMethods
+                )
+            } else {
+                throw DownloadFailedException(
+                    "Interactive authorization failed at endpoint $endpoint : ${e.message}"
+                )
+            }
+
         }
 
         return response.authorizationCode
@@ -218,13 +252,12 @@ internal class AuthorizationCodeFlowService(
             )
     }
 
-    private suspend fun obtainAuthorizationCodeViaStandardRedirectToWeb(
+    private suspend fun obtainAuthorizationCodeViaAuthorizationEndpoint(
         authorizationServerMetadata: AuthorizationServerMetadata,
-        authorizeUser: AuthorizeUserCallback? = null,
         issuerMetadata: IssuerMetadata,
         clientMetadata: ClientMetadata,
         pkceSession: PKCESessionManager.PKCESession,
-        authorizationMethods: List<AuthorizationMethod>? = null
+        authorizationMethods: List<AuthorizationMethod>
     ): String {
         val authorizationEndpoint = authorizationServerMetadata.authorizationEndpoint
             ?: throw DownloadFailedException(
@@ -233,7 +266,7 @@ internal class AuthorizationCodeFlowService(
 
         val redirectToWebAuthMethod =
             authorizationMethods
-                ?.firstOrNull { it.type == InteractionType.RedirectToWeb } as? AuthorizationMethod.RedirectToWeb
+                .firstOrNull { it is AuthorizationMethod.RedirectToWeb } as? AuthorizationMethod.RedirectToWeb
 
         if (redirectToWebAuthMethod != null) {
             logger.info(
@@ -241,7 +274,7 @@ internal class AuthorizationCodeFlowService(
                         "(redirect_to_web) for issuer=${issuerMetadata.credentialIssuer}"
             )
 
-            val requestData = StandardAuthorizationRequestData(
+            val requestData = ImplicitAuthorizationRequestData(
                 authorizeUrl = authorizationEndpoint,
                 clientMetadata = clientMetadata,
                 pkceSession = pkceSession,
@@ -254,7 +287,7 @@ internal class AuthorizationCodeFlowService(
 
             } catch (e: Exception) {
                 throw DownloadFailedException(
-                    "Redirect-to-web authorization failed at endpoint $authorizationEndpoint: ${e.message}"
+                    "authorization failed at endpoint $authorizationEndpoint: ${e.message}"
                 )
             }
             return response.authorizationCode
@@ -262,13 +295,9 @@ internal class AuthorizationCodeFlowService(
                     "Authorization code not received from non-interactive authorization endpoint $authorizationEndpoint"
                 )
         } else {
-
-            val authorizationCode = authorizeUser?.invoke(authorizationEndpoint)
-                ?: throw DownloadFailedException(
-                    "No authorization method available to obtain authorization code from $authorizationEndpoint"
-                )
-
-            return authorizationCode
+            throw DownloadFailedException(
+                "No authorization method available to obtain authorization code from $authorizationEndpoint"
+            )
         }
     }
 }

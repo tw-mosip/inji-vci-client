@@ -1,18 +1,22 @@
 package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler
 
-import AuthorizationDetail
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.OpenId4VpPresentationResponse
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.OpenId4VpPresentationAuthorizationRequestData
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationInteractionResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceRequestData
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceAuthorizationMethodService
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationDetail
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.IARInitialRequestBody
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractionResponse
 import io.mosip.vciclient.common.JsonUtils
+import io.mosip.vciclient.constants.Constants.APPLICATION_X_WWW_FORM_URLENCODED
+import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
 import io.mosip.vciclient.pkce.PKCESessionManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.util.logging.Logger
 
@@ -25,52 +29,61 @@ class InteractiveAuthorizationHandler {
         clientMetadata: ClientMetadata,
         credentialConfigurationId: String,
         authorizationMethods: List<AuthorizationMethod>,
-        pkceSession: PKCESessionManager.PKCESession
-    ): AuthorizationResponse {
+        pkceSession: PKCESessionManager.PKCESession,
+        traceabilityId: String? = null
+    ): InteractionResponse {
 
         return try {
-            val interactionTypesSupported = authorizationMethods.map { it.type.value }
-            val requestMap = buildIarRequest(
+            //interaction types supported will be extracted from authmethods once we start supporting redirect-to-web
+            val interactionTypesSupported = authorizationMethods
+                .filter { it.type != InteractionType.RedirectToWeb }
+                .map { it.type.value }
+
+            if (interactionTypesSupported.isEmpty()) {
+                throw InteractiveAuthorizationException("No supported interaction types found in authorization methods")
+            }
+
+            val requestMap = buildInitialIarRequest(
                 clientMetadata,
                 credentialConfigurationId,
                 pkceSession,
                 interactionTypesSupported
             )
 
-            val response = NetworkManager.sendRequest(
-                url = endpoint,
-                method = HttpMethod.POST,
-                bodyParams = requestMap,
-                headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
-            )
-
-            val type = try {
-                extractInteractionType(response.body)
-            } catch (
-                e: Exception
-            ) {
-                throw InteractiveAuthorizationException("Failed to parse and extract interaction type: ${e.message}")
+            val response = withContext(Dispatchers.IO) {
+                NetworkManager.sendRequest(
+                    url = endpoint,
+                    method = HttpMethod.POST,
+                    bodyParams = requestMap,
+                    headers = mapOf(CONTENT_TYPE to APPLICATION_X_WWW_FORM_URLENCODED)
+                )
             }
 
+            val type = extractTypeAndThrowIfError(response.body)
 
             when (type) {
                 InteractionType.OpenId4VpPresentation.value ->
-                    handlePresentationInteraction(response.body, authorizationMethods, endpoint)
+                    handlePresentationInteraction(
+                        response.body,
+                        authorizationMethods,
+                        endpoint,
+                        traceabilityId
+                    )
 
                 else ->
                     throw InteractiveAuthorizationException("Unsupported interaction type: $type")
             }
 
         } catch (e: InteractiveAuthorizationException) {
-            logger.warning("IAR Error: ${e.message}")
+            logger.warning("Interactive authorization failed: ${e.message}")
             throw e
         } catch (e: Exception) {
-            logger.severe("IAR Fatal Error: ${e.message}")
+            logger.severe("Interactive authorization failed: ${e.message}")
             throw InteractiveAuthorizationException("Interactive authorization failed: ${e.message}")
         }
     }
 
-    private fun buildIarRequest(
+    private fun buildInitialIarRequest(
         clientMetadata: ClientMetadata,
         credentialConfigId: String,
         pkce: PKCESessionManager.PKCESession,
@@ -92,23 +105,51 @@ class InteractiveAuthorizationHandler {
         ).toFormMap()
     }
 
-    private fun extractInteractionType(responseBody: String): String =
-        JSONObject(responseBody).optString("type", "")
+    private fun extractTypeAndThrowIfError(responseBody: String): String {
+        var json: JSONObject
+        try {
+            json = JSONObject(responseBody)
+        } catch (_: Exception) {
+            throw InteractiveAuthorizationException("Invalid JSON in interaction response from authorization server")
+        }
+        if (json.has("type")) {
+            return json.getString("type")
+        }
+        if (json.has("error")) {
+            val error = json.optString("error")
+            val errorDescription = json.optString("error_description")
+
+            throw InteractiveAuthorizationException(
+                message = buildString {
+                    append("authorization server error: $error")
+                    if (errorDescription.isNotBlank()) {
+                        append(" - $errorDescription")
+                    }
+                },
+            )
+        } else {
+            throw InteractiveAuthorizationException("Missing 'type' in interaction response from authorization server")
+        }
+    }
 
 
     private suspend fun handlePresentationInteraction(
-        responseBody: String,
+        presentationInteractionResponse: String,
         authorizationMethods: List<AuthorizationMethod>,
-        endpoint: String
-    ): AuthorizationResponse {
+        endpoint: String,
+        traceabilityId: String? = null
+    ): InteractionResponse {
 
-        val parsed = JsonUtils.deserialize(responseBody, OpenId4VpPresentationResponse::class.java)
-            ?: throw InteractiveAuthorizationException("Failed to parse OpenID4VP response")
+        val parsedPresentationInteractionResponse = JsonUtils.deserialize(
+            presentationInteractionResponse,
+            PresentationInteractionResponse::class.java
+        )
+            ?: throw InteractiveAuthorizationException("Failed to parse presentation interaction response")
 
         try {
-            parsed.validate()
+            parsedPresentationInteractionResponse.validate()
         } catch (e: Exception) {
-            throw InteractiveAuthorizationException("Invalid OpenID4VP response: ${e.message}")
+            throw InteractiveAuthorizationException("Invalid presentation interaction response: ${e.message}")
         }
 
         val presentationMethod = authorizationMethods
@@ -116,17 +157,18 @@ class InteractiveAuthorizationHandler {
             .firstOrNull()
             ?: throw InteractiveAuthorizationException("Presentation callback missing")
 
-        val request = OpenId4VpPresentationAuthorizationRequestData(
-            ovpRequest = parsed.openid4vpRequest,
-            authSession = parsed.authSession,
+        val request = PresentationDuringIssuanceRequestData(
+            ovpRequest = parsedPresentationInteractionResponse.openid4vpRequest,
+            authSession = parsedPresentationInteractionResponse.authSession,
             iar = endpoint
         )
 
-        val handler = PresentationDuringIssuanceAuthorizationMethodService(
-            handlePresentationRequest = presentationMethod.selectCredentialsForPresentation,
-            signVerifiablePresentation = presentationMethod.signVerifiablePresentation
+        val authorizationService = PresentationDuringIssuanceAuthorizationMethodService(
+            selectCredentialsForPresentation = presentationMethod.selectCredentialsForPresentation,
+            signVerifiablePresentation = presentationMethod.signVerifiablePresentation,
+            traceabilityId = traceabilityId
         )
 
-        return handler.authorizeUser(request)
+        return authorizationService.authorizeUser(request)
     }
 }

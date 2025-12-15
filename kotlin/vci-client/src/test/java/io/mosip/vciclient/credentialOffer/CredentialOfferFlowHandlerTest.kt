@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.unmockkAll
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
+import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.exception.CredentialOfferFetchFailedException
@@ -41,6 +42,8 @@ class CredentialOfferFlowHandlerTest {
     private lateinit var txCode: TxCodeCallback
     private lateinit var getProofJwt: ProofJwtCallback
     private lateinit var authorizeUser: AuthorizeUserCallback
+
+    private lateinit var authorizationMethod: AuthorizationMethod
     private lateinit var getTokenResponse: TokenResponseCallback
     private lateinit var onCheckIssuerTrust: CheckIssuerTrustCallback
 
@@ -71,6 +74,15 @@ class CredentialOfferFlowHandlerTest {
                 authEndpoint: String,
             ): String = "mock-auth-code"
         }
+
+        authorizationMethod = AuthorizationMethod.RedirectToWeb(
+            openWebPage = {
+                val code = authorizeUser.invoke("dummy-endpoint")
+                mapOf(
+                    "code" to code,
+                )
+            }
+        )
 
         getProofJwt = object : ProofJwtCallback {
             override suspend fun invoke(p1: String, p2: String?, p3: List<String>): String =
@@ -114,9 +126,9 @@ class CredentialOfferFlowHandlerTest {
             credentialOffer = "some-offer",
             clientMetadata = mockClientMetadata,
             getTxCode = txCode,
-            authorizeUser = authorizeUser,
             getTokenResponse = getTokenResponse,
             getProofJwt = getProofJwt,
+            authorizationMethods = listOf(authorizationMethod),
             onCheckIssuerTrust = onCheckIssuerTrust,
         )
 
@@ -139,9 +151,9 @@ class CredentialOfferFlowHandlerTest {
                 credentialOffer = "some-offer",
                 clientMetadata = mockClientMetadata,
                 getTxCode = txCode,
-                authorizeUser = authorizeUser,
                 getTokenResponse = getTokenResponse,
                 getProofJwt = getProofJwt,
+                authorizationMethods = listOf(authorizationMethod),
                 onCheckIssuerTrust = onCheckIssuerTrust,
             )
         }
@@ -182,8 +194,8 @@ class CredentialOfferFlowHandlerTest {
                 credentialOffer = "some-offer",
                 clientMetadata = mockClientMetadata,
                 getTxCode = txCode,
-                authorizeUser = authorizeUser,
                 getTokenResponse = getTokenResponse,
+                authorizationMethods = listOf(authorizationMethod),
                 getProofJwt = getProofJwt,
                 onCheckIssuerTrust = onCheckIssuerTrust,
             )
@@ -213,8 +225,8 @@ class CredentialOfferFlowHandlerTest {
                     credentialOffer = "some-offer",
                     clientMetadata = mockClientMetadata,
                     getTxCode = txCode,
-                    authorizeUser = authorizeUser,
                     getTokenResponse = getTokenResponse,
+                    authorizationMethods = listOf(authorizationMethod),
                     getProofJwt = getProofJwt,
                     onCheckIssuerTrust = onCheckIssuerTrust,
                 )
@@ -242,8 +254,8 @@ class CredentialOfferFlowHandlerTest {
                     credentialOffer = "some-offer",
                     clientMetadata = mockClientMetadata,
                     getTxCode = txCode,
-                    authorizeUser = authorizeUser,
                     getTokenResponse = getTokenResponse,
+                    authorizationMethods = listOf(authorizationMethod),
                     getProofJwt = getProofJwt,
                     onCheckIssuerTrust = onCheckIssuerTrust,
                 )

@@ -1,6 +1,5 @@
 package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request
 
-import AuthorizationDetail
 import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.common.JsonUtils
 

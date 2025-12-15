@@ -1,5 +1,7 @@
 package io.mosip.vciclient.credential.request.types
 
+import io.mosip.vciclient.constants.Constants.APPLICATION_JSON
+import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
 import io.mosip.vciclient.constants.CredentialFormat
 import io.mosip.vciclient.credential.request.util.ValidatorResult
 import io.mosip.vciclient.proof.jwt.JWTProof
@@ -33,7 +35,7 @@ class LdpVcCredentialRequestTest {
             ldpVcRequest.headers.toHeaderList().containsAll(
                 listOf(
                     Header("Authorization", "Bearer accessToken"),
-                    Header("Content-Type", "application/json")
+                    Header(CONTENT_TYPE, APPLICATION_JSON)
                 )
             )
         )

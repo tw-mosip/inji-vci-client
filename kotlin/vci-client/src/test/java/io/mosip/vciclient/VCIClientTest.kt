@@ -46,7 +46,7 @@ class VCIClientTest {
 
         coEvery {
             anyConstructed<CredentialOfferFlowHandler>().downloadCredentials(
-                any(), any(), any(), any(), any(), any(), any(), any()
+                any(), any(), any(), any(), any(), any(), any(), any(),any()
             )
         } returns mockCredentialResponse
 
@@ -179,7 +179,7 @@ class VCIClientTest {
     fun `should throw VCIClientException when credential offer flow throws`(): Unit = runBlocking {
         coEvery {
             anyConstructed<CredentialOfferFlowHandler>().downloadCredentials(
-                any(), any(), any(), any(), any(), any(), any(), any()
+                any(), any(), any(), any(), any(), any(), any(), any(),any()
             )
         } throws Exception("flow error")
 
@@ -325,7 +325,7 @@ class VCIClientTest {
             )
         } returns mockCredentialResponse
 
-        val result = VCIClient("trace-id").fetchCredentialFromTrustedIssuerV2(
+        val result = VCIClient("trace-id").fetchCredentialFromTrustedIssuer(
             credentialIssuer = "https://issuer.com",
             credentialConfigurationId = "config-id",
             clientMetadata = mockk(),
@@ -347,7 +347,7 @@ class VCIClientTest {
         } throws RuntimeException("boom")
 
         val ex = assertThrows<VCIClientException> {
-            VCIClient("trace-id").fetchCredentialFromTrustedIssuerV2(
+            VCIClient("trace-id").fetchCredentialFromTrustedIssuer(
                 credentialIssuer = "https://issuer.com",
                 credentialConfigurationId = "config-id",
                 clientMetadata = mockk(),
@@ -369,7 +369,7 @@ class VCIClientTest {
                 credentialOffer = any(),
                 clientMetadata = any(),
                 getTxCode = any(),
-                interactiveAuthorizationCallbacks = any(),
+                authorizationMethods = any(),
                 getTokenResponse = any(),
                 getProofJwt = any(),
                 onCheckIssuerTrust = any(),
@@ -377,7 +377,7 @@ class VCIClientTest {
             )
         } returns mockCredentialResponse
 
-        val result = VCIClient("trace-id").fetchCredentialByCredentialOfferV2(
+        val result = VCIClient("trace-id").fetchCredentialByCredentialOffer(
             credentialOffer = "sample-offer",
             clientMetadata = mockk(),
             getTxCode = getTxCode,
@@ -400,7 +400,7 @@ class VCIClientTest {
         } throws VCIClientException("VCI-999", "known failure")
 
         val ex = assertThrows<VCIClientException> {
-            VCIClient("trace-id").fetchCredentialByCredentialOfferV2(
+            VCIClient("trace-id").fetchCredentialByCredentialOffer(
                 credentialOffer = "sample-offer",
                 clientMetadata = mockk(),
                 getTxCode = getTxCode,
@@ -413,7 +413,7 @@ class VCIClientTest {
         }
 
         assertEquals("VCI-999", ex.code)
-        assertTrue(ex.message!!.contains("known failure"))
+        assertTrue(ex.message.contains("known failure"))
     }
 
     @Test
@@ -430,7 +430,7 @@ class VCIClientTest {
             )
         } returns mockCredentialResponse
 
-        val result = VCIClient("trace-id").fetchCredentialFromTrustedIssuerV2(
+        val result = VCIClient("trace-id").fetchCredentialFromTrustedIssuer(
             credentialIssuer = "https://issuer.com",
             credentialConfigurationId = "config-id",
             clientMetadata = mockk(),

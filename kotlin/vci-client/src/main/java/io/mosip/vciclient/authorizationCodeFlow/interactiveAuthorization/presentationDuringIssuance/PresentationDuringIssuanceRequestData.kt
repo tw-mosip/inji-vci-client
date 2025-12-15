@@ -2,8 +2,8 @@ package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presen
 
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationRequestData
 
-data class OpenId4VpPresentationAuthorizationRequestData(
+data class PresentationDuringIssuanceRequestData(
     val ovpRequest: Map<String, Any>,
-    val authSession: String?,
+    val authSession: String,
     val iar: String
 ) : AuthorizationRequestData()

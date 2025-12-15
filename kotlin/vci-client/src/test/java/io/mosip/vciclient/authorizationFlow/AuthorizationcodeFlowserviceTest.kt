@@ -8,9 +8,10 @@ import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
+import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractiveAuthorizationHandler
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractionResponse
 import io.mosip.vciclient.authorizationServer.AuthorizationServerMetadata
 import io.mosip.vciclient.authorizationServer.AuthorizationServerResolver
 import io.mosip.vciclient.authorizationServer.AuthorizationUrlBuilder
@@ -48,6 +49,7 @@ class AuthorizationCodeFlowServiceTest {
     private val pkceSession = PKCESession("verifier", "challenge", "state", "nonce")
 
     private lateinit var authorizeUser: AuthorizeUserCallback
+    private lateinit var authorizationMethod: AuthorizationMethod
     private lateinit var getProofJwt: ProofJwtCallback
     private lateinit var getTokenResponse: TokenResponseCallback
 
@@ -119,6 +121,14 @@ class AuthorizationCodeFlowServiceTest {
         } returns mockCredentialResponse
 
         authorizeUser = { _ -> "mockAuthCode" }
+        authorizationMethod = AuthorizationMethod.RedirectToWeb(
+            openWebPage = {
+                val code = authorizeUser.invoke("dummy-endpoint")
+                mapOf(
+                    "code" to code,
+                )
+            }
+        )
         getProofJwt = { _, _, _ -> "mock.jwt.proof" }
         getTokenResponse = { _ -> TokenResponse("accessToken", "accessToken") }
     }
@@ -133,12 +143,12 @@ class AuthorizationCodeFlowServiceTest {
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
-                authorizeUser = authorizeUser,
                 getTokenResponse = getTokenResponse,
                 getProofJwt = getProofJwt,
                 credentialOffer = credentialOffer,
                 downloadTimeOutInMillis = downloadTimeout,
                 jwtProofAlgorithmsSupported = listOf("ES256"),
+                authorizationMethods = listOf(authorizationMethod),
             )
 
             assertEquals(mockCredentialResponse, result)
@@ -164,12 +174,12 @@ class AuthorizationCodeFlowServiceTest {
                     issuerMetadata = resolvedIssuerMetadata,
                     credentialConfigurationId = credentialConfigurationId,
                     clientMetadata = clientMetadata,
-                    authorizeUser = authorizeUser,
                     getTokenResponse = getTokenResponse,
                     getProofJwt = getProofJwt,
                     credentialOffer = credentialOffer,
                     downloadTimeOutInMillis = downloadTimeout,
-                    jwtProofAlgorithmsSupported = listOf("ES256")
+                    jwtProofAlgorithmsSupported = listOf("ES256"),
+                    authorizationMethods = listOf(authorizationMethod),
                 )
             }
 
@@ -202,7 +212,7 @@ class AuthorizationCodeFlowServiceTest {
                     any(),
                     any(),
                 )
-            } returns AuthorizationResponse("mockAuthCode", "success")
+            } returns InteractionResponse("mockAuthCode", "success")
 
 
             val result =
@@ -210,12 +220,12 @@ class AuthorizationCodeFlowServiceTest {
                     issuerMetadata = resolvedIssuerMetadata,
                     credentialConfigurationId = credentialConfigurationId,
                     clientMetadata = clientMetadata,
-                    authorizeUser = authorizeUser,
                     getTokenResponse = getTokenResponse,
                     getProofJwt = getProofJwt,
                     credentialOffer = credentialOffer,
                     downloadTimeOutInMillis = downloadTimeout,
-                    jwtProofAlgorithmsSupported = listOf("ES256")
+                    jwtProofAlgorithmsSupported = listOf("ES256"),
+                    authorizationMethods = listOf(authorizationMethod),
                 )
             assertEquals(mockCredentialResponse, result)
         }
@@ -231,10 +241,10 @@ class AuthorizationCodeFlowServiceTest {
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
-                authorizeUser = authorizeUser,
                 getTokenResponse = getTokenResponse,
                 getProofJwt = getProofJwt,
-                jwtProofAlgorithmsSupported = listOf("ES256")
+                jwtProofAlgorithmsSupported = listOf("ES256"),
+                authorizationMethods = listOf(authorizationMethod),
             )
         }
 
@@ -260,10 +270,10 @@ class AuthorizationCodeFlowServiceTest {
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
-                authorizeUser = authorizeUser,
                 getTokenResponse = getTokenResponse,
                 getProofJwt = getProofJwt,
-                jwtProofAlgorithmsSupported = listOf("ES256")
+                jwtProofAlgorithmsSupported = listOf("ES256"),
+                authorizationMethods = listOf(authorizationMethod),
             )
         }
 
@@ -283,7 +293,7 @@ class AuthorizationCodeFlowServiceTest {
         val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
         coEvery {
             mockHandler.handle(any(), any(), any(), any(), any())
-        } returns AuthorizationResponse(
+        } returns InteractionResponse(
             authorizationCode = null,
             status = "error",
             error = "access_denied",
@@ -314,10 +324,10 @@ class AuthorizationCodeFlowServiceTest {
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
-                authorizeUser = null,
                 getTokenResponse = getTokenResponse,
                 getProofJwt = getProofJwt,
-                jwtProofAlgorithmsSupported = listOf("ES256")
+                jwtProofAlgorithmsSupported = listOf("ES256"),
+                authorizationMethods = emptyList(),
             )
         }
 
@@ -337,10 +347,10 @@ class AuthorizationCodeFlowServiceTest {
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
-                authorizeUser = authorizeUser,
                 getTokenResponse = getTokenResponse,
                 getProofJwt = failingProofJwt,
-                jwtProofAlgorithmsSupported = listOf("ES256")
+                jwtProofAlgorithmsSupported = listOf("ES256"),
+                authorizationMethods = listOf(authorizationMethod),
             )
         }
 
@@ -362,10 +372,10 @@ class AuthorizationCodeFlowServiceTest {
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
-                authorizeUser = authorizeUser,
                 getTokenResponse = getTokenResponse,
                 getProofJwt = getProofJwt,
-                jwtProofAlgorithmsSupported = listOf("ES256")
+                jwtProofAlgorithmsSupported = listOf("ES256"),
+                authorizationMethods = listOf(authorizationMethod),
             )
         }
 

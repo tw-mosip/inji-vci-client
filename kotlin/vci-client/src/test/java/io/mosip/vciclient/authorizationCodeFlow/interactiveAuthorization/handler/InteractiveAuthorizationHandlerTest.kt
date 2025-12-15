@@ -8,9 +8,9 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.OpenId4VpPresentationAuthorizationRequestData
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceRequestData
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceAuthorizationMethodService
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractionResponse
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
@@ -71,17 +71,17 @@ class InteractiveAuthorizationHandlerTest {
             )
         } returns NetworkResponse(responseBody, null)
 
-        val expectedAuthResponse = mockk<AuthorizationResponse>()
+        val expectedAuthResponse = mockk<InteractionResponse>()
 
         val presentationMethod = AuthorizationMethod.PresentationDuringIssuance(
             selectCredentialsForPresentation = mockk(relaxed = true),
-            signVerifiablePresentation = mockk(relaxed = true)
+            signVerifiablePresentation = mockk(relaxed = true),
         )
 
         mockkConstructor(PresentationDuringIssuanceAuthorizationMethodService::class)
         coEvery {
             anyConstructed<PresentationDuringIssuanceAuthorizationMethodService>()
-                .authorizeUser(any<OpenId4VpPresentationAuthorizationRequestData>())
+                .authorizeUser(any<PresentationDuringIssuanceRequestData>())
         } returns expectedAuthResponse
 
         val result = handler.handle(
@@ -89,7 +89,8 @@ class InteractiveAuthorizationHandlerTest {
             clientMetadata = clientMetadata,
             credentialConfigurationId = credentialConfigId,
             authorizationMethods = listOf(presentationMethod),
-            pkceSession = pkceSession
+            pkceSession = pkceSession,
+            traceabilityId = "demo"
         )
 
         assertEquals(expectedAuthResponse, result)
@@ -114,7 +115,7 @@ class InteractiveAuthorizationHandlerTest {
             )
         }
 
-        assert(ex.message.contains("Unsupported interaction type"))
+        assert(ex.message.contains("No supported interaction types found"))
     }
 
     @Test
@@ -144,18 +145,20 @@ class InteractiveAuthorizationHandlerTest {
             NetworkManager.sendRequest(any(), any(), any(), any())
         } returns NetworkResponse(responseBody, null)
 
-        val ex = assertFailsWith<InteractiveAuthorizationException> {
+         assertFailsWith<InteractiveAuthorizationException> {
             handler.handle(
                 endpoint,
                 clientMetadata,
                 credentialConfigId,
-                emptyList(),
+                listOf(
+                    AuthorizationMethod.PresentationDuringIssuance(
+                        selectCredentialsForPresentation = mockk(relaxed = true),
+                        signVerifiablePresentation = mockk(relaxed = true)
+                    )
+                ),
                 pkceSession
             )
         }
-        print(ex.message)
-
-        assert(ex.message.contains("Failed to parse and extract interaction type"))
     }
 
     @Test
@@ -183,7 +186,7 @@ class InteractiveAuthorizationHandlerTest {
             )
         }
 
-        assert(ex.message.contains("Invalid OpenID4VP response"))
+        assert(ex.message.contains("Invalid presentation interaction response"))
     }
 
     @Test
@@ -204,7 +207,7 @@ class InteractiveAuthorizationHandlerTest {
             )
         }
 
-        assert(ex.message.contains("Presentation callback missing"))
+        assert(ex.message.contains("No supported interaction types found"))
     }
 
     @Test
@@ -218,9 +221,16 @@ class InteractiveAuthorizationHandlerTest {
                 endpoint,
                 clientMetadata,
                 credentialConfigId,
-                emptyList(),
-                pkceSession
-            )
+                listOf(
+                    AuthorizationMethod.PresentationDuringIssuance(
+                        selectCredentialsForPresentation = mockk(relaxed = true),
+                        signVerifiablePresentation = mockk(relaxed = true)
+                    )
+                ),
+
+                pkceSession,
+
+                )
         }
 
         assert(ex.message.contains("Interactive authorization failed"))
@@ -237,7 +247,12 @@ class InteractiveAuthorizationHandlerTest {
                 endpoint,
                 clientMetadata,
                 credentialConfigId,
-                emptyList(),
+                listOf(
+                    AuthorizationMethod.PresentationDuringIssuance(
+                        selectCredentialsForPresentation = mockk(relaxed = true),
+                        signVerifiablePresentation = mockk(relaxed = true)
+                    )
+                ),
                 pkceSession
             )
         }

@@ -1,9 +1,9 @@
 package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance
 
 import com.google.gson.annotations.SerializedName
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractiveAuthorizationResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 
-data class OpenId4VpPresentationResponse(
+data class PresentationInteractionResponse(
     @SerializedName("status")
     override val status: String,
     @SerializedName("type")
@@ -12,7 +12,7 @@ data class OpenId4VpPresentationResponse(
     override val authSession: String,
     @SerializedName("openid4vp_request")
     val openid4vpRequest: Map<String, Any>
-) : InteractiveAuthorizationResponse(status, type, authSession) {
+) : AuthorizationResponse(status, type, authSession) {
 
     override fun validate() {
 
@@ -46,7 +46,7 @@ data class OpenId4VpPresentationResponse(
     }
 
     private fun validateSignedRequest() {
-        val jwt = openid4vpRequest["request"] as? String
+        openid4vpRequest["request"] as? String
             ?: throw IllegalArgumentException("Missing or invalid 'request' JWT")
     }
 

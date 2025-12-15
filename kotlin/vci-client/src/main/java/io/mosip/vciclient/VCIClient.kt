@@ -1,5 +1,6 @@
 package io.mosip.vciclient
 
+import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.common.JsonUtils
@@ -31,7 +32,7 @@ import java.io.InterruptedIOException
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 
-class VCIClient(traceabilityId: String) {
+class VCIClient(val traceabilityId: String) {
 
     private val logTag = Util.getLogTag(javaClass.simpleName, traceabilityId)
     private val logger = Logger.getLogger(logTag)
@@ -80,15 +81,21 @@ class VCIClient(traceabilityId: String) {
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS
     ): CredentialResponse {
         try {
+            val normalizedAuthorizationMethods =
+                AuthorizationCodeFlowService().normalizeAuthorizationMethods(
+                    authorizeUser = authorizeUser,
+                )
+
             return CredentialOfferFlowHandler().downloadCredentials(
                 credentialOffer = credentialOffer,
                 clientMetadata = clientMetadata,
                 getTxCode = getTxCode,
-                authorizeUser = authorizeUser,
+                authorizationMethods = normalizedAuthorizationMethods,
                 getTokenResponse = getTokenResponse,
                 getProofJwt = getProofJwt,
                 onCheckIssuerTrust = onCheckIssuerTrust,
-                downloadTimeoutInMillis = downloadTimeoutInMillis
+                downloadTimeoutInMillis = downloadTimeoutInMillis,
+                traceabilityId = traceabilityId
             )
         } catch (e: VCIClientException) {
             logger.severe("Downloading credential failed due to ${e.message}")
@@ -110,12 +117,18 @@ class VCIClient(traceabilityId: String) {
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS
     ): CredentialResponse {
         try {
+
+            val normalizedAuthorizationMethods =
+                AuthorizationCodeFlowService().normalizeAuthorizationMethods(
+                    authorizeUser = authorizeUser,
+                )
+
             return TrustedIssuerFlowHandler().downloadCredentials(
                 credentialIssuer = credentialIssuer,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
                 getTokenResponse = getTokenResponse,
-                authorizeUser = authorizeUser,
+                authorizationMethods = normalizedAuthorizationMethods,
                 getProofJwt = getProofJwt,
                 downloadTimeoutInMillis = downloadTimeoutInMillis,
             )
@@ -128,7 +141,7 @@ class VCIClient(traceabilityId: String) {
         }
     }
 
-    suspend fun fetchCredentialFromTrustedIssuerV2(
+    suspend fun fetchCredentialFromTrustedIssuer(
         credentialIssuer: String,
         credentialConfigurationId: String,
         clientMetadata: ClientMetadata,
@@ -156,7 +169,7 @@ class VCIClient(traceabilityId: String) {
         }
     }
 
-    suspend fun fetchCredentialByCredentialOfferV2(
+    suspend fun fetchCredentialByCredentialOffer(
         credentialOffer: String,
         clientMetadata: ClientMetadata,
         getTxCode: TxCodeCallback?,
@@ -171,7 +184,7 @@ class VCIClient(traceabilityId: String) {
                 credentialOffer = credentialOffer,
                 clientMetadata = clientMetadata,
                 getTxCode = getTxCode,
-                interactiveAuthorizationCallbacks = authorizations,
+                authorizationMethods = authorizations,
                 getTokenResponse = getTokenResponse,
                 getProofJwt = getProofJwt,
                 onCheckIssuerTrust = onCheckIssuerTrust,

@@ -17,8 +17,8 @@ typealias ProofJwtCallback = (suspend (
 ) -> String)
 
 typealias CheckIssuerTrustCallback = (suspend (credentialIssuer: String, issuerDisplay: List<Map<String, Any>>) -> Boolean)
-typealias CredentialSelectionCallback = (suspend (ovpRequest: AuthorizationRequest) -> Map<String, Map<FormatType, List<Any>>>)
-typealias SignPresentationCallback = suspend (
+typealias SelectCredentialsForPresentationCallback = (suspend (ovpRequest: AuthorizationRequest) -> Map<String, Map<FormatType, List<Any>>>)
+typealias SignVerifiablePresentationCallback = suspend (
     payload: Map<FormatType, UnsignedVPToken>,
 ) -> Map<FormatType, VPTokenSigningResult>
 typealias OpenWebPageCallback = (suspend (authorizationUrl: String) -> Map<String, Any>)

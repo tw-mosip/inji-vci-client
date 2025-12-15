@@ -3,6 +3,8 @@ package io.mosip.vciclient.credential.request.types
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import io.mosip.vciclient.constants.Constants.APPLICATION_JSON
+import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
 import io.mosip.vciclient.constants.CredentialFormat
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
 import io.mosip.vciclient.proof.Proof
@@ -48,7 +50,7 @@ class SdJwtCredentialRequestTest {
         assertEquals(sampleCredentialEndpoint, request.url.toString())
         assertEquals("POST", request.method)
         assertEquals("Bearer $sampleAccessToken", request.header("Authorization"))
-        assertEquals("application/json", request.header("Content-Type"))
+        assertEquals(APPLICATION_JSON, request.header(CONTENT_TYPE))
         assertNotNull(request.body)
     }
 

@@ -4,7 +4,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mosip.vciclient.authorizationCodeFlow.StandardAuthorizationRequestData
+import io.mosip.vciclient.authorizationCodeFlow.implicitAuthorization.ImplicitAuthorizationRequestData
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationRequestData
 import io.mosip.vciclient.authorizationServer.AuthorizationUrlBuilder
@@ -72,7 +72,7 @@ class RedirectToWebAuthorizationMethodServiceTest {
         coEvery {
             openWebPage.invoke(any())
         } returns mapOf(
-            "authorization_code" to "auth-code-123",
+            "code" to "auth-code-123",
             "auth_session" to "session-xyz"
         )
 
@@ -131,8 +131,8 @@ class RedirectToWebAuthorizationMethodServiceTest {
     }
 
 
-    private fun standardRequest(): StandardAuthorizationRequestData {
-        return StandardAuthorizationRequestData(
+    private fun standardRequest(): ImplicitAuthorizationRequestData {
+        return ImplicitAuthorizationRequestData(
             authorizeUrl = "https://auth.example.com",
             clientMetadata = ClientMetadata(
                 clientId = "client-id",
