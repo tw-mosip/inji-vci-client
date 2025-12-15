@@ -5,10 +5,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.unmockkAll
+import io.mosip.vciclient.constants.AuthorizeUserCallback
 import io.mosip.vciclient.constants.CredentialFormat
-import io.mosip.vciclient.credentialOffer.CredentialOfferFlowHandler
-import io.mosip.vciclient.trustedIssuer.TrustedIssuerFlowHandler
+import io.mosip.vciclient.constants.ProofJwtCallback
+import io.mosip.vciclient.constants.TxCodeCallback
 import io.mosip.vciclient.credential.response.CredentialResponse
+import io.mosip.vciclient.credentialOffer.CredentialOfferFlowHandler
 import io.mosip.vciclient.dto.IssuerMetaData
 import io.mosip.vciclient.exception.IssuerMetadataFetchException
 import io.mosip.vciclient.exception.VCIClientException
@@ -16,9 +18,7 @@ import io.mosip.vciclient.issuerMetadata.IssuerMetadata
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataResult
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
 import io.mosip.vciclient.proof.Proof
-import io.mosip.vciclient.constants.AuthorizeUserCallback
-import io.mosip.vciclient.constants.ProofJwtCallback
-import io.mosip.vciclient.constants.TxCodeCallback
+import io.mosip.vciclient.trustedIssuer.TrustedIssuerFlowHandler
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.junit.After
@@ -122,7 +122,10 @@ class VCIClientTest {
                 credentialIssuer = "https://example.com/issuer"
             )
         }
-        assertEquals("Failed to fetch issuerMetadata - Failed to fetch metadata", vciClientException.message)
+        assertEquals(
+            "Failed to fetch issuerMetadata - Failed to fetch metadata",
+            vciClientException.message
+        )
     }
 
     @Test
@@ -306,6 +309,138 @@ class VCIClientTest {
 
         assertEquals("VCI-010", exception.code)
         assertTrue(exception.message!!.contains("unexpected error"))
+    }
+
+    @Test
+    fun `should return credential when trusted issuer V2 flow succeeds`() = runBlocking {
+        coEvery {
+            anyConstructed<TrustedIssuerFlowHandler>().downloadCredentials(
+                credentialIssuer = any(),
+                credentialConfigurationId = any(),
+                clientMetadata = any(),
+                getTokenResponse = any(),
+                authorizationMethods = any(),
+                getProofJwt = any(),
+                downloadTimeoutInMillis = any()
+            )
+        } returns mockCredentialResponse
+
+        val result = VCIClient("trace-id").fetchCredentialFromTrustedIssuerV2(
+            credentialIssuer = "https://issuer.com",
+            credentialConfigurationId = "config-id",
+            clientMetadata = mockk(),
+            getTokenResponse = mockk(relaxed = true),
+            authorizations = listOf(mockk(relaxed = true)),
+            getProofJwt = getProofJwt,
+            downloadTimeoutInMillis = 10000
+        )
+
+        assertEquals(mockCredentialResponse, result)
+    }
+
+    @Test
+    fun `should wrap unknown exception in trusted issuer V2 flow`() = runBlocking {
+        coEvery {
+            anyConstructed<TrustedIssuerFlowHandler>().downloadCredentials(
+                any(), any(), any(), any(), any(), any(), any()
+            )
+        } throws RuntimeException("boom")
+
+        val ex = assertThrows<VCIClientException> {
+            VCIClient("trace-id").fetchCredentialFromTrustedIssuerV2(
+                credentialIssuer = "https://issuer.com",
+                credentialConfigurationId = "config-id",
+                clientMetadata = mockk(),
+                getTokenResponse = mockk(relaxed = true),
+                authorizations = listOf(mockk(relaxed = true)),
+                getProofJwt = getProofJwt,
+                downloadTimeoutInMillis = 10000
+            )
+        }
+
+        assertEquals("VCI-010", ex.code)
+        assertTrue(ex.message.contains("boom"))
+    }
+
+    @Test
+    fun `should return credential when credential offer V2 flow succeeds`() = runBlocking {
+        coEvery {
+            anyConstructed<CredentialOfferFlowHandler>().downloadCredentials(
+                credentialOffer = any(),
+                clientMetadata = any(),
+                getTxCode = any(),
+                interactiveAuthorizationCallbacks = any(),
+                getTokenResponse = any(),
+                getProofJwt = any(),
+                onCheckIssuerTrust = any(),
+                downloadTimeoutInMillis = any()
+            )
+        } returns mockCredentialResponse
+
+        val result = VCIClient("trace-id").fetchCredentialByCredentialOfferV2(
+            credentialOffer = "sample-offer",
+            clientMetadata = mockk(),
+            getTxCode = getTxCode,
+            authorizations = listOf(mockk(relaxed = true)),
+            getTokenResponse = mockk(relaxed = true),
+            getProofJwt = getProofJwt,
+            onCheckIssuerTrust = mockk(relaxed = true),
+            downloadTimeoutInMillis = 10000
+        )
+
+        assertEquals(mockCredentialResponse, result)
+    }
+
+    @Test
+    fun `should rethrow VCIClientException in credential offer V2 flow`() = runBlocking {
+        coEvery {
+            anyConstructed<CredentialOfferFlowHandler>().downloadCredentials(
+                any(), any(), any(), any(), any(), any(), any(), any()
+            )
+        } throws VCIClientException("VCI-999", "known failure")
+
+        val ex = assertThrows<VCIClientException> {
+            VCIClient("trace-id").fetchCredentialByCredentialOfferV2(
+                credentialOffer = "sample-offer",
+                clientMetadata = mockk(),
+                getTxCode = getTxCode,
+                authorizations = listOf(mockk(relaxed = true)),
+                getTokenResponse = mockk(relaxed = true),
+                getProofJwt = getProofJwt,
+                onCheckIssuerTrust = mockk(relaxed = true),
+                downloadTimeoutInMillis = 10000
+            )
+        }
+
+        assertEquals("VCI-999", ex.code)
+        assertTrue(ex.message!!.contains("known failure"))
+    }
+
+    @Test
+    fun `should allow empty authorization methods in trusted issuer V2 flow`() = runBlocking {
+        coEvery {
+            anyConstructed<TrustedIssuerFlowHandler>().downloadCredentials(
+                credentialIssuer = any(),
+                credentialConfigurationId = any(),
+                clientMetadata = any(),
+                getTokenResponse = any(),
+                authorizationMethods = emptyList(),
+                getProofJwt = any(),
+                downloadTimeoutInMillis = any()
+            )
+        } returns mockCredentialResponse
+
+        val result = VCIClient("trace-id").fetchCredentialFromTrustedIssuerV2(
+            credentialIssuer = "https://issuer.com",
+            credentialConfigurationId = "config-id",
+            clientMetadata = mockk(),
+            getTokenResponse = mockk(relaxed = true),
+            authorizations = emptyList(),
+            getProofJwt = getProofJwt,
+            downloadTimeoutInMillis = 10000
+        )
+
+        assertEquals(mockCredentialResponse, result)
     }
 
 }

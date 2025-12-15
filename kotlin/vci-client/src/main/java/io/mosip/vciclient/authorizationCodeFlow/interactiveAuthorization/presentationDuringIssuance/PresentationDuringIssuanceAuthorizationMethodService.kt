@@ -1,4 +1,4 @@
-package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.presentationDuringIssuance
+package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance
 
 import io.mosip.openID4VP.OpenID4VP
 import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
@@ -6,18 +6,17 @@ import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPToken
 import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResult
 import io.mosip.openID4VP.constants.FormatType
 import io.mosip.openID4VP.constants.ResponseMode
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.handler.AuthorizationHandler
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.request.AuthorizationRequestData
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.response.AuthorizationResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.AuthorizationMethodService
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationRequestData
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
 import io.mosip.vercred.vcverifier.keyResolver.types.did.DidPublicKeyResolver
 import kotlinx.coroutines.withTimeout
-import kotlin.collections.get
 
-class PresentationDuringIssuanceAuthorizationHandler(
+class PresentationDuringIssuanceAuthorizationMethodService(
     private val handlePresentationRequest: suspend (ovpRequest: AuthorizationRequest) -> Map<String, Map<FormatType, List<Any>>>,
     private val signVerifiablePresentation: suspend (
         payload: Map<FormatType, UnsignedVPToken>,
@@ -26,12 +25,12 @@ class PresentationDuringIssuanceAuthorizationHandler(
     private val didPublicKeyResolver: DidPublicKeyResolver = DidPublicKeyResolver(),
     private val handlePresentationTimeoutMs: Long = 500 * 1000L,
     private val signVPTokensTimeoutMs: Long = 5 * 1000L
-) : AuthorizationHandler {
+) : AuthorizationMethodService {
 
     override fun type(): String = "openid4vp_presentation"
 
     override suspend fun authorizeUser(requestData: AuthorizationRequestData): AuthorizationResponse {
-        if (requestData !is PresentationAuthorizationRequestData) {
+        if (requestData !is OpenId4VpPresentationAuthorizationRequestData) {
             return errorResponse("invalid_request", "Expected PresentationAuthorizationRequestData")
         }
 
@@ -62,7 +61,7 @@ class PresentationDuringIssuanceAuthorizationHandler(
         }
     }
 
-    private suspend fun authorize(requestData: PresentationAuthorizationRequestData): AuthorizationResponse {
+    private suspend fun authorize(requestData: OpenId4VpPresentationAuthorizationRequestData): AuthorizationResponse {
         var authorizationRequest: AuthorizationRequest
         try {
             authorizationRequest = validateAuthorizationRequest(requestData.ovpRequest)
@@ -154,10 +153,19 @@ class PresentationDuringIssuanceAuthorizationHandler(
         if (credential == null) {
             return null
         }
-        val vc = credential as? Map<*, *>
-            ?: throw InteractiveAuthorizationException(
-                "Expected LDP VC as Map for holderId extraction"
-            )
+        val vc = when (credential) {
+            is String -> {
+                JsonUtils.deserialize(
+                    credential,
+                    Map::class.java
+                )
+            }
+
+            is Map<*, *> -> credential
+            else -> null
+        } ?: throw InteractiveAuthorizationException(
+            "Failed to parse LDP VC for extracting holder ID"
+        )
 
         val credentialSubject = vc["credentialSubject"] as? Map<*, *>
             ?: throw InteractiveAuthorizationException(
@@ -211,60 +219,60 @@ class PresentationDuringIssuanceAuthorizationHandler(
     }
 }
 
-    private fun sendOVPAuthorizationResponseToIssuer(
-        iar: String,
-        authSession: String,
-        vpResponse: Map<String, Any>? = null,
-        errorResponse: Map<String, Any>? = null
-    ): AuthorizationResponse {
+private fun sendOVPAuthorizationResponseToIssuer(
+    iar: String,
+    authSession: String,
+    vpResponse: Map<String, Any>? = null,
+    errorResponse: Map<String, Any>? = null
+): AuthorizationResponse {
 
-        if (vpResponse == null && errorResponse == null) {
-            throw IllegalArgumentException("Either vpResponse or errorResponse must be provided")
-        }
-
-        val responseBody = mutableMapOf(
-            "auth_session" to authSession,
-            "openid4vp_response" to JsonUtils.serialize(
-                vpResponse ?: errorResponse!!
-            )
-        )
-
-        val networkResponse = try {
-            NetworkManager.sendRequest(
-                url = iar,
-                method = HttpMethod.POST,
-                bodyParams = responseBody,
-                headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
-            )
-        } catch (ex: Exception) {
-            throw InteractiveAuthorizationException(
-                "Network error while posting VP response: ${ex.message}"
-            )
-        }
-
-        val authorizationResponse = JsonUtils.deserialize(
-            networkResponse.body,
-            AuthorizationResponse::class.java
-        )
-
-        return authorizationResponse
-            ?: throw InteractiveAuthorizationException(
-                "Issuer response deserialization failed"
-            )
+    if (vpResponse == null && errorResponse == null) {
+        throw IllegalArgumentException("Either vpResponse or errorResponse must be provided")
     }
 
+    val responseBody = mutableMapOf(
+        "auth_session" to authSession,
+        "openid4vp_response" to JsonUtils.serialize(
+            vpResponse ?: errorResponse!!
+        )
+    )
 
-    private fun errorResponse(
-        error: String, description: String, authSession: String? = null
-    ): AuthorizationResponse {
-        return AuthorizationResponse(
-            status = "error",
-            authorizationCode = null,
-            error = error,
-            errorDescription = description,
-            authSession = authSession.orEmpty()
+    val networkResponse = try {
+        NetworkManager.sendRequest(
+            url = iar,
+            method = HttpMethod.POST,
+            bodyParams = responseBody,
+            headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
+        )
+    } catch (ex: Exception) {
+        throw InteractiveAuthorizationException(
+            "Network error while posting VP response: ${ex.message}"
         )
     }
+
+    val authorizationResponse = JsonUtils.deserialize(
+        networkResponse.body,
+        AuthorizationResponse::class.java
+    )
+
+    return authorizationResponse
+        ?: throw InteractiveAuthorizationException(
+            "Issuer response deserialization failed"
+        )
+}
+
+
+private fun errorResponse(
+    error: String, description: String, authSession: String? = null
+): AuthorizationResponse {
+    return AuthorizationResponse(
+        status = "error",
+        authorizationCode = null,
+        error = error,
+        errorDescription = description,
+        authSession = authSession.orEmpty()
+    )
+}
 
 
 

@@ -1,16 +1,17 @@
-package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.redirectToWeb
+package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.redirectToWeb
 
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.handler.AuthorizationHandler
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.request.AuthorizationRequestData
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.response.AuthorizationResponse
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.handler.InteractionType
+import io.mosip.vciclient.authorizationCodeFlow.StandardAuthorizationRequestData
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.AuthorizationMethodService
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationRequestData
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
 import io.mosip.vciclient.authorizationServer.AuthorizationUrlBuilder
 import io.mosip.vciclient.constants.OpenWebPageCallback
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 
-class RedirectToWebAuthorizationHandler(
+class RedirectToWebAuthorizationMethodService(
     val openWebPage: OpenWebPageCallback
-) : AuthorizationHandler {
+) : AuthorizationMethodService {
 
     override fun type(): String {
         return InteractionType.RedirectToWeb.value

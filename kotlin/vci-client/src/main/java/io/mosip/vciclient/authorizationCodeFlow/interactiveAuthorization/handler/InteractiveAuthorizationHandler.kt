@@ -1,13 +1,13 @@
-package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.handler
+package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler
 
 import AuthorizationDetail
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.presentationDuringIssuance.OpenId4VpPresentationResponse
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.presentationDuringIssuance.PresentationAuthorizationRequestData
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.presentationDuringIssuance.PresentationDuringIssuanceAuthorizationHandler
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.request.IARInitialRequestBody
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.response.AuthorizationResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.OpenId4VpPresentationResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.OpenId4VpPresentationAuthorizationRequestData
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceAuthorizationMethodService
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.IARInitialRequestBody
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.networkManager.HttpMethod
@@ -44,7 +44,14 @@ class InteractiveAuthorizationHandler {
                 headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
             )
 
-            val type = extractInteractionType(response.body)
+            val type = try {
+                extractInteractionType(response.body)
+            } catch (
+                e: Exception
+            ) {
+                throw InteractiveAuthorizationException("Failed to parse and extract interaction type: ${e.message}")
+            }
+
 
             when (type) {
                 InteractionType.OpenId4VpPresentation.value ->
@@ -98,20 +105,24 @@ class InteractiveAuthorizationHandler {
         val parsed = JsonUtils.deserialize(responseBody, OpenId4VpPresentationResponse::class.java)
             ?: throw InteractiveAuthorizationException("Failed to parse OpenID4VP response")
 
-        parsed.validate()
+        try {
+            parsed.validate()
+        } catch (e: Exception) {
+            throw InteractiveAuthorizationException("Invalid OpenID4VP response: ${e.message}")
+        }
 
         val presentationMethod = authorizationMethods
             .filterIsInstance<AuthorizationMethod.PresentationDuringIssuance>()
             .firstOrNull()
             ?: throw InteractiveAuthorizationException("Presentation callback missing")
 
-        val request = PresentationAuthorizationRequestData(
+        val request = OpenId4VpPresentationAuthorizationRequestData(
             ovpRequest = parsed.openid4vpRequest,
             authSession = parsed.authSession,
             iar = endpoint
         )
 
-        val handler = PresentationDuringIssuanceAuthorizationHandler(
+        val handler = PresentationDuringIssuanceAuthorizationMethodService(
             handlePresentationRequest = presentationMethod.selectCredentialsForPresentation,
             signVerifiablePresentation = presentationMethod.signVerifiablePresentation
         )

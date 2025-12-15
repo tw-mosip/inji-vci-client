@@ -86,6 +86,7 @@ class TrustedIssuerFlowHandlerTest {
         } returns mockk {
             every { authorizationEndpoint } returns "https://auth/authorize"
             every { tokenEndpoint } returns "https://auth/token"
+            every { interactiveAuthorizationEndpoint } returns null
         }
 
         coEvery {
@@ -150,10 +151,10 @@ class TrustedIssuerFlowHandlerTest {
                 getTokenResponse = mockk(relaxed = true),
                 authorizeUser = authorizeUser,
                 getProofJwt = failingProof,
-                downloadTimeoutInMillis = 10000
+                downloadTimeoutInMillis = 10000,
             )
         }
-
+        print(ex)
         assert(ex.message.contains("Proof generation failed"))
     }
 

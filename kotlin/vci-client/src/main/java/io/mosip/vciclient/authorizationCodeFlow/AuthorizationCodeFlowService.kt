@@ -1,10 +1,9 @@
 package io.mosip.vciclient.authorizationCodeFlow
 
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.handler.InteractionType
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.handler.InteractiveAuthorizationHandler
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.redirectToWeb.RedirectToWebAuthorizationHandler
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.redirectToWeb.StandardAuthorizationRequestData
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractiveAuthorizationHandler
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.redirectToWeb.RedirectToWebAuthorizationMethodService
 import io.mosip.vciclient.authorizationServer.AuthorizationServerMetadata
 import io.mosip.vciclient.authorizationServer.AuthorizationServerResolver
 import io.mosip.vciclient.constants.AuthorizeUserCallback
@@ -250,7 +249,7 @@ internal class AuthorizationCodeFlowService(
             )
 
             val response = try {
-                RedirectToWebAuthorizationHandler(redirectToWebAuthMethod.openWebPage)
+                RedirectToWebAuthorizationMethodService(redirectToWebAuthMethod.openWebPage)
                     .authorizeUser(requestData)
 
             } catch (e: Exception) {

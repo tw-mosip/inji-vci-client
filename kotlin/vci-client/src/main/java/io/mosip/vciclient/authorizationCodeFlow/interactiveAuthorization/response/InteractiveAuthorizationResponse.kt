@@ -1,8 +1,11 @@
-package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.response
+package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response
 
 abstract class InteractiveAuthorizationResponse(
+    @Transient
     open val status: String?,
+    @Transient
     open val type: String?,
+    @Transient
     open val authSession: String?,
 ) {
 

@@ -1,4 +1,4 @@
-package io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.handler
+package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler
 
 enum class InteractionType(val value: String) {
     RedirectToWeb("redirect_to_web"),

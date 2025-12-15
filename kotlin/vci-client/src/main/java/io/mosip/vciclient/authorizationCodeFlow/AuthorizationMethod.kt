@@ -1,6 +1,6 @@
 package io.mosip.vciclient.authorizationCodeFlow
 
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuth.handler.InteractionType
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
 import io.mosip.vciclient.constants.CredentialSelectionCallback
 import io.mosip.vciclient.constants.OpenWebPageCallback
 import io.mosip.vciclient.constants.SignPresentationCallback
