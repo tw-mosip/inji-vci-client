@@ -6,7 +6,7 @@ data class AuthorizationDetail(
     val type: String,
 
     @SerializedName("credential_configuration_id")
-    val credentialConfigurationId: List<String>,
+    val credentialConfigurationId: String,
 
     val claims: Map<String, Any>? = null
 )

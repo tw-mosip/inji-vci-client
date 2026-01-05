@@ -92,7 +92,7 @@ class InteractiveAuthorizationHandler {
         val details = listOf(
             AuthorizationDetail(
                 type = "openid_credential",
-                credentialConfigurationId = listOf(credentialConfigId)
+                credentialConfigurationId = credentialConfigId
             )
         )
 

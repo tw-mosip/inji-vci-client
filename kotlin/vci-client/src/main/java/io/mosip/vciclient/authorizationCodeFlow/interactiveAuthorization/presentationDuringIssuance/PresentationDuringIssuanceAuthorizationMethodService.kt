@@ -86,11 +86,8 @@ class PresentationDuringIssuanceAuthorizationMethodService(
     }
 
     private suspend fun handlePresentation(request: AuthorizationRequest): Map<String, Any> {
-        val credentialsMap = try {
+        val credentialsMap =
             selectCredentialsForPresentation(request)
-        } catch (ex: Exception) {
-            throw InteractiveAuthorizationException("Failed to fetch matching credentials. ${ex.message}")
-        }
 
         if (credentialsMap.isEmpty()) {
             throw OpenID4VPExceptions.AccessDenied(
@@ -119,8 +116,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
 
 
         return openId4vp.constructVPResponse(
-            vpTokenSigningResults = signedVpTokens,
-            responseModeAlias = ResponseMode.IAR_POST
+            vpTokenSigningResults = signedVpTokens
         )
 
     }

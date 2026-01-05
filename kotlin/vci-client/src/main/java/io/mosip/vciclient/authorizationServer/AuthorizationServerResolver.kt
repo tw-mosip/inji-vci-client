@@ -75,10 +75,6 @@ class AuthorizationServerResolver {
             throw AuthorizationServerDiscoveryException("Grant type '$expectedGrantType' not supported by auth server.")
         }
 
-        if (expectedGrantType == GrantType.AUTHORIZATION_CODE.value && authorizationServerMetadata.authorizationEndpoint.isNullOrBlank()) {
-            throw AuthorizationServerDiscoveryException("Missing authorization_endpoint for authorization_code flow.")
-        }
-
         return authorizationServerMetadata
     }
 

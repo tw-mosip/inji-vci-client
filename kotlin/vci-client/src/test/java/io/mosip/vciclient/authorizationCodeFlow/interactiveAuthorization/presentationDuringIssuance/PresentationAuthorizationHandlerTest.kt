@@ -110,7 +110,7 @@ class PresentationAuthorizationHandlerTest {
         )
 
         coEvery {
-            mockOvp.constructVPResponse(any(), any())
+            mockOvp.constructVPResponse(any())
         } returns mapOf("vp_token" to "signed")
 
         every {
@@ -152,7 +152,7 @@ class PresentationAuthorizationHandlerTest {
             mockOvp.constructUnsignedVPToken(any(), any(), any())
         }
         coVerify(exactly = 1) {
-            mockOvp.constructVPResponse(any(), any())
+            mockOvp.constructVPResponse(any())
         }
     }
 }

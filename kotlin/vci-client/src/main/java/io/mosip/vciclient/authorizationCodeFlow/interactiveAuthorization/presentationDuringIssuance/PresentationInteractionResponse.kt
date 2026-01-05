@@ -40,8 +40,8 @@ data class PresentationInteractionResponse(
 
         val responseMode = openid4vpRequest["response_mode"] as? String
             ?: throw IllegalArgumentException("Missing or invalid 'response_mode'")
-        if (responseMode !in listOf("iar_post", "iar_post.jwt")) {
-            throw IllegalArgumentException("response_mode must be 'iar_post' or 'iar_post.jwt'")
+        if (responseMode !in listOf("iar-post", "iar-post.jwt")) {
+            throw IllegalArgumentException("response_mode must be 'iar-post' or 'iar-post.jwt'")
         }
     }
 
