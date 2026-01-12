@@ -33,7 +33,6 @@ data class PresentationInteractionResponse(
 
     private fun validateUnsignedRequest() {
         val responseType = openid4vpRequest["response_type"] as? String
-            ?: throw IllegalArgumentException("Missing or invalid 'response_type'")
         if (responseType != "vp_token") {
             throw IllegalArgumentException("response_type must be 'vp_token'")
         }

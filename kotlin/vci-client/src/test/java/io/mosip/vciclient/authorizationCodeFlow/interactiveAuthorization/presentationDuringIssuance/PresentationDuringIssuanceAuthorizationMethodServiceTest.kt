@@ -23,7 +23,7 @@ import org.junit.Test
 import org.junit.jupiter.api.assertThrows
 import java.security.PublicKey
 
-class PresentationAuthorizationHandlerTest {
+class PresentationDuringIssuanceAuthorizationMethodServiceTest {
 
     private lateinit var fakeAuthRequest: AuthorizationRequest
     private lateinit var mockOvp: OpenID4VP
