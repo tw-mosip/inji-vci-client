@@ -141,7 +141,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
 
         val holderId = credentialSubject?.get("id") as? String
 
-        return holderId?.trimEnd('=') + "#0"
+        return holderId?.let { it.trimEnd('=') + "#0"}
     }
 
     private fun resolveSignatureSuite(holderId: String?): String? {
