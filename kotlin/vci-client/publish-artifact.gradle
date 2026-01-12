@@ -21,7 +21,7 @@ publishing {
             pom {
                 withXml {
                     asNode().appendNode('name', "Inji VCI Client")
-                    asNode().appendNode('url', "https://github.com/mosip/inji-vci-client")
+                    asNode().appendNode('url', "https://github.com/inji/inji-vci-client")
                     asNode().appendNode('description', "Kotlin library to implement OpenIdVCI specification")
 
                     asNode().appendNode('licenses').appendNode('license').with {
@@ -31,9 +31,9 @@ publishing {
 
 
                     asNode().appendNode('scm').with {
-                        appendNode('connection', 'scm:git:git://github.com/mosip/inji-vci-client.git')
-                        appendNode('developerConnection', 'scm:git:ssh://github.com:mosip/inji-vci-client.git')
-                        appendNode('url', "https://github.com/mosip/inji-vci-client")
+                        appendNode('connection', 'scm:git:git://github.com/inji/inji-vci-client.git')
+                        appendNode('developerConnection', 'scm:git:ssh://github.com:inji/inji-vci-client.git')
+                        appendNode('url', "https://github.com/inji/inji-vci-client")
                         appendNode('tag', "HEAD")
                     }
 
@@ -41,8 +41,8 @@ publishing {
                         appendNode('id', 'Your developer ID')
                         appendNode('name', 'Mosip')
                         appendNode('email', 'mosip.emailnotifier@gmail.com')
-                        appendNode('organization', 'io.mosip')
-                        appendNode('organizationUrl', 'https://github.com/mosip/inji-vci-client')
+                        appendNode('organization', 'io.inji')
+                        appendNode('organizationUrl', 'https://inji.io/')
                     }
 
                     def dependenciesNode = asNode().appendNode('dependencies')
@@ -96,7 +96,7 @@ publishing {
                     gpgArgumentsNode.appendNode('arg', 'loopback')
                 }
             }
-            groupId = "io.mosip"
+            groupId = "io.inji"
             artifactId = "inji-vci-client-aar"
             version = "0.5.0-SNAPSHOT"
             archivesBaseName = "${artifactId}-${version}"
