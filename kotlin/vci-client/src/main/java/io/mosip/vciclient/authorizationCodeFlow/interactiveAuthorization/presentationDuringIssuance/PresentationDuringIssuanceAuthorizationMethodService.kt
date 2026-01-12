@@ -5,7 +5,6 @@ import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
 import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPToken
 import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResult
 import io.mosip.openID4VP.constants.FormatType
-import io.mosip.openID4VP.constants.ResponseMode
 import io.mosip.openID4VP.exceptions.OpenID4VPExceptions
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.AuthorizationMethodService
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
@@ -142,7 +141,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
 
         val holderId = credentialSubject?.get("id") as? String
 
-        return holderId?.trimEnd('=')
+        return holderId?.trimEnd('=') + "#0"
     }
 
     private fun resolveSignatureSuite(holderId: String?): String? {
