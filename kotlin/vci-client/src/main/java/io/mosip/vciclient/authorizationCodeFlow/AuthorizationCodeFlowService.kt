@@ -228,7 +228,6 @@ internal class AuthorizationCodeFlowService(
                 traceabilityId = traceabilityId
             )
         } catch (e: Exception) {
-            //TODO:: TBD later
             if (e.message?.contains("missing_interaction_type") == true || e.message?.contains("No supported interaction types") == true) {
                 logger.info("Falling back to authorization via authorization endpoint as interactive authorization endpoint $endpoint does not support required interaction types.")
                 return obtainAuthorizationCodeViaAuthorizationEndpoint(
@@ -287,7 +286,7 @@ internal class AuthorizationCodeFlowService(
 
             } catch (e: Exception) {
                 throw DownloadFailedException(
-                    "authorization failed at endpoint $authorizationEndpoint: ${e.message}"
+                    "Authorization failed at authorization endpoint $authorizationEndpoint: ${e.message}"
                 )
             }
             return response.authorizationCode

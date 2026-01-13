@@ -45,7 +45,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
 
         if (requestData !is PresentationDuringIssuanceRequestData) {
             throw InteractiveAuthorizationException(
-                "Expected OpenId4VpPresentationAuthorizationRequestData"
+                "Expected PresentationDuringIssuanceRequestData"
             )
         }
 

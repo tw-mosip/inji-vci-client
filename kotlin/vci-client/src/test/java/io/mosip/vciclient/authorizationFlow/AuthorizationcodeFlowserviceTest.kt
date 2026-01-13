@@ -313,7 +313,6 @@ class AuthorizationCodeFlowServiceTest {
                 authorizationMethods = mockk(relaxed = true)
             )
         }
-        print(ex.message)
         assertTrue(ex.message.contains("code not received"))
     }
 
