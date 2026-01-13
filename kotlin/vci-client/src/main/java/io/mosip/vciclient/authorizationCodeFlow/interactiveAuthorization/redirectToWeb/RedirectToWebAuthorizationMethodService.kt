@@ -20,7 +20,7 @@ class RedirectToWebAuthorizationMethodService(
     override suspend fun authorizeUser(requestData: AuthorizationRequestData): AuthorizationResponse {
         if (requestData !is ImplicitAuthorizationRequestData) {
             throw IllegalArgumentException(
-                "RedirectToWebAuthorizationHandler expects StandardAuthorizationRequestData " +
+                "RedirectToWebAuthorizationHandler expects ImplicitAuthorizationRequestData " +
                         "but received ${requestData::class.simpleName}"
             )
         }

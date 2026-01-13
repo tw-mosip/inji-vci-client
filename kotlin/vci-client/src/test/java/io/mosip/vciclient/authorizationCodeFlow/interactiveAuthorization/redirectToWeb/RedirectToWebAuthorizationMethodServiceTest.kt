@@ -53,7 +53,7 @@ class RedirectToWebAuthorizationMethodServiceTest {
 
 
     @Test
-    fun `should throw if requestData is not StandardAuthorizationRequestData`() = runTest {
+    fun `should throw if requestData is not ImplicitAuthorizationRequestData`() = runTest {
         val service = RedirectToWebAuthorizationMethodService(openWebPage)
 
         val ex = assertThrows<IllegalArgumentException> {
@@ -61,7 +61,7 @@ class RedirectToWebAuthorizationMethodServiceTest {
         }
 
         assertEquals(
-            "RedirectToWebAuthorizationHandler expects StandardAuthorizationRequestData but received AuthorizationRequestData",
+            "RedirectToWebAuthorizationHandler expects ImplicitAuthorizationRequestData but received AuthorizationRequestData",
             ex.message
         )
     }
