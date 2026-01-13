@@ -10,7 +10,7 @@ import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceRequestData
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceAuthorizationMethodService
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractionResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
@@ -44,7 +44,7 @@ class InteractiveAuthorizationHandlerTest {
     )
 
     val mockPresentationInteractionResponse =
-        """ { "status": "require_interaction", "type": "openid4vp_presentation", "auth_session": "mock-auth-session", "openid4vp_request": { "issuer": "https://example.org", "credential_type": "example-vc", "response_type": "vp_token", "response_mode": "iar_post", "nonce": "n-0S6_WzA2Mj", "presentation_definition": { "id": "pd-id", "input_descriptors": [ { "id": "id-1", "schema": [ { "uri": "https://example.org/schema" } ], "constraints": { "fields": [ { "path": ["$.credentialSubject.age"], "filter": { "type": "number", "minimum": 18 } } ] } } ] } } } """.trimIndent()
+        """ { "status": "require_interaction", "type": "openid4vp_presentation", "auth_session": "mock-auth-session", "openid4vp_request": { "issuer": "https://example.org", "credential_type": "example-vc", "response_type": "vp_token", "response_mode": "iar-post", "nonce": "n-0S6_WzA2Mj", "presentation_definition": { "id": "pd-id", "input_descriptors": [ { "id": "id-1", "schema": [ { "uri": "https://example.org/schema" } ], "constraints": { "fields": [ { "path": ["$.credentialSubject.age"], "filter": { "type": "number", "minimum": 18 } } ] } } ] } } } """.trimIndent()
 
     @Before
     fun setup() {
@@ -71,7 +71,7 @@ class InteractiveAuthorizationHandlerTest {
             )
         } returns NetworkResponse(responseBody, null)
 
-        val expectedAuthResponse = mockk<InteractionResponse>()
+        val expectedAuthResponse = mockk<AuthorizationResponse>()
 
         val presentationMethod = AuthorizationMethod.PresentationDuringIssuance(
             selectCredentialsForPresentation = mockk(relaxed = true),

@@ -7,7 +7,7 @@ import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.present
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceAuthorizationMethodService
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationDetail
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.IARInitialRequestBody
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractionResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.constants.Constants.APPLICATION_X_WWW_FORM_URLENCODED
 import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
@@ -31,7 +31,7 @@ class InteractiveAuthorizationHandler {
         authorizationMethods: List<AuthorizationMethod>,
         pkceSession: PKCESessionManager.PKCESession,
         traceabilityId: String? = null
-    ): InteractionResponse {
+    ): AuthorizationResponse {
 
         return try {
             //interaction types supported will be extracted from authmethods once we start supporting redirect-to-web
@@ -138,7 +138,7 @@ class InteractiveAuthorizationHandler {
         authorizationMethods: List<AuthorizationMethod>,
         endpoint: String,
         traceabilityId: String? = null
-    ): InteractionResponse {
+    ): AuthorizationResponse {
 
         val parsedPresentationInteractionResponse = JsonUtils.deserialize(
             presentationInteractionResponse,
@@ -166,6 +166,7 @@ class InteractiveAuthorizationHandler {
         val authorizationService = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = presentationMethod.selectCredentialsForPresentation,
             signVerifiablePresentation = presentationMethod.signVerifiablePresentation,
+            signatureSuite = presentationMethod.signatureSuite,
             traceabilityId = traceabilityId
         )
 

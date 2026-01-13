@@ -3,7 +3,7 @@ package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.redire
 import io.mosip.vciclient.authorizationCodeFlow.implicitAuthorization.ImplicitAuthorizationRequestData
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.AuthorizationMethodService
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationRequestData
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractionResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
 import io.mosip.vciclient.authorizationServer.AuthorizationUrlBuilder
 import io.mosip.vciclient.constants.OpenWebPageCallback
@@ -17,10 +17,10 @@ class RedirectToWebAuthorizationMethodService(
         return InteractionType.RedirectToWeb.value
     }
 
-    override suspend fun authorizeUser(requestData: AuthorizationRequestData): InteractionResponse {
+    override suspend fun authorizeUser(requestData: AuthorizationRequestData): AuthorizationResponse {
         if (requestData !is ImplicitAuthorizationRequestData) {
             throw IllegalArgumentException(
-                "RedirectToWebAuthorizationMethodService expects StandardAuthorizationRequestData " +
+                "RedirectToWebAuthorizationHandler expects StandardAuthorizationRequestData " +
                         "but received ${requestData::class.simpleName}"
             )
         }
@@ -39,7 +39,7 @@ class RedirectToWebAuthorizationMethodService(
         if (authorizationResponse.containsKey("error")) {
             val error = authorizationResponse["error"] as? String
             val errorDescription = authorizationResponse["error_description"] as? String
-            return InteractionResponse(
+            return AuthorizationResponse(
                 authorizationCode = null,
                 status = "error",
                 error = error,
@@ -51,7 +51,7 @@ class RedirectToWebAuthorizationMethodService(
         val code = authorizationResponse["code"] as? String
             ?: throw InteractiveAuthorizationException("Missing authorization_code in successful redirect response")
 
-        return InteractionResponse(
+        return AuthorizationResponse(
             authorizationCode = code,
             status = "success",
             error = null,

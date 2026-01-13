@@ -1,7 +1,7 @@
 package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance
 
 import com.google.gson.annotations.SerializedName
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractionResponse
 
 data class PresentationInteractionResponse(
     @SerializedName("status")
@@ -12,7 +12,7 @@ data class PresentationInteractionResponse(
     override val authSession: String,
     @SerializedName("openid4vp_request")
     val openid4vpRequest: Map<String, Any>
-) : AuthorizationResponse(status, type, authSession) {
+) : InteractionResponse(status, type, authSession) {
 
     override fun validate() {
 

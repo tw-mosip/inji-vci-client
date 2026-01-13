@@ -11,7 +11,7 @@ import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractiveAuthorizationHandler
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractionResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 import io.mosip.vciclient.authorizationServer.AuthorizationServerMetadata
 import io.mosip.vciclient.authorizationServer.AuthorizationServerResolver
 import io.mosip.vciclient.authorizationServer.AuthorizationUrlBuilder
@@ -212,7 +212,7 @@ class AuthorizationCodeFlowServiceTest {
                     any(),
                     any(),
                 )
-            } returns InteractionResponse("mockAuthCode", "success")
+            } returns AuthorizationResponse("mockAuthCode", "success")
 
 
             val result =
@@ -293,7 +293,7 @@ class AuthorizationCodeFlowServiceTest {
         val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
         coEvery {
             mockHandler.handle(any(), any(), any(), any(), any())
-        } returns InteractionResponse(
+        } returns AuthorizationResponse(
             authorizationCode = null,
             status = "error",
             error = "access_denied",

@@ -9,7 +9,7 @@ import io.mosip.openID4VP.exceptions.OpenID4VPExceptions
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.AuthorizationMethodService
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationRequestData
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.InteractionResponse
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.constants.Constants.APPLICATION_X_WWW_FORM_URLENCODED
@@ -17,10 +17,8 @@ import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
-import io.mosip.vercred.vcverifier.keyResolver.types.did.DidPublicKeyResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.security.PublicKey
 import java.util.logging.Logger
 
 class PresentationDuringIssuanceAuthorizationMethodService(
@@ -28,14 +26,12 @@ class PresentationDuringIssuanceAuthorizationMethodService(
     private val signVerifiablePresentation: suspend (
         payload: Map<FormatType, UnsignedVPToken>,
     ) -> Map<FormatType, VPTokenSigningResult>,
+    private val signatureSuite: String? = null,
     private val traceabilityId: String? = null,
     private val openId4vp: OpenID4VP = OpenID4VP(
         traceabilityId = traceabilityId ?: "",
         walletMetadata = null
     ),
-    private val didPublicKeyResolver: (uri: String) -> PublicKey = { uri ->
-        DidPublicKeyResolver().resolve(uri)
-    },
 ) : AuthorizationMethodService {
 
     private val logTag = Util.getLogTag(javaClass.simpleName, traceabilityId)
@@ -45,7 +41,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
 
     override suspend fun authorizeUser(
         requestData: AuthorizationRequestData
-    ): InteractionResponse {
+    ): AuthorizationResponse {
 
         if (requestData !is PresentationDuringIssuanceRequestData) {
             throw InteractiveAuthorizationException(
@@ -84,90 +80,64 @@ class PresentationDuringIssuanceAuthorizationMethodService(
         return openId4vp.authenticateVerifier(request, emptyList(), false)
     }
 
-    private suspend fun handlePresentation(request: AuthorizationRequest): Map<String, Any> {
-        val credentialsMap =
-            selectCredentialsForPresentation(request)
+    private suspend fun handlePresentation(vpRequest: AuthorizationRequest): Map<String, Any> {
+        val selectedCredentials = selectCredentialsForPresentation(vpRequest)
 
-        if (credentialsMap.isEmpty()) {
+        if (selectedCredentials.isEmpty()) {
             throw OpenID4VPExceptions.AccessDenied(
                 "No credentials selected by user",
                 className = "PresentationDuringIssuanceAuthorizationMethodService",
             )
         }
 
-        val firstLdpCredential = findFirstLdpCredential(credentialsMap)
-        val holderId = extractHolderIdForLdpVc(firstLdpCredential)
-        val signatureSuite = resolveSignatureSuite(holderId)
+        val holderId = extractHolderIdForLdpVc(selectedCredentials)
 
-        val unsignedVpTokens =
-            openId4vp.constructUnsignedVPToken(
-                verifiableCredentials = credentialsMap,
-                holderId = holderId,
-                signatureSuite = signatureSuite
-            )
-
-
-        val signedVpTokens = try {
-            signVerifiablePresentation(unsignedVpTokens)
-        } catch (ex: Exception) {
-            throw InteractiveAuthorizationException("Failed to sign VP token. ${ex.message}")
+        val flattenedFormatEntries = selectedCredentials.values.flatMap { formatMap ->
+            formatMap.map { it.key to it.value }
+        }
+        val hasLdpVc = flattenedFormatEntries.any { (formatType, _) ->
+            formatType == FormatType.LDP_VC
+        }
+        if (hasLdpVc && signatureSuite == null) {
+            throw InteractiveAuthorizationException("Missing signature suite for LDP VC")
         }
 
+        val unsignedVpTokens = openId4vp.constructUnsignedVPToken(
+            verifiableCredentials = selectedCredentials,
+            holderId = holderId,
+            signatureSuite = signatureSuite
+        )
+
+        val signedVpTokens = signVerifiablePresentation(unsignedVpTokens)
 
         return openId4vp.constructVPResponse(
             vpTokenSigningResults = signedVpTokens
         )
-
     }
 
-    private fun findFirstLdpCredential(
+    private fun extractHolderIdForLdpVc(
         credentialsMap: Map<String, Map<FormatType, List<Any>>>
-    ): Any? {
-        return credentialsMap
-            .values.firstNotNullOfOrNull { it[FormatType.LDP_VC] }
-            ?.firstOrNull()
-    }
-
-    private fun extractHolderIdForLdpVc(credential: Any?): String? {
-        if (credential == null) return null
-
-        val vc = when (credential) {
-            is String -> JsonUtils.deserialize(credential, Map::class.java)
-            is Map<*, *> -> credential
-            else -> null
-        }
-
-        val credentialSubject = vc?.get("credentialSubject") as? Map<*, *>
-
-        val holderId = credentialSubject?.get("id") as? String
-
-        return holderId?.let { it.trimEnd('=') + "#0"}
-    }
-
-    private fun resolveSignatureSuite(holderId: String?): String? {
-        if (holderId == null) return null
-        return resolvePublicKeyType(holderId)
-    }
-
-    private fun resolvePublicKeyType(holderId: String): String {
-        try {
-            val publicKey = didPublicKeyResolver(holderId)
-            return when (publicKey.algorithm) {
-                "Ed25519" -> "Ed25519Signature2020"
-                else -> "JsonWebSignature2020"
+    ): String? {
+        return credentialsMap.values.firstNotNullOfOrNull { formatMap ->
+            val ldpVc = formatMap[FormatType.LDP_VC]?.firstOrNull()
+            val vc = when (ldpVc) {
+                is String -> JsonUtils.deserialize(ldpVc, Map::class.java)
+                is Map<*, *> -> ldpVc
+                else -> null
             }
-        } catch (ex: Exception) {
-            throw InteractiveAuthorizationException(
-                "Failed to resolve public key for holderId: $holderId . ${ex.message}"
-            )
+            val credentialSubject = vc?.get("credentialSubject") as? Map<*, *>
+            credentialSubject?.get("id") as? String
         }
+            ?.trimEnd('=')
+            ?.plus("#0")
     }
+
 
     private suspend fun sendOVPAuthorizationResponseToIssuer(
         iar: String,
         authSession: String,
         vpResponse: Map<String, Any>
-    ): InteractionResponse {
+    ): AuthorizationResponse {
         val responseBody = mapOf(
             "auth_session" to authSession,
             "openid4vp_response" to JsonUtils.serialize(vpResponse)
@@ -186,7 +156,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
             throw InteractiveAuthorizationException("Network error while posting VP response: ${ex.message}")
         }
 
-        return JsonUtils.deserialize(networkResponse.body, InteractionResponse::class.java)
+        return JsonUtils.deserialize(networkResponse.body, AuthorizationResponse::class.java)
             ?: throw InteractiveAuthorizationException("Issuer response deserialization failed")
     }
 }

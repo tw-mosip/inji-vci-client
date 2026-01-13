@@ -5,6 +5,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.verify
 import io.mosip.openID4VP.OpenID4VP
 import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
 import io.mosip.openID4VP.authorizationRequest.presentationDefinition.PresentationDefinition
@@ -15,13 +16,11 @@ import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.networkManager.NetworkManager
 import io.mosip.vciclient.networkManager.NetworkResponse
-import io.mosip.vercred.vcverifier.keyResolver.types.did.DidPublicKeyResolver
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
-import java.security.PublicKey
 
 class PresentationDuringIssuanceAuthorizationMethodServiceTest {
 
@@ -51,13 +50,17 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
             )
         )
 
+        // ✅ IMPORTANT: mock positionally (avoid overload + named args mismatch)
         coEvery {
-            mockOvp.authenticateVerifier(authRequest = any(), any(), any())
+            mockOvp.authenticateVerifier(
+                authRequest = any(),
+                any(),
+                any()
+            )
         } returns fakeAuthRequest
 
-        every {
-            NetworkManager.sendRequest(any(), any(), any(), any())
-        } returns NetworkResponse("""{"status":"error"}""", null)
+        every { NetworkManager.sendRequest(any(), any(), any(), any()) } returns
+                NetworkResponse("""{"status":"error"}""", null)
     }
 
     private fun validRequest() =
@@ -76,19 +79,10 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
             )
         )
 
-    private fun mockDidResolver(): (String) -> PublicKey {
-        val resolver = mockk<DidPublicKeyResolver>()
-        val publicKey = mockk<PublicKey>(relaxed = true)
-
-        every { resolver.resolve(any()) } returns publicKey
-
-        return { resolver.resolve(it) }
-    }
-
     // ------------------------------------------------------------------------
 
     @Test
-    fun `should throw and send error when request type is invalid`() = runTest {
+    fun `should throw when request type is invalid`() = runTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { emptyMap() },
             signVerifiablePresentation = { emptyMap() },
@@ -98,24 +92,17 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         assertThrows<InteractiveAuthorizationException> {
             handler.authorizeUser(AuthorizationRequestData())
         }
-
     }
 
     @Test
     fun `should successfully authorize and return success response`() = runTest {
-        coEvery {
-            mockOvp.constructUnsignedVPToken(any(), any(), any())
-        } returns mapOf(
+        coEvery { mockOvp.constructUnsignedVPToken(any(), any(), any()) } returns mapOf(
             FormatType.LDP_VC to UnsignedLdpVPToken("unsigned")
         )
 
-        coEvery {
-            mockOvp.constructVPResponse(any())
-        } returns mapOf("vp_token" to "signed")
+        coEvery { mockOvp.constructVPResponse(any()) } returns mapOf("vp_token" to "signed")
 
-        every {
-            NetworkManager.sendRequest(any(), any(), any(), any())
-        } returns NetworkResponse(
+        every { NetworkManager.sendRequest(any(), any(), any(), any()) } returns NetworkResponse(
             """{
               "status":"success",
               "code":"auth-code-123",
@@ -135,8 +122,8 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
                     )
                 )
             },
+            signatureSuite = "Ed25519Signature2020",
             openId4vp = mockOvp,
-            didPublicKeyResolver = mockDidResolver(),
             traceabilityId = "test-trace-id"
         )
 
@@ -145,14 +132,85 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         Assert.assertEquals("success", result.status)
         Assert.assertEquals("auth-code-123", result.authorizationCode)
 
-        coVerify(exactly = 1) {
-            mockOvp.authenticateVerifier(authRequest = any(), any(), any())
+        coVerify(exactly = 1) { mockOvp.authenticateVerifier(authRequest = any(), any(), any()) }
+        coVerify(exactly = 1) { mockOvp.constructUnsignedVPToken(any(), any(), any()) }
+        coVerify(exactly = 1) { mockOvp.constructVPResponse(any()) }
+    }
+
+    @Test
+    fun `should post VP error response when user selects no credentials`() = runTest {
+
+        val handler = PresentationDuringIssuanceAuthorizationMethodService(
+            selectCredentialsForPresentation = { emptyMap() },
+            signVerifiablePresentation = { emptyMap() },
+            openId4vp = mockOvp,
+            traceabilityId = "test-trace-id"
+        )
+
+        handler.authorizeUser(validRequest())
+
+        verify(exactly = 1) { NetworkManager.sendRequest(any(), any(), any(), any()) }
+
+        coVerify(exactly = 0) { mockOvp.constructUnsignedVPToken(any(), any(), any()) }
+        coVerify(exactly = 0) { mockOvp.constructVPResponse(any()) }
+    }
+
+    @Test
+    fun `should post VP error response when signatureSuite missing for LDP VC`() = runTest {
+        val handler = PresentationDuringIssuanceAuthorizationMethodService(
+            selectCredentialsForPresentation = { validCredentialMap() }, // contains LDP_VC
+            signVerifiablePresentation = { emptyMap() },
+            signatureSuite = null, // triggers InteractiveAuthorizationException in handlePresentation
+            openId4vp = mockOvp,
+            traceabilityId = "test-trace-id"
+        )
+
+        handler.authorizeUser(validRequest())
+
+        verify(exactly = 1) { NetworkManager.sendRequest(any(), any(), any(), any()) }
+
+        coVerify(exactly = 0) { mockOvp.constructUnsignedVPToken(any(), any(), any()) }
+    }
+
+    @Test
+    fun `should throw when network post fails`() = runTest {
+        every {
+            NetworkManager.sendRequest(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } throws RuntimeException("boom")
+
+        val handler = PresentationDuringIssuanceAuthorizationMethodService(
+            selectCredentialsForPresentation = { validCredentialMap() },
+            signVerifiablePresentation = { emptyMap() },
+            signatureSuite = "Ed25519Signature2020",
+            openId4vp = mockOvp,
+            traceabilityId = "test-trace-id"
+        )
+
+        assertThrows<InteractiveAuthorizationException> {
+            handler.authorizeUser(validRequest())
         }
-        coVerify(exactly = 1) {
-            mockOvp.constructUnsignedVPToken(any(), any(), any())
-        }
-        coVerify(exactly = 1) {
-            mockOvp.constructVPResponse(any())
+    }
+
+    @Test
+    fun `should throw when issuer response deserialization fails`() = runTest {
+        every { NetworkManager.sendRequest(any(), any(), any(), any()) } returns
+                NetworkResponse(""""not":"a-valid-AuthorizationResponse" }""", null)
+
+        val handler = PresentationDuringIssuanceAuthorizationMethodService(
+            selectCredentialsForPresentation = { validCredentialMap() },
+            signVerifiablePresentation = { emptyMap() },
+            signatureSuite = "Ed25519Signature2020",
+            openId4vp = mockOvp,
+            traceabilityId = "test-trace-id"
+        )
+
+        assertThrows<InteractiveAuthorizationException> {
+            handler.authorizeUser(validRequest())
         }
     }
 }

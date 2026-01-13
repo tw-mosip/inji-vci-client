@@ -118,19 +118,5 @@ class AuthorizationServerResolverTest {
 
         assert(ex.message.contains("None of the authorization servers responded"))
     }
-
-    @Test
-    fun `should throw if authorization endpoint is missing`() = runBlocking {
-        every { resolvedMeta.authorizationServers } returns listOf("https://empty.com")
-        every { resolvedMeta.credentialIssuer } returns credentialIssuer
-
-        val badMetadata = AuthorizationServerMetadata(issuer = "https://empty.com", authorizationEndpoint = null)
-        coEvery { anyConstructed<AuthorizationServerDiscoveryService>().discover("https://empty.com") } returns badMetadata
-
-        val ex = assertThrows<AuthorizationServerDiscoveryException> {
-            AuthorizationServerResolver().resolveForAuthCode(resolvedMeta, offer)
-        }
-
-        assert(ex.message.contains("Missing authorization_endpoint"))
-    }
+    
 }

@@ -1,21 +1,32 @@
 package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response
 
-import com.google.gson.annotations.SerializedName
+abstract class InteractionResponse(
+    @Transient
+    open val status: String?,
+    @Transient
+    open val type: String?,
+    @Transient
+    open val authSession: String?,
+) {
 
-data class InteractionResponse(
+    init {
+        validateCommonFields()
+    }
 
-    @SerializedName("code")
-    val authorizationCode: String? = null,
+    private fun validateCommonFields() {
+        if (status.isNullOrBlank()) {
+            throw IllegalArgumentException("Missing or empty 'status' field")
+        }
 
-    @SerializedName("status")
-    val status: String? = null,
+        if (status == "require_interaction") {
+            if (type.isNullOrBlank()) {
+                throw IllegalArgumentException("'type' is required when status is 'require_interaction'")
+            }
+            if (authSession.isNullOrBlank()) {
+                throw IllegalArgumentException("'authSession' is required when status is 'require_interaction'")
+            }
+        }
+    }
 
-    @SerializedName("error")
-    val error: String? = null,
-
-    @SerializedName("error_description")
-    val errorDescription: String? = null,
-
-    @SerializedName("auth_session")
-    val authSession: String? = null
-)
+    abstract fun validate()
+}
