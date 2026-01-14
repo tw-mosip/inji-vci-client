@@ -1,5 +1,9 @@
 package io.mosip.vciclient.constants
 
+import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
+import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPToken
+import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResult
+import io.mosip.openID4VP.constants.FormatType
 import io.mosip.vciclient.token.TokenRequest
 import io.mosip.vciclient.token.TokenResponse
 
@@ -13,3 +17,8 @@ typealias ProofJwtCallback = (suspend (
 ) -> String)
 
 typealias CheckIssuerTrustCallback = (suspend (credentialIssuer: String, issuerDisplay: List<Map<String, Any>>) -> Boolean)
+typealias SelectCredentialsForPresentationCallback = (suspend (ovpRequest: AuthorizationRequest) -> Map<String, Map<FormatType, List<Any>>>)
+typealias SignVerifiablePresentationCallback = suspend (
+    payload: Map<FormatType, UnsignedVPToken>,
+) -> Map<FormatType, VPTokenSigningResult>
+typealias OpenWebPageCallback = (suspend (authorizationUrl: String) -> Map<String, Any>)

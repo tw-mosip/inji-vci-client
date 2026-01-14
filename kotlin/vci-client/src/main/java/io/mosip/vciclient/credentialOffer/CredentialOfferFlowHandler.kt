@@ -1,14 +1,15 @@
 package io.mosip.vciclient.credentialOffer
 
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
+import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
+import io.mosip.vciclient.constants.AuthorizeUserCallback
 import io.mosip.vciclient.constants.Constants
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.exception.CredentialOfferFetchFailedException
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
 import io.mosip.vciclient.preAuthCodeFlow.PreAuthCodeFlowService
-import io.mosip.vciclient.constants.AuthorizeUserCallback
 import io.mosip.vciclient.constants.CheckIssuerTrustCallback
 import io.mosip.vciclient.constants.ProofJwtCallback
 import io.mosip.vciclient.constants.TokenResponseCallback
@@ -20,11 +21,12 @@ class CredentialOfferFlowHandler {
         credentialOffer: String,
         clientMetadata: ClientMetadata,
         getTxCode: TxCodeCallback?,
-        authorizeUser: AuthorizeUserCallback,
         getTokenResponse: TokenResponseCallback,
         getProofJwt: ProofJwtCallback,
+        authorizationMethods: List<AuthorizationMethod>,
         onCheckIssuerTrust: CheckIssuerTrustCallback? = null,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
+        traceabilityId: String? = null
     ): CredentialResponse {
         val offer = CredentialOfferService().fetchCredentialOffer(credentialOffer)
         if (offer.credentialConfigurationIds.size > 1) {
@@ -65,14 +67,15 @@ class CredentialOfferFlowHandler {
                     issuerMetadata = issuerMetadataResult.issuerMetadata,
                     credentialConfigurationId = offer.credentialConfigurationIds.first(),
                     clientMetadata = clientMetadata,
-                    authorizeUser = authorizeUser,
                     getTokenResponse = getTokenResponse,
                     getProofJwt = getProofJwt,
                     credentialOffer = offer,
                     downloadTimeOutInMillis = downloadTimeoutInMillis,
                     jwtProofAlgorithmsSupported = issuerMetadataResult.extractJwtProofSigningAlgorithms(
                         credentialConfigurationId
-                    )
+                    ),
+                    authorizationMethods = authorizationMethods,
+                    traceabilityId = traceabilityId,
                 )
             }
 

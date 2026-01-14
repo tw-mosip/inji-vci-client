@@ -1,10 +1,15 @@
 package io.mosip.vciclient.authorizationCodeFlow
 
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
+import io.mosip.vciclient.authorizationCodeFlow.implicitAuthorization.ImplicitAuthorizationRequestData
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractiveAuthorizationHandler
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.redirectToWeb.RedirectToWebAuthorizationMethodService
 import io.mosip.vciclient.authorizationServer.AuthorizationServerMetadata
 import io.mosip.vciclient.authorizationServer.AuthorizationServerResolver
-import io.mosip.vciclient.authorizationServer.AuthorizationUrlBuilder
+import io.mosip.vciclient.constants.AuthorizeUserCallback
 import io.mosip.vciclient.constants.Constants
+import io.mosip.vciclient.constants.ProofJwtCallback
+import io.mosip.vciclient.constants.TokenResponseCallback
 import io.mosip.vciclient.credential.request.CredentialRequestExecutor
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.credentialOffer.CredentialOffer
@@ -14,63 +19,91 @@ import io.mosip.vciclient.pkce.PKCESessionManager
 import io.mosip.vciclient.proof.jwt.JWTProof
 import io.mosip.vciclient.token.TokenResponse
 import io.mosip.vciclient.token.TokenService
-import io.mosip.vciclient.constants.AuthorizeUserCallback
-import io.mosip.vciclient.constants.ProofJwtCallback
-import io.mosip.vciclient.constants.TokenResponseCallback
+import java.util.logging.Logger
 
 internal class AuthorizationCodeFlowService(
     private val authorizationServerResolver: AuthorizationServerResolver = AuthorizationServerResolver(),
     private val tokenService: TokenService = TokenService(),
     private val credentialExecutor: CredentialRequestExecutor = CredentialRequestExecutor(),
-    private val pkceSessionManager: PKCESessionManager = PKCESessionManager()
+    private val pkceSessionManager: PKCESessionManager = PKCESessionManager(),
+    private val interactiveAuthorizationHandler: InteractiveAuthorizationHandler = InteractiveAuthorizationHandler()
 ) {
+    private val logger: Logger = Logger.getLogger(javaClass.simpleName)
 
     suspend fun requestCredentials(
         issuerMetadata: IssuerMetadata,
         credentialConfigurationId: String,
         clientMetadata: ClientMetadata,
-        authorizeUser: AuthorizeUserCallback,
         getTokenResponse: TokenResponseCallback,
         getProofJwt: ProofJwtCallback,
+        authorizationMethods: List<AuthorizationMethod>,
         credentialOffer: CredentialOffer? = null,
         downloadTimeOutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
         jwtProofAlgorithmsSupported: List<String>,
+        traceabilityId: String? = null
     ): CredentialResponse {
         try {
+
             val pkceSession = pkceSessionManager.createSession()
 
-            val authorizationServerMetadata = authorizationServerResolver.resolveForAuthCode(
-                issuerMetadata,
-                credentialOffer
-            )
+            val authorizationServerMetadata = try {
+                authorizationServerResolver.resolveForAuthCode(issuerMetadata, credentialOffer)
+            } catch (e: Exception) {
+                throw DownloadFailedException(
+                    "Failed to resolve authorization server metadata for issuer ${issuerMetadata.credentialIssuer}: ${e.message} "
+                )
+            }
 
-            val token = performAuthorizationAndGetToken(
-                authorizationServerMetadata = authorizationServerMetadata,
-                issuerMetadata = issuerMetadata,
-                clientMetadata = clientMetadata,
-                authorizeUser = authorizeUser,
-                pkceSession = pkceSession,
-                getTokenResponse = getTokenResponse
-            )
+            val token = try {
+                performAuthorizationAndGetToken(
+                    authorizationServerMetadata = authorizationServerMetadata,
+                    issuerMetadata = issuerMetadata,
+                    clientMetadata = clientMetadata,
+                    pkceSession = pkceSession,
+                    getTokenResponse = getTokenResponse,
+                    credentialConfigurationId = credentialConfigurationId,
+                    authorizationMethods = authorizationMethods,
+                    traceabilityId = traceabilityId
+                )
+            } catch (e: DownloadFailedException) {
+                throw e
+            } catch (e: Exception) {
+                throw DownloadFailedException(
+                    "Failed to obtain access token via authorization code flow: ${e.message}"
+                )
+            }
 
-            val jwt = getProofJwt(
-                issuerMetadata.credentialIssuer,
-                token.cNonce,
-                jwtProofAlgorithmsSupported
-            )
+            val jwt = try {
+                getProofJwt(
+                    issuerMetadata.credentialIssuer,
+                    token.cNonce,
+                    jwtProofAlgorithmsSupported
+                )
+            } catch (e: Exception) {
+                throw DownloadFailedException(
+                    "Failed to obtain proof JWT from callback: ${e.message}"
+                )
+            }
 
             val proof = JWTProof(jwt)
 
-            return credentialExecutor.requestCredential(
-                issuerMetadata = issuerMetadata,
-                credentialConfigurationId = credentialConfigurationId,
-                proof = proof,
-                accessToken = token.accessToken,
-                downloadTimeoutInMillis = downloadTimeOutInMillis
-            ) ?: throw DownloadFailedException("Credential request returned null.")
+            val credentialResponse =
+                credentialExecutor.requestCredential(
+                    issuerMetadata = issuerMetadata,
+                    credentialConfigurationId = credentialConfigurationId,
+                    proof = proof,
+                    accessToken = token.accessToken,
+                    downloadTimeoutInMillis = downloadTimeOutInMillis
+                )
 
+            return credentialResponse
+                ?: throw DownloadFailedException("Credential request returned null.")
+        } catch (e: DownloadFailedException) {
+            throw e
         } catch (e: Exception) {
-            throw DownloadFailedException("Download failed via authorization code flow: ${e.message}")
+            throw DownloadFailedException(
+                "Download failed via authorization code flow: ${e.message}"
+            )
         }
     }
 
@@ -78,35 +111,192 @@ internal class AuthorizationCodeFlowService(
         authorizationServerMetadata: AuthorizationServerMetadata,
         issuerMetadata: IssuerMetadata,
         clientMetadata: ClientMetadata,
-        authorizeUser: AuthorizeUserCallback,
         pkceSession: PKCESessionManager.PKCESession,
-        getTokenResponse: TokenResponseCallback
+        getTokenResponse: TokenResponseCallback,
+        credentialConfigurationId: String,
+        authorizationMethods: List<AuthorizationMethod>,
+        traceabilityId: String? = null
     ): TokenResponse {
+        val tokenEndpoint = issuerMetadata.tokenEndpoint
+            ?: authorizationServerMetadata.tokenEndpoint
+            ?: throw DownloadFailedException(
+                "Missing token endpoint for issuer ${issuerMetadata.credentialIssuer}"
+            )
+
+        val authCode = obtainAuthorizationCode(
+            authorizationServerMetadata = authorizationServerMetadata,
+            issuerMetadata = issuerMetadata,
+            clientMetadata = clientMetadata,
+            pkceSession = pkceSession,
+            credentialConfigurationId = credentialConfigurationId,
+            authorizationMethods = authorizationMethods,
+            traceabilityId = traceabilityId
+        )
+
+        return try {
+            tokenService.getAccessToken(
+                getTokenResponse = getTokenResponse,
+                tokenEndpoint = tokenEndpoint,
+                authCode = authCode,
+                clientId = clientMetadata.clientId,
+                redirectUri = clientMetadata.redirectUri,
+                codeVerifier = pkceSession.codeVerifier
+            )
+        } catch (e: Exception) {
+            throw DownloadFailedException(
+                "Failed to exchange authorization code for access token at $tokenEndpoint: ${e.message}",
+            )
+        }
+    }
+
+    internal fun normalizeAuthorizationMethods(
+        authorizeUser: AuthorizeUserCallback?,
+        authorizationMethods: List<AuthorizationMethod> = emptyList()
+    ): List<AuthorizationMethod> {
+        if (authorizeUser == null) return authorizationMethods
+
+        val redirectToWeb = AuthorizationMethod.RedirectToWeb(
+            openWebPage = { authUrl ->
+                val code = authorizeUser.invoke(authUrl)
+                mapOf("code" to code)
+            }
+        )
+
+        return (authorizationMethods + redirectToWeb)
+    }
+
+
+    private suspend fun obtainAuthorizationCode(
+        authorizationServerMetadata: AuthorizationServerMetadata,
+        issuerMetadata: IssuerMetadata,
+        clientMetadata: ClientMetadata,
+        pkceSession: PKCESessionManager.PKCESession,
+        credentialConfigurationId: String,
+        authorizationMethods: List<AuthorizationMethod>,
+        traceabilityId: String? = null
+    ): String {
+        val interactiveEndpoint = authorizationServerMetadata.interactiveAuthorizationEndpoint
+
+        return when {
+            interactiveEndpoint != null -> {
+                obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
+                    endpoint = interactiveEndpoint,
+                    issuerMetadata = issuerMetadata,
+                    clientMetadata = clientMetadata,
+                    pkceSession = pkceSession,
+                    credentialConfigurationId = credentialConfigurationId,
+                    authorizationMethods = authorizationMethods,
+                    authorizationServerMetadata = authorizationServerMetadata,
+                    traceabilityId = traceabilityId
+                )
+            }
+
+            else -> {
+                obtainAuthorizationCodeViaAuthorizationEndpoint(
+                    authorizationServerMetadata = authorizationServerMetadata,
+                    issuerMetadata = issuerMetadata,
+                    clientMetadata = clientMetadata,
+                    pkceSession = pkceSession,
+                    authorizationMethods = authorizationMethods
+                )
+            }
+        }
+    }
+
+    private suspend fun obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
+        endpoint: String,
+        issuerMetadata: IssuerMetadata,
+        clientMetadata: ClientMetadata,
+        pkceSession: PKCESessionManager.PKCESession,
+        credentialConfigurationId: String,
+        authorizationServerMetadata: AuthorizationServerMetadata,
+        authorizationMethods: List<AuthorizationMethod>,
+        traceabilityId: String? = null
+    ): String {
+        logger.info(
+            "Using Interactive Authorization Endpoint: $endpoint for issuer=${issuerMetadata.credentialIssuer}"
+        )
+
+
+        val response = try {
+            interactiveAuthorizationHandler.handle(
+                endpoint = endpoint,
+                clientMetadata = clientMetadata,
+                credentialConfigurationId = credentialConfigurationId,
+                authorizationMethods = authorizationMethods,
+                pkceSession = pkceSession,
+                traceabilityId = traceabilityId
+            )
+        } catch (e: Exception) {
+            if (e.message?.contains("missing_interaction_type") == true || e.message?.contains("No supported interaction types") == true) {
+                logger.info("Falling back to authorization via authorization endpoint as interactive authorization endpoint $endpoint does not support required interaction types.")
+                return obtainAuthorizationCodeViaAuthorizationEndpoint(
+                    authorizationServerMetadata = authorizationServerMetadata,
+                    issuerMetadata = issuerMetadata,
+                    clientMetadata = clientMetadata,
+                    pkceSession = pkceSession,
+                    authorizationMethods = authorizationMethods
+                )
+            } else {
+                throw DownloadFailedException(
+                    "Interactive authorization failed at endpoint $endpoint : ${e.message}"
+                )
+            }
+
+        }
+
+        return response.authorizationCode
+            ?: throw DownloadFailedException(
+                "Authorization failed: code not received from interactive authorization endpoint $endpoint. Error : ${response.error}, Description: ${response.errorDescription}"
+            )
+    }
+
+    private suspend fun obtainAuthorizationCodeViaAuthorizationEndpoint(
+        authorizationServerMetadata: AuthorizationServerMetadata,
+        issuerMetadata: IssuerMetadata,
+        clientMetadata: ClientMetadata,
+        pkceSession: PKCESessionManager.PKCESession,
+        authorizationMethods: List<AuthorizationMethod>
+    ): String {
         val authorizationEndpoint = authorizationServerMetadata.authorizationEndpoint
-            ?: throw DownloadFailedException("Missing authorization endpoint")
+            ?: throw DownloadFailedException(
+                "Missing authorization endpoint for issuer ${issuerMetadata.credentialIssuer}"
+            )
 
-        val tokenEndpoint = issuerMetadata.tokenEndpoint ?: authorizationServerMetadata.tokenEndpoint
-        ?: throw DownloadFailedException("Missing token endpoint")
+        val redirectToWebAuthMethod =
+            authorizationMethods
+                .firstOrNull { it is AuthorizationMethod.RedirectToWeb } as? AuthorizationMethod.RedirectToWeb
 
-        val authUrl = AuthorizationUrlBuilder.build(
-            baseUrl = authorizationEndpoint,
-            clientId = clientMetadata.clientId,
-            redirectUri = clientMetadata.redirectUri,
-            scope = issuerMetadata.scope,
-            state = pkceSession.state,
-            codeChallenge = pkceSession.codeChallenge,
-            nonce = pkceSession.nonce
-        )
+        if (redirectToWebAuthMethod != null) {
+            logger.info(
+                "Using non-interactive authorization endpoint: $authorizationEndpoint " +
+                        "(redirect_to_web) for issuer=${issuerMetadata.credentialIssuer}"
+            )
 
-        val authCode = authorizeUser(authUrl)
+            val requestData = ImplicitAuthorizationRequestData(
+                authorizeUrl = authorizationEndpoint,
+                clientMetadata = clientMetadata,
+                pkceSession = pkceSession,
+                scope = issuerMetadata.scope
+            )
 
-        return tokenService.getAccessToken(
-            getTokenResponse = getTokenResponse,
-            tokenEndpoint = tokenEndpoint,
-            authCode = authCode,
-            clientId = clientMetadata.clientId,
-            redirectUri = clientMetadata.redirectUri,
-            codeVerifier = pkceSession.codeVerifier
-        )
+            val response = try {
+                RedirectToWebAuthorizationMethodService(redirectToWebAuthMethod.openWebPage)
+                    .authorizeUser(requestData)
+
+            } catch (e: Exception) {
+                throw DownloadFailedException(
+                    "Authorization failed at authorization endpoint $authorizationEndpoint: ${e.message}"
+                )
+            }
+            return response.authorizationCode
+                ?: throw DownloadFailedException(
+                    "Authorization code not received from non-interactive authorization endpoint $authorizationEndpoint"
+                )
+        } else {
+            throw DownloadFailedException(
+                "No authorization method available to obtain authorization code from $authorizationEndpoint"
+            )
+        }
     }
 }

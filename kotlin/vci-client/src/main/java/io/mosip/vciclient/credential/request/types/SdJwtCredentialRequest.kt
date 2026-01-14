@@ -1,6 +1,8 @@
 package io.mosip.vciclient.credential.request.types
 
 import io.mosip.vciclient.common.JsonUtils
+import io.mosip.vciclient.constants.Constants.APPLICATION_JSON
+import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
 import io.mosip.vciclient.credential.request.CredentialRequest
 import io.mosip.vciclient.credential.request.util.ValidatorResult
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
@@ -20,7 +22,7 @@ class SdJwtCredentialRequest(
         return Request.Builder()
             .url(issuerMetadata.credentialEndpoint)
             .addHeader("Authorization", "Bearer $accessToken")
-            .addHeader("Content-Type", "application/json")
+            .addHeader(CONTENT_TYPE, APPLICATION_JSON)
             .post(generateRequestBody())
             .build()
     }
@@ -41,7 +43,7 @@ class SdJwtCredentialRequest(
             claims = issuerMetadata.claims
         ).toJson()
 
-        return request.toRequestBody("application/json".toMediaTypeOrNull())
+        return request.toRequestBody(APPLICATION_JSON.toMediaTypeOrNull())
     }
 }
 

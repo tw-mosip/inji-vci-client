@@ -3,6 +3,8 @@ package io.mosip.vciclient.credential.request.types
 import android.util.Log
 import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.common.JsonUtils
+import io.mosip.vciclient.constants.Constants.APPLICATION_JSON
+import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
 import io.mosip.vciclient.credential.request.CredentialRequest
 import io.mosip.vciclient.credential.request.util.ValidatorResult
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
@@ -21,7 +23,7 @@ class LdpVcCredentialRequest(
         return Request.Builder()
             .url(this.issuerMetadata.credentialEndpoint)
             .addHeader("Authorization", "Bearer ${this.accessToken}")
-            .addHeader("Content-Type", "application/json")
+            .addHeader(CONTENT_TYPE, APPLICATION_JSON)
             .post(generateRequestBody())
             .build()
     }
@@ -41,7 +43,7 @@ class LdpVcCredentialRequest(
             format = this.issuerMetadata.credentialFormat.value
         ).toJson()
         return credentialRequestBody
-            .toRequestBody("application/json".toMediaTypeOrNull())
+            .toRequestBody(APPLICATION_JSON.toMediaTypeOrNull())
     }
 
     private fun getCredentialRequestContext(): List<String> {
