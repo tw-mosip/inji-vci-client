@@ -70,6 +70,10 @@ class VCIClient(val traceabilityId: String) {
     }
 
 
+    @Deprecated(
+        message = """This method is deprecated as per the new VCI Client library contract. Use fetchCredentialUsingCredentialOffer()""",
+        level = DeprecationLevel.WARNING
+    )
     suspend fun requestCredentialByCredentialOffer(
         credentialOffer: String,
         clientMetadata: ClientMetadata,
@@ -107,6 +111,10 @@ class VCIClient(val traceabilityId: String) {
     }
 
 
+    @Deprecated(
+        message = """This method is deprecated as per the new VCI Client library contract. Use fetchCredentialFromTrustedIssuer()""",
+        level = DeprecationLevel.WARNING
+    )
     suspend fun requestCredentialFromTrustedIssuer(
         credentialIssuer: String,
         credentialConfigurationId: String,
@@ -169,7 +177,7 @@ class VCIClient(val traceabilityId: String) {
         }
     }
 
-    suspend fun fetchCredentialByCredentialOffer(
+    suspend fun fetchCredentialUsingCredentialOffer(
         credentialOffer: String,
         clientMetadata: ClientMetadata,
         getTxCode: TxCodeCallback?,
