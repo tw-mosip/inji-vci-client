@@ -122,7 +122,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
                     )
                 )
             },
-            signatureSuite = "Ed25519Signature2020",
+            ldpVpSignatureSuite = "Ed25519Signature2020",
             openId4vp = mockOvp,
             traceabilityId = "test-trace-id"
         )
@@ -160,7 +160,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { validCredentialMap() }, // contains LDP_VC
             signVerifiablePresentation = { emptyMap() },
-            signatureSuite = null, // triggers InteractiveAuthorizationException in handlePresentation
+            ldpVpSignatureSuite = null, // triggers InteractiveAuthorizationException in handlePresentation
             openId4vp = mockOvp,
             traceabilityId = "test-trace-id"
         )
@@ -186,7 +186,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { validCredentialMap() },
             signVerifiablePresentation = { emptyMap() },
-            signatureSuite = "Ed25519Signature2020",
+            ldpVpSignatureSuite = "Ed25519Signature2020",
             openId4vp = mockOvp,
             traceabilityId = "test-trace-id"
         )
@@ -204,7 +204,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { validCredentialMap() },
             signVerifiablePresentation = { emptyMap() },
-            signatureSuite = "Ed25519Signature2020",
+            ldpVpSignatureSuite = "Ed25519Signature2020",
             openId4vp = mockOvp,
             traceabilityId = "test-trace-id"
         )

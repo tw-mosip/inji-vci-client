@@ -26,7 +26,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
     private val signVerifiablePresentation: suspend (
         payload: List<UnsignedVPTokenV2>,
     ) -> List<VPTokenSigningResultV2>,
-    private val signatureSuite: String? = null,
+    private val ldpVpSignatureSuite: String? = null,
     private val traceabilityId: String? = null,
     private val openId4vp: OpenID4VP = OpenID4VP(
         traceabilityId = traceabilityId ?: "",
@@ -98,14 +98,14 @@ class PresentationDuringIssuanceAuthorizationMethodService(
         val hasLdpVc = flattenedFormatEntries.any { (formatType, _) ->
             formatType == FormatType.LDP_VC
         }
-        if (hasLdpVc && signatureSuite == null) {
+        if (hasLdpVc && ldpVpSignatureSuite == null) {
             throw InteractiveAuthorizationException("Missing signature suite for LDP VC")
         }
 
         val unsignedVpTokens = openId4vp.constructUnsignedVPTokenV2(
             verifiableCredentials = selectedCredentials,
             holderId = holderId,
-            signatureSuite = signatureSuite
+            signatureSuite = ldpVpSignatureSuite
         )
 
         val signedVpTokens = signVerifiablePresentation(unsignedVpTokens)
