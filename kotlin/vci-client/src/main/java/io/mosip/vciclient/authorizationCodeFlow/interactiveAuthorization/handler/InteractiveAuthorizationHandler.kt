@@ -166,7 +166,7 @@ class InteractiveAuthorizationHandler {
         val authorizationService = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = presentationMethod.selectCredentialsForPresentation,
             signVerifiablePresentation = presentationMethod.signVerifiablePresentation,
-            signatureSuite = presentationMethod.signatureSuite,
+            signatureSuite = presentationMethod.ldpVpSignatureSuite,
             traceabilityId = traceabilityId
         )
 
