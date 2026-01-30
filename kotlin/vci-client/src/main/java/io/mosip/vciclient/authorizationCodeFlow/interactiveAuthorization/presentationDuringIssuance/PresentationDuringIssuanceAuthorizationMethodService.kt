@@ -2,8 +2,8 @@ package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presen
 
 import io.mosip.openID4VP.OpenID4VP
 import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
-import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPToken
-import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResult
+import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPTokenV2
+import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResultV2
 import io.mosip.openID4VP.constants.FormatType
 import io.mosip.openID4VP.exceptions.OpenID4VPExceptions
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.AuthorizationMethodService
@@ -24,8 +24,8 @@ import java.util.logging.Logger
 class PresentationDuringIssuanceAuthorizationMethodService(
     private val selectCredentialsForPresentation: suspend (ovpRequest: AuthorizationRequest) -> Map<String, Map<FormatType, List<Any>>>,
     private val signVerifiablePresentation: suspend (
-        payload: Map<FormatType, UnsignedVPToken>,
-    ) -> Map<FormatType, VPTokenSigningResult>,
+        payload: List<UnsignedVPTokenV2>,
+    ) -> List<VPTokenSigningResultV2>,
     private val signatureSuite: String? = null,
     private val traceabilityId: String? = null,
     private val openId4vp: OpenID4VP = OpenID4VP(
@@ -102,7 +102,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
             throw InteractiveAuthorizationException("Missing signature suite for LDP VC")
         }
 
-        val unsignedVpTokens = openId4vp.constructUnsignedVPToken(
+        val unsignedVpTokens = openId4vp.constructUnsignedVPTokenV2(
             verifiableCredentials = selectedCredentials,
             holderId = holderId,
             signatureSuite = signatureSuite
@@ -110,7 +110,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
 
         val signedVpTokens = signVerifiablePresentation(unsignedVpTokens)
 
-        return openId4vp.constructVPResponse(
+        return openId4vp.constructVPResponseV2(
             vpTokenSigningResults = signedVpTokens
         )
     }
