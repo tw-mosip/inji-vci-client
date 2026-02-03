@@ -328,9 +328,11 @@ val issuerMetadata = IssuerMetaData(
                         CREDENTIAL_ENDPOINT, 
                         DOWNLOAD_TIMEOUT, 
                         DOC_TYPE,
-                        CLAIMS, 
+                        CLAIMS,
                         CredentialFormat.MSO_MDOC )
 ```
+
+> ⚠️ **Note**: The `claims` parameter is optional in the OID4VCI specification for `mso_mdoc` format. While `claims` can be provided in `IssuerMetaData`, this implementation does not include `claims` in the credential request body for `mso_mdoc` format.
 
 3. Format: `vc+sd-jwt`
 ```
@@ -370,7 +372,7 @@ val credentialResponse = vciClient.requestCredential(
                         CREDENTIAL_ENDPOINT, 
                         DOWNLOAD_TIMEOUT, 
                         DOC_TYPE,
-                        CLAIMS, 
+                        CLAIMS,
                         CredentialFormat.MSO_MDOC ),
     proofJwt = JWTProof(jwtValue = "sampleProofJwt"),
     accessToken = "sampleAccessToken"
