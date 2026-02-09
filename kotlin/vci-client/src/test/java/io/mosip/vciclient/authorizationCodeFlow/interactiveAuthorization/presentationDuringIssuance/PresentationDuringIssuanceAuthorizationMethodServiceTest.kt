@@ -10,6 +10,7 @@ import io.mosip.openID4VP.OpenID4VP
 import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
 import io.mosip.openID4VP.authorizationRequest.presentationDefinition.PresentationDefinition
 import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.types.ldp.UnsignedLdpVPToken
+import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResultV2
 import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.types.ldp.LdpVPTokenSigningResult
 import io.mosip.openID4VP.constants.FormatType
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationRequestData
@@ -53,9 +54,9 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         // ✅ IMPORTANT: mock positionally (avoid overload + named args mismatch)
         coEvery {
             mockOvp.authenticateVerifier(
-                authRequest = any(),
+                authorizationRequest = any(),
                 any(),
-                any()
+                any(),
             )
         } returns fakeAuthRequest
 
@@ -85,7 +86,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
     fun `should throw when request type is invalid`() = runTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { emptyMap() },
-            signVerifiablePresentation = { emptyMap() },
+            signVerifiablePresentation = { emptyList() },
             traceabilityId = "test-trace-id",
         )
 
@@ -114,11 +115,9 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { validCredentialMap() },
             signVerifiablePresentation = {
-                mapOf(
-                    FormatType.LDP_VC to LdpVPTokenSigningResult(
-                        "signed-vp-token",
-                        null,
-                        "Ed25519Signature2020"
+                listOf(
+                    VPTokenSigningResultV2(
+                        signedData = "signed",
                     )
                 )
             },
@@ -132,9 +131,15 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         Assert.assertEquals("success", result.status)
         Assert.assertEquals("auth-code-123", result.authorizationCode)
 
-        coVerify(exactly = 1) { mockOvp.authenticateVerifier(authRequest = any(), any(), any()) }
-        coVerify(exactly = 1) { mockOvp.constructUnsignedVPToken(any(), any(), any()) }
-        coVerify(exactly = 1) { mockOvp.constructVPResponse(any()) }
+        coVerify(exactly = 1) {
+            mockOvp.authenticateVerifier(
+                authorizationRequest = any(),
+                any(),
+                any()
+            )
+        }
+        coVerify(exactly = 1) { mockOvp.constructUnsignedVPTokenV2(any(), any(), any()) }
+        coVerify(exactly = 1) { mockOvp.constructVPResponseV2(any()) }
     }
 
     @Test
@@ -142,7 +147,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
 
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { emptyMap() },
-            signVerifiablePresentation = { emptyMap() },
+            signVerifiablePresentation = { emptyList() },
             openId4vp = mockOvp,
             traceabilityId = "test-trace-id"
         )
@@ -159,7 +164,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
     fun `should post VP error response when signatureSuite missing for LDP VC`() = runTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { validCredentialMap() }, // contains LDP_VC
-            signVerifiablePresentation = { emptyMap() },
+            signVerifiablePresentation = { emptyList() },
             ldpVpSignatureSuite = null, // triggers InteractiveAuthorizationException in handlePresentation
             openId4vp = mockOvp,
             traceabilityId = "test-trace-id"
@@ -185,7 +190,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
 
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { validCredentialMap() },
-            signVerifiablePresentation = { emptyMap() },
+            signVerifiablePresentation = { emptyList() },
             ldpVpSignatureSuite = "Ed25519Signature2020",
             openId4vp = mockOvp,
             traceabilityId = "test-trace-id"
@@ -203,7 +208,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
 
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { validCredentialMap() },
-            signVerifiablePresentation = { emptyMap() },
+            signVerifiablePresentation = { emptyList() },
             ldpVpSignatureSuite = "Ed25519Signature2020",
             openId4vp = mockOvp,
             traceabilityId = "test-trace-id"
