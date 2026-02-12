@@ -8,6 +8,7 @@ on:
         required: false
         default: 'Triggered for inji-vci-client Updates'
         type: string
+
       release_type:
         description: 'Select release type to publish: snapshot or release'
         required: true
@@ -16,11 +17,13 @@ on:
         options:
           - snapshot
           - release
+
       publication_type:
         description: 'Select artifact type to publish: aar, jar, or both (only for release)'
         required: true
         default: both
         type: string
+
       group_path:
         description: 'Select Maven group path'
         required: true
@@ -33,7 +36,7 @@ on:
 jobs:
   publish-snapshot:
     if: ${{ inputs.release_type == 'snapshot' }}
-    uses: mosip/kattu/.github/workflows/maven-publish-android-download.yaml@MOSIP-44195
+    uses: mosip/kattu/.github/workflows/maven-publish-android.yml@master
     with:
       SERVICE_LOCATION: 'kotlin'
       ANDROID_SERVICE_LOCATION: 'vci-client'
@@ -51,7 +54,7 @@ jobs:
 
   publish-release:
     if: ${{ inputs.release_type == 'release' }}
-    uses: mosip/kattu/.github/workflows/maven-publish-android-download.yaml@MOSIP-44195
+    uses: mosip/kattu/.github/workflows/maven-publish-android-download.yaml@master
     with:
       SERVICE_LOCATION: 'kotlin'
       ANDROID_SERVICE_LOCATION: 'vci-client'
@@ -62,8 +65,8 @@ jobs:
       PUBLICATION_TYPE: ${{ inputs.publication_type }}
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
-      OSSRH_URL: ${{ secrets.OSSRH_GRADLE_URL }}
+      OSSRH_URL: ${{ secrets.GRADLE_OSSRH_URL }}
       OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
       OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
-      GPG_SECRET: ${{ secrets.GRADLE_OSSRH_URL }}
+      GPG_SECRET: ${{ secrets.GPG_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_INJI_TEAM }}
