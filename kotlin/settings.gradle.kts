@@ -12,6 +12,7 @@ dependencyResolutionManagement {
         maven {
             url = uri("https://repo.danubetech.com/repository/maven-public/")
         }
+        maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
         exclusiveContent {
             forRepository {
                 maven {

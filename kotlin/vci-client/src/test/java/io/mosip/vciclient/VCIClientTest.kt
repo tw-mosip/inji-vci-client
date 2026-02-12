@@ -377,7 +377,7 @@ class VCIClientTest {
             )
         } returns mockCredentialResponse
 
-        val result = VCIClient("trace-id").fetchCredentialByCredentialOffer(
+        val result = VCIClient("trace-id").fetchCredentialUsingCredentialOffer(
             credentialOffer = "sample-offer",
             clientMetadata = mockk(),
             getTxCode = getTxCode,
@@ -400,7 +400,7 @@ class VCIClientTest {
         } throws VCIClientException("VCI-999", "known failure")
 
         val ex = assertThrows<VCIClientException> {
-            VCIClient("trace-id").fetchCredentialByCredentialOffer(
+            VCIClient("trace-id").fetchCredentialUsingCredentialOffer(
                 credentialOffer = "sample-offer",
                 clientMetadata = mockk(),
                 getTxCode = getTxCode,
