@@ -534,6 +534,10 @@ AuthorizationMethod.PresentationDuringIssuance(
                     )
 ```
 
+[//]: # (The branch in inji-wallet for pdi docs link is pointed to master intentionally to ensure that the latest documentation is always referred.)
+> For more details on the Presentation During Issuance flow and the expected implementation of the callbacks, please refer to the documentation of `inji-wallet` [here](https://github.com/inji/inji-wallet/blob/master/docs/presentation-during-issuance-support.md)
+
+
 ### 3.3 Request Credential
 - Method: `requestCredential`
 - Request for credential from the providers (credential issuer), and receive the credential back.
