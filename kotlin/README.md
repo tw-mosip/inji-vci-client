@@ -104,7 +104,7 @@ mapOf(
 
 #### fetchCredentialUsingCredentialOffer
 
-- Method: `fetchCredentialByCredentialOffer`
+- Method: `fetchCredentialUsingCredentialOffer`
 - This method allows you to fetch a credential using a credential offer, which can be either an embedded JSON or a URI pointing to the credential offer.
 - It supports both **Pre-Authorization** and **Authorization** flows.
 - The library handles the PKCE flow internally.
@@ -122,7 +122,7 @@ mapOf(
 | getTokenResponse        | TokenResponseCallback    | Yes      | N/A           | Callback function to exchange Authorization Grant with Access Token response                                                                                                              |
 | getProofJwt             | ProofJwtCallback         | Yes      | N/A           | Callback function to prepare proof-jwt for Credential Request                                                                                                                             |
 | onCheckIssuerTrust      | CheckIssuerTrustCallback | No       | null          | Callback function to get user trust with the Credential Issuer                                                                                                                            |
-| downloadTimeoutInMillis | Long                     | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10 ms)                                                                                               |
+| downloadTimeoutInMillis | Long                     | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10000 ms)                                                                                            |
 
 ###### Returns
 
@@ -137,7 +137,7 @@ An instance of `CredentialResponse` containing:
 ###### Example usage
 
 ```kotlin
-val credentialResponse: CredentialResponse = vciClient.requestCredentialByCredentialOffer(
+val credentialResponse: CredentialResponse = vciClient.fetchCredentialUsingCredentialOffer(
   credentialOffer = "openid-credential-offer://?credential_offer_uri=https%3A%2F%2Fsample-issuer.com%2Fcredential-offer",
   clientMetadata = ClientMetadata(clientId = "sample-client-id", redirectUri = "https://sample-wallet.com/callback"),
   getTxCode = object : TxCodeCallback {
@@ -195,7 +195,7 @@ val credentialResponse: CredentialResponse = vciClient.requestCredentialByCreden
 )
 
 //Consider the credential is a Driver's license credential (credential format `mso_mdoc`)
-val credentialResponse = vciClient.requestCredentialByCredentialOffer(credentialOffer, clientMetadata, getTxCode, authorizeUser, getTokenResponse, getProofJwt, onCheckIssuerTrust, downloadTimeoutInMillis)
+val credentialResponse = vciClient.fetchCredentialUsingCredentialOffer(credentialOffer, clientMetadata, getTxCode, authorizations, getTokenResponse, getProofJwt, onCheckIssuerTrust, downloadTimeoutInMillis)
 credentialResponse.credential // This will be a JsonElement containing the credential data. eg - JsonPrimitive("omdk...t")
 credentialResponse.credentialConfigurationId // eg - "DriversLicense"
 credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
@@ -211,16 +211,16 @@ credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
 
 ###### Parameters
 
-| Name                    | Type                     | Required | Default Value | Description                                                                                 |
-|-------------------------|--------------------------|----------|---------------|---------------------------------------------------------------------------------------------|
-| credentialOffer         | String                   | Yes      | N/A           | Credential offer as embedded JSON or `credential_offer_uri`                                 |
-| clientMetadata          | ClientMetadata           | Yes      | N/A           | Contains client ID and redirect URI                                                         |
-| getTxCode               | TxCodeCallback           | No       | N/A           | Optional callback function for TX Code (for Pre-Auth flows)                                 |
-| authorizeUser           | AuthorizeUserCallback    | Yes      | N/A           | Handles authorization and returns the code (for Authorization flows)                        |
-| getTokenResponse        | TokenResponseCallback    | Yes      | N/A           | Callback function to exchange Authorization Grant with Access Token response                |
-| getProofJwt             | ProofJwtCallback         | Yes      | N/A           | Callback function to prepare proof-jwt for Credential Request                               |
-| onCheckIssuerTrust      | CheckIssuerTrustCallback | No       | null          | Callback function to get user trust with the Credential Issuer                              |
-| downloadTimeoutInMillis | Long                     | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10 ms) |
+| Name                    | Type                     | Required | Default Value | Description                                                                                    |
+|-------------------------|--------------------------|----------|---------------|------------------------------------------------------------------------------------------------|
+| credentialOffer         | String                   | Yes      | N/A           | Credential offer as embedded JSON or `credential_offer_uri`                                    |
+| clientMetadata          | ClientMetadata           | Yes      | N/A           | Contains client ID and redirect URI                                                            |
+| getTxCode               | TxCodeCallback           | No       | N/A           | Optional callback function for TX Code (for Pre-Auth flows)                                    |
+| authorizeUser           | AuthorizeUserCallback    | Yes      | N/A           | Handles authorization and returns the code (for Authorization flows)                           |
+| getTokenResponse        | TokenResponseCallback    | Yes      | N/A           | Callback function to exchange Authorization Grant with Access Token response                   |
+| getProofJwt             | ProofJwtCallback         | Yes      | N/A           | Callback function to prepare proof-jwt for Credential Request                                  |
+| onCheckIssuerTrust      | CheckIssuerTrustCallback | No       | null          | Callback function to get user trust with the Credential Issuer                                 |
+| downloadTimeoutInMillis | Long                     | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10000 ms) |
 
 ###### Returns
 
@@ -313,7 +313,7 @@ credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
 | authorizations            | List<Authorization>   | Yes      | N/A           | Callback functions list to handle authorization and return the resultant authorization response (for Authorization flows) [click [here](#authorizations) for details about authorization] |
 | getTokenResponse          | TokenResponseCallback | Yes      | N/A           | Callback function to exchange Authorization Grant with Access Token response                                                                                                              |
 | getProofJwt               | ProofJwtCallback      | Yes      | N/A           | Callback function to prepare proof-jwt for Credential Request                                                                                                                             |
-| downloadTimeoutInMillis   | Long                  | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10 ms)                                                                                               |
+| downloadTimeoutInMillis   | Long                  | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10000 ms)                                                                                            |
 
 #### Returns
 
@@ -328,7 +328,7 @@ An instance of `CredentialResponse` containing:
 #### Example usage
 
 ```kotlin
-val credentialResponse: CredentialResponse = vciClient.requestCredentialFromTrustedIssuer(
+val credentialResponse: CredentialResponse = vciClient.fetchCredentialFromTrustedIssuer(
   credentialIssuer = "https://sample-issuer.com",
   credentialConfigurationId = "DriversLicense",
   clientMetadata = ClientMetadata(
@@ -374,7 +374,7 @@ val credentialResponse: CredentialResponse = vciClient.requestCredentialFromTrus
 )
 
 //Consider the credential is a Driver's license credential (credential format `mso_mdoc`)
-val credentialResponse = vciClient.requestCredentialByCredentialOffer(credentialOffer, clientMetadata, getTxCode, authorizeUser, getTokenResponse, getProofJwt, onCheckIssuerTrust, downloadTimeoutInMillis)
+val credentialResponse = vciClient.fetchCredentialFromTrustedIssuer(credentialIssuer, credentialConfigurationId, clientMetadata, authorizations, getTokenResponse, getProofJwt, downloadTimeoutInMillis)
 credentialResponse.credential // This will be a JsonElement containing the credential data. eg - JsonPrimitive("omdk...t")
 credentialResponse.credentialConfigurationId // eg - "DriversLicense"
 credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
@@ -388,15 +388,15 @@ credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
 
 #### Parameters
 
-| Name                      | Type                  | Required | Default Value | Description                                                                                 |
-|---------------------------|-----------------------|----------|---------------|---------------------------------------------------------------------------------------------|
-| credentialIssuer          | String                | Yes      | N/A           | URI of the Credential Issuer                                                                |
-| credentialConfigurationId | String                | Yes      | N/A           | Identifier of the respective supported credential from well-known response                  |
-| clientMetadata            | ClientMetadata        | Yes      | N/A           | Contains client ID and redirect URI                                                         |
-| authorizeUser             | AuthorizeUserCallback | Yes      | N/A           | Handles authorization and returns the code (for Authorization flows)                        |
-| getTokenResponse          | TokenResponseCallback | Yes      | N/A           | Callback function to exchange Authorization Grant with Access Token response                |
-| getProofJwt               | ProofJwtCallback      | Yes      | N/A           | Callback function to prepare proof-jwt for Credential Request                               |
-| downloadTimeoutInMillis   | Long                  | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10 ms) |
+| Name                      | Type                  | Required | Default Value | Description                                                                                    |
+|---------------------------|-----------------------|----------|---------------|------------------------------------------------------------------------------------------------|
+| credentialIssuer          | String                | Yes      | N/A           | URI of the Credential Issuer                                                                   |
+| credentialConfigurationId | String                | Yes      | N/A           | Identifier of the respective supported credential from well-known response                     |
+| clientMetadata            | ClientMetadata        | Yes      | N/A           | Contains client ID and redirect URI                                                            |
+| authorizeUser             | AuthorizeUserCallback | Yes      | N/A           | Handles authorization and returns the code (for Authorization flows)                           |
+| getTokenResponse          | TokenResponseCallback | Yes      | N/A           | Callback function to exchange Authorization Grant with Access Token response                   |
+| getProofJwt               | ProofJwtCallback      | Yes      | N/A           | Callback function to prepare proof-jwt for Credential Request                                  |
+| downloadTimeoutInMillis   | Long                  | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10000 ms) |
 
 #### Returns
 
@@ -487,7 +487,7 @@ AuthorizationMethod.RedirectToWeb(
   }
 )
 ```
-> Note: The Redirect to Web flow for an interactive authorization flow is recommended is exposed as an experimental API, and is expected to be improved in future releases.
+> Note: The Redirect to Web flow for an interactive authorization flow is exposed as an experimental API, and is expected to be improved in future releases.
 
 2. Presentation During Issuance
 
@@ -510,8 +510,8 @@ Presentation During Issuance flow allows the Wallet to present a verifiable pres
 AuthorizationMethod.PresentationDuringIssuance(
                             selectCredentialsForPresentation = object : SelectCredentialsForPresentationCallback {
                                     override suspend fun invoke(
-                                        authorizationRequest: AuthorizationRequest
-                                    ): List<CredentialDescriptor> {
+                                        presentationRequest: AuthorizationRequest
+                                    ): Map<String, Map<FormatType, List<Any>>> {
                                         // Handle the logic to select credentials from the wallet as per the presentation request
                                         // Handle the logic for obtaining consent from the user for presenting the credentials to the issuer
                                         val selectedCredentials: Map<String, Map<FormatType, List<Any>>> = selectCredentials(presentationRequest)
@@ -521,7 +521,7 @@ AuthorizationMethod.PresentationDuringIssuance(
                             signVerifiablePresentation = object : SignVerifiablePresentationCallback {
                                     override suspend fun invoke(
                                         payload: List<UnsignedVPTokenV2>
-                                    ): String {
+                                    ): List<VPTokenSigningResultV2> {
                                         // Handle the logic to sign the data with the appropriate key as per the credential descriptor and signature suite
                                         // From UnsignedVPTokenV2 use the data like format, holderKeyReference and signatureAlgorithm to identify the key to be used for signing and the algorithm to be used for signing the dataToSign, and then return the signature result back to the library
                                         val signedData : List<VPTokenSigningResultV2> = signDataForVP(payload)
