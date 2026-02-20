@@ -20,7 +20,7 @@ The implementation follows
 - Authorization server discovery for both download flows
 - PKCE-compliant OAuth 2.0 Authorization Code flow (RFC 7636)
     - PKCE session is managed internally by the library
-- Well-defined **exception handling** with `VCI-XXX` error codes (see more on [this](#error-handling))
+- Well-defined **exception handling** with `VCI-XXX` error codes (see more on [this](./kotlin/README.md#-error-handling))
 - Support for multiple Credential formats:
     - `ldp_vc`
     - `mso_mdoc`
