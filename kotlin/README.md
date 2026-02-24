@@ -290,7 +290,7 @@ val credentialResponse: CredentialResponse = vciClient.requestCredentialByCreden
 )
 
 //Consider the credential is a Driver's license credential (credential format `mso_mdoc`)
-val credentialResponse = vciClient.requestCredentialByCredentialOffer(credentialOffer, clientMetadata, getTxCode, authorizeUser, getTokenResponse, getProofJwt, onCheckIssuerTrust, downloadTimeoutInMillis)
+val mdocCredentialResponse = vciClient.requestCredentialByCredentialOffer(credentialOffer, clientMetadata, getTxCode, authorizeUser, getTokenResponse, getProofJwt, onCheckIssuerTrust, downloadTimeoutInMillis)
 credentialResponse.credential // This will be a JsonElement containing the credential data. eg - JsonPrimitive("omdk...t")
 credentialResponse.credentialConfigurationId // eg - "DriversLicense"
 credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
@@ -374,7 +374,7 @@ val credentialResponse: CredentialResponse = vciClient.fetchCredentialFromTruste
 )
 
 //Consider the credential is a Driver's license credential (credential format `mso_mdoc`)
-val credentialResponse = vciClient.fetchCredentialFromTrustedIssuer(credentialIssuer, credentialConfigurationId, clientMetadata, authorizations, getTokenResponse, getProofJwt, downloadTimeoutInMillis)
+val mdocCredentialResponse = vciClient.fetchCredentialFromTrustedIssuer(credentialIssuer, credentialConfigurationId, clientMetadata, authorizations, getTokenResponse, getProofJwt, downloadTimeoutInMillis)
 credentialResponse.credential // This will be a JsonElement containing the credential data. eg - JsonPrimitive("omdk...t")
 credentialResponse.credentialConfigurationId // eg - "DriversLicense"
 credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
@@ -454,7 +454,7 @@ val credentialResponse: CredentialResponse = vciClient.requestCredentialFromTrus
 )
 
 //Consider the credential is a Driver's license credential (credential format `mso_mdoc`)
-val credentialResponse = vciClient.requestCredentialFromTrustedIssuer(credentialIssuer, credentialConfigurationId, clientMetadata, authorizeUser, getTokenResponse, getProofJwt, downloadTimeoutInMillis)
+val mdocCredentialResponse = vciClient.requestCredentialFromTrustedIssuer(credentialIssuer, credentialConfigurationId, clientMetadata, authorizeUser, getTokenResponse, getProofJwt, downloadTimeoutInMillis)
 credentialResponse.credential // This will be a JsonElement containing the credential data. eg - JsonPrimitive("omdk...t")
 credentialResponse.credentialConfigurationId // eg - "DriversLicense"
 credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
@@ -628,11 +628,11 @@ credentialResponse.credentialIssuer // This will be null
 
 The following methods are deprecated and will be removed in future releases. Please migrate to the suggested alternatives.
 
-| Method Name                        | Description                                                                                                                                                              | Deprecated Since | Suggested Alternative                                                                                                                                                         |
-|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| requestCredentialFromTrustedIssuer | Request for the download of Verifiable Credential through trusted flow has been improvised to accept different authorizations (web / presentation during issuance)       | 0.7.0            | [fetchCredentialFromTrustedIssuer](#fetchcredentialfromtrustedissuer)                                                                                                         |
-| requestCredentialByCredentialOffer | Request for download of Verifiable Credential through Credential Offer flow has been improvised to accept different authorizations (web / presentation during issuance). | 0.7.0            | [fetchCredentialUsingCredentialOffer](#fetchcredentialusingcredentialoffer)                                                                                                   |
-| requestCredential                  | Request for credential from the providers (credential issuer), and receive the credential back.                                                                          | 0.4.0            | [requestCredentialByCredentialOffer()](#3.1-request-credential-using-credential-offer) or [requestCredentialFromTrustedIssuer()](#3.2-request-credential-from-trusted-issuer) |
+| Method Name                        | Description                                                                                                                                                              | Deprecated Since | Suggested Alternative                                                                                                                                                       |
+|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| requestCredentialFromTrustedIssuer | Request for the download of Verifiable Credential through trusted flow has been improvised to accept different authorizations (web / presentation during issuance)       | 0.7.0            | [fetchCredentialFromTrustedIssuer](#fetchcredentialfromtrustedissuer)                                                                                                       |
+| requestCredentialByCredentialOffer | Request for download of Verifiable Credential through Credential Offer flow has been improvised to accept different authorizations (web / presentation during issuance). | 0.7.0            | [fetchCredentialUsingCredentialOffer](#fetchcredentialusingcredentialoffer)                                                                                                 |
+| requestCredential                  | Request for credential from the providers (credential issuer), and receive the credential back.                                                                          | 0.4.0            | [requestCredentialByCredentialOffer()](#31-request-credential-using-credential-offer) or [requestCredentialFromTrustedIssuer()](#32-request-credential-from-trusted-issuer) |
 
 ---
 
