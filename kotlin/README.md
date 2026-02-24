@@ -454,7 +454,7 @@ val credentialResponse: CredentialResponse = vciClient.requestCredentialFromTrus
 )
 
 //Consider the credential is a Driver's license credential (credential format `mso_mdoc`)
-val credentialResponse = vciClient.requestCredentialByCredentialOffer(credentialOffer, clientMetadata, getTxCode, authorizeUser, getTokenResponse, getProofJwt, onCheckIssuerTrust, downloadTimeoutInMillis)
+val credentialResponse = vciClient.requestCredentialFromTrustedIssuer(credentialIssuer, credentialConfigurationId, clientMetadata, authorizeUser, getTokenResponse, getProofJwt, downloadTimeoutInMillis)
 credentialResponse.credential // This will be a JsonElement containing the credential data. eg - JsonPrimitive("omdk...t")
 credentialResponse.credentialConfigurationId // eg - "DriversLicense"
 credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
