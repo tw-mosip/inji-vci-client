@@ -109,22 +109,22 @@ mapOf(
 - It supports both **Pre-Authorization** and **Authorization** flows.
 - The library handles the PKCE flow internally.
 - User-trust based credential download supported through onCheckIssuerTrust callback.
-- This method is the recommended way to request credential using credential offer and will replace `requestCredentialByCredentialOffer` in future releases.
+- This method is the recommended way to request credential using credential offer.
 
-###### Parameters
+##### Parameters
 
-| Name                    | Type                     | Required | Default Value | Description                                                                                                                                                                               |
-|-------------------------|--------------------------|----------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| credentialOffer         | String                   | Yes      | N/A           | Credential offer as embedded JSON or `credential_offer_uri`                                                                                                                               |
-| clientMetadata          | ClientMetadata           | Yes      | N/A           | Contains client ID and redirect URI                                                                                                                                                       |
-| getTxCode               | TxCodeCallback           | No       | N/A           | Optional callback function for TX Code (for Pre-Auth flows)                                                                                                                               |
-| authorizations          | List<Authorization>      | Yes      | N/A           | Callback functions list to handle authorization and return the resultant authorization response (for Authorization flows) [click [here](#authorizations) for details about authorization] |
-| getTokenResponse        | TokenResponseCallback    | Yes      | N/A           | Callback function to exchange Authorization Grant with Access Token response                                                                                                              |
-| getProofJwt             | ProofJwtCallback         | Yes      | N/A           | Callback function to prepare proof-jwt for Credential Request                                                                                                                             |
-| onCheckIssuerTrust      | CheckIssuerTrustCallback | No       | null          | Callback function to get user trust with the Credential Issuer                                                                                                                            |
-| downloadTimeoutInMillis | Long                     | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10000 ms)                                                                                            |
+| Name                    | Type                     | Required | Default Value | Description                                                                                                                                                            |
+|-------------------------|--------------------------|----------|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| credentialOffer         | String                   | Yes      | N/A           | Credential offer as embedded JSON or `credential_offer_uri`                                                                                                            |
+| clientMetadata          | ClientMetadata           | Yes      | N/A           | Contains client ID and redirect URI                                                                                                                                    |
+| getTxCode               | TxCodeCallback           | No       | N/A           | Optional callback function for TX Code (for Pre-Auth flows)                                                                                                            |
+| authorizations          | List<Authorization>      | Yes      | N/A           | Callback functions list to handle authorization and return the resultant authorization response (for Authorization flows) [see authorization details](#authorizations) |
+| getTokenResponse        | TokenResponseCallback    | Yes      | N/A           | Callback function to exchange Authorization Grant with Access Token response                                                                                           |
+| getProofJwt             | ProofJwtCallback         | Yes      | N/A           | Callback function to prepare proof-jwt for Credential Request                                                                                                          |
+| onCheckIssuerTrust      | CheckIssuerTrustCallback | No       | null          | Callback function to get user trust with the Credential Issuer                                                                                                         |
+| downloadTimeoutInMillis | Long                     | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10000 ms)                                                                         |
 
-###### Returns
+##### Returns
 
 An instance of `CredentialResponse` containing:
 
@@ -134,7 +134,7 @@ An instance of `CredentialResponse` containing:
 | credentialConfigurationId | String      | The identifier of the respective supported credential from well-known response |
 | credentialIssuer          | String      | URI of the Credential Issuer                                                   |
 
-###### Example usage
+##### Example usage
 
 ```kotlin
 val credentialResponse: CredentialResponse = vciClient.fetchCredentialUsingCredentialOffer(
@@ -209,7 +209,7 @@ credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
 - The library handles the PKCE flow internally.
 - User-trust based credential download supported through onCheckIssuerTrust callback.
 
-###### Parameters
+##### Parameters
 
 | Name                    | Type                     | Required | Default Value | Description                                                                                    |
 |-------------------------|--------------------------|----------|---------------|------------------------------------------------------------------------------------------------|
@@ -222,7 +222,7 @@ credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
 | onCheckIssuerTrust      | CheckIssuerTrustCallback | No       | null          | Callback function to get user trust with the Credential Issuer                                 |
 | downloadTimeoutInMillis | Long                     | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10000 ms) |
 
-###### Returns
+##### Returns
 
 An instance of `CredentialResponse` containing:
 
@@ -232,7 +232,7 @@ An instance of `CredentialResponse` containing:
 | credentialConfigurationId | String      | The identifier of the respective supported credential from well-known response |
 | credentialIssuer          | String      | URI of the Credential Issuer                                                   |
 
-###### Example usage
+##### Example usage
 
 ```kotlin
 val credentialResponse: CredentialResponse = vciClient.requestCredentialByCredentialOffer(
@@ -310,7 +310,7 @@ credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
 | credentialIssuer          | String                | Yes      | N/A           | URI of the Credential Issuer                                                                                                                                                              |
 | credentialConfigurationId | String                | Yes      | N/A           | Identifier of the respective supported credential from well-known response                                                                                                                |
 | clientMetadata            | ClientMetadata        | Yes      | N/A           | Contains client ID and redirect URI                                                                                                                                                       |
-| authorizations            | List<Authorization>   | Yes      | N/A           | Callback functions list to handle authorization and return the resultant authorization response (for Authorization flows) [click [here](#authorizations) for details about authorization] |
+| authorizations            | List<Authorization>   | Yes      | N/A           | Callback functions list to handle authorization and return the resultant authorization response (for Authorization flows) [see authorization details](#authorizations)                     |
 | getTokenResponse          | TokenResponseCallback | Yes      | N/A           | Callback function to exchange Authorization Grant with Access Token response                                                                                                              |
 | getProofJwt               | ProofJwtCallback      | Yes      | N/A           | Callback function to prepare proof-jwt for Credential Request                                                                                                                             |
 | downloadTimeoutInMillis   | Long                  | No       | 10000         | Download timeout set for Credential Request call with Credential Issuer (defaults to 10000 ms)                                                                                            |
@@ -460,7 +460,7 @@ credentialResponse.credentialConfigurationId // eg - "DriversLicense"
 credentialResponse.credentialIssuer // eg - "https://sample-issuer.com"
 ```
 
-###### Authorizations
+##### Authorizations
 The `authorizations` parameter is a list of `Authorization` objects indicating the supported authorizations of the Wallet for the download flow. Currently, library supports two authorization flows - _Redirect To Web_ and _Presentation During Issuance_. Library exposes the supported authorization flows via class - `AuthorizationMethod`
 
 1. Redirect To Web (for Authorization flow)
@@ -491,7 +491,7 @@ AuthorizationMethod.RedirectToWeb(
 
 2. Presentation During Issuance
 
-Presentation During Issuance flow allows the Wallet to present a verifiable presentation to the Credential Issuer during the credential download process, which can be used by the issuer to verify certain claims about the user before issuing the credential. The authorization for the download here is presentation of another credential (or a verifiable presentation) instead of user interaction based authorization as in Redirect To Web flow.
+Presentation During Issuance flow allows the Wallet to present a verifiable presentation to the Credential Issuer during the credential download process, which can be used by the issuer to verify certain claims about the user before issuing the credential. The authorization for the download here is presentation of another credential (or a verifiable presentation) instead of user interaction-based authorization as in Redirect To Web flow.
 
 > Note: For Presentation During Issuance flow, this VCI client library internally uses [inji-openid4vp](https://github.com/inji/inji-openid4vp/tree/master/kotlin) library to construct the VP and handle the presentation exchange with the issuer.
 
@@ -552,7 +552,7 @@ AuthorizationMethod.PresentationDuringIssuance(
 | proofJwt       | Proof          | Yes      | N/A           | The proof used for making credential request. Supported proof types : JWT. |
 | accessToken    | String         | Yes      | N/A           | token issued by providers based on auth code                               |
 
-###### Construction of issuerMetadata
+##### Construction of issuerMetadata
 
 1. Format: `ldp_vc`
 ```
@@ -685,4 +685,3 @@ Mock-based tests are available covering:
 
 Architecture decisions are noted as ADRs [here](https://github.com/mosip/inji-vci-client/tree/master/doc).
 **Note: The android library is available [here](https://github.com/mosip/inji-vci-client)**
-
