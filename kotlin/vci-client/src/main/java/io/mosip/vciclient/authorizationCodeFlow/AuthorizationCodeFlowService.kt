@@ -228,21 +228,9 @@ internal class AuthorizationCodeFlowService(
                 traceabilityId = traceabilityId
             )
         } catch (e: Exception) {
-            if (e.message?.contains("missing_interaction_type") == true || e.message?.contains("No supported interaction types") == true) {
-                logger.info("Falling back to authorization via authorization endpoint as interactive authorization endpoint $endpoint does not support required interaction types.")
-                return obtainAuthorizationCodeViaAuthorizationEndpoint(
-                    authorizationServerMetadata = authorizationServerMetadata,
-                    issuerMetadata = issuerMetadata,
-                    clientMetadata = clientMetadata,
-                    pkceSession = pkceSession,
-                    authorizationMethods = authorizationMethods
-                )
-            } else {
-                throw DownloadFailedException(
-                    "Interactive authorization failed at endpoint $endpoint : ${e.message}"
-                )
-            }
-
+            throw DownloadFailedException(
+                "Interactive authorization failed at endpoint $endpoint : ${e.message}"
+            )
         }
 
         return response.authorizationCode
