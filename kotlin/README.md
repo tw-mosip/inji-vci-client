@@ -523,7 +523,7 @@ AuthorizationMethod.PresentationDuringIssuance(
                                         payload: List<UnsignedVPTokenV2>
                                     ): List<VPTokenSigningResultV2> {
                                         // Handle the logic to sign the data with the appropriate key as per the credential descriptor and signature suite
-                                        // From UnsignedVPTokenV2 use the data like format, holderKeyReference and signatureAlgorithm to identify the key to be used for signing and the algorithm to be used for signing the dataToSign, and then return the signature result back to the library
+                                        // From UnsignedVPTokenV2 use the data like format, holderKeyReference and signatureAlgorithm to identify the key to be used for signing and the algorithm to be used for signing the dataToSign, and then return the signature result to the library
                                         val signedData : List<VPTokenSigningResultV2> = signDataForVP(payload)
                                         // since the payload is a list of data to be signed for each credential, the result is also a list containing the signature result for each credential, and the library will take care of constructing the VP with the respective proof for each credential accordingly
                                         // To avoid any confusion, the library will expect the implementation of this callback to return a list of signature results corresponding to each credential in the same order as the payload, and the library will match the signature result with the respective credential based on the order of the payload list.
@@ -535,7 +535,7 @@ AuthorizationMethod.PresentationDuringIssuance(
 ```
 
 [//]: # (The branch in inji-wallet for pdi docs link is pointed to master intentionally to ensure that the latest documentation is always referred.)
-> For more details on the Presentation During Issuance flow and the expected implementation of the callbacks, please refer to the documentation of `inji-wallet` [here](https://github.com/inji/inji-wallet/blob/master/docs/presentation-during-issuance-support.md)
+> For more details on the Presentation During Issuance flow and the expected implementation of the callbacks, please refer to the [inji-wallet Presentation During Issuance documentation](https://github.com/inji/inji-wallet/blob/master/docs/presentation-during-issuance-support.md)
 
 
 ### 3.3 Request Credential
@@ -628,11 +628,11 @@ credentialResponse.credentialIssuer // This will be null
 
 The following methods are deprecated and will be removed in future releases. Please migrate to the suggested alternatives.
 
-| Method Name                        | Description                                                                                                                                                              | Deprecated Since | Suggested Alternative                                                                                                                                                       |
-|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| requestCredentialFromTrustedIssuer | Request for the download of Verifiable Credential through trusted flow has been improvised to accept different authorizations (web / presentation during issuance)       | 0.7.0            | [fetchCredentialFromTrustedIssuer](#fetchcredentialfromtrustedissuer)                                                                                                       |
-| requestCredentialByCredentialOffer | Request for download of Verifiable Credential through Credential Offer flow has been improvised to accept different authorizations (web / presentation during issuance). | 0.7.0            | [fetchCredentialUsingCredentialOffer](#fetchcredentialusingcredentialoffer)                                                                                                 |
-| requestCredential                  | Request for credential from the providers (credential issuer), and receive the credential back.                                                                          | 0.4.0            | [requestCredentialByCredentialOffer()](#31-request-credential-using-credential-offer) or [requestCredentialFromTrustedIssuer()](#32-request-credential-from-trusted-issuer) |
+| Method Name                        | Description                                                                                                                                                              | Deprecated Since | Suggested Alternative                                                                                                                                    |
+|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| requestCredentialFromTrustedIssuer | Request for the download of Verifiable Credential through trusted flow has been improvised to accept different authorizations (web / presentation during issuance)       | 0.7.0            | [fetchCredentialFromTrustedIssuer](#fetchcredentialfromtrustedissuer)                                                                                    |
+| requestCredentialByCredentialOffer | Request for download of Verifiable Credential through Credential Offer flow has been improvised to accept different authorizations (web / presentation during issuance). | 0.7.0            | [fetchCredentialUsingCredentialOffer](#fetchcredentialusingcredentialoffer)                                                                              |
+| requestCredential                  | Request for credential from the providers (credential issuer), and receive the credential back.                                                                          | 0.4.0            | [fetchCredentialUsingCredentialOffer()](#fetchcredentialusingcredentialoffer) or [fetchCredentialFromTrustedIssuer()](#fetchcredentialfromtrustedissuer) |
 
 ---
 
