@@ -42,11 +42,15 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        // Fix: Upgrade compiler to match Kotlin stdlib versions required by transitive dependencies (Tink/Nimbus).
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            pickFirsts += "META-INF/{LICENSE,LICENSE.txt,license.txt,NOTICE,NOTICE.txt,notice.txt,DEPENDENCIES,ASL2.0}"
+            pickFirsts += "META-INF/INDEX.LIST"
+            pickFirsts += "META-INF/io.netty.versions.properties"
         }
     }
 }
@@ -64,6 +68,8 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
+    // Fix: Force 'android' variant to prevent crashes caused by transitive 'jre' variant (from Tink).
+    implementation("com.google.guava:guava:31.1-android")
 
 
 //INJI VCI client project
@@ -94,4 +100,17 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Fix: Prevent duplicate classes by strictly replacing legacy 'jdk15on' with modern 'jdk15to18'.
+    modules {
+        module("org.bouncycastle:bcprov-jdk15on") {
+            replacedBy("org.bouncycastle:bcprov-jdk15to18", "Prevent class duplication")
+        }
+    }
+}
+
+configurations.all {
+    exclude(group = "com.apicatalog", module = "titanium-json-ld")
+    exclude(group = "com.google.protobuf", module = "protobuf-java")
+    exclude(group = "com.google.crypto.tink", module = "tink")
 }
