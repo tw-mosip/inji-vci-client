@@ -12,7 +12,9 @@ import io.mosip.vciclient.constants.TxCodeCallback
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.credentialOffer.CredentialOfferFlowHandler
 import io.mosip.vciclient.dto.IssuerMetaData
+import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.IssuerMetadataFetchException
+import io.mosip.vciclient.exception.NetworkRequestTimeoutException
 import io.mosip.vciclient.exception.VCIClientException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataResult
@@ -21,12 +23,14 @@ import io.mosip.vciclient.proof.Proof
 import io.mosip.vciclient.trustedIssuer.TrustedIssuerFlowHandler
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
+import okhttp3.Response
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
+import java.io.InterruptedIOException
 
 class VCIClientTest {
 
@@ -441,6 +445,149 @@ class VCIClientTest {
         )
 
         assertEquals(mockCredentialResponse, result)
+    }
+
+    @Test
+    fun `should throw DownloadFailedException when response code not 200`() {
+
+        val mockIssuerMetaData = mockk<IssuerMetaData> {
+            every { credentialAudience } returns "audience"
+            every { credentialEndpoint } returns "https://example.com"
+            every { credentialType } returns arrayOf("test-type")
+            every { credentialFormat } returns CredentialFormat.LDP_VC
+            every { doctype } returns "test-doctype"
+            every { claims } returns emptyMap()
+            every { downloadTimeoutInMilliSeconds } returns 30000
+        }
+
+        val mockProof = mockk<Proof>(relaxed = true)
+
+        mockkConstructor(OkHttpClient.Builder::class)
+
+        val mockClient = mockk<OkHttpClient>()
+        val mockCall = mockk<okhttp3.Call>()
+        val mockResponse = mockk<Response>()
+        val mockBody = mockk<okhttp3.ResponseBody>()
+
+        every { anyConstructed<OkHttpClient.Builder>().callTimeout(any<Long>(), any()) } returns OkHttpClient.Builder()
+        every { anyConstructed<OkHttpClient.Builder>().build() } returns mockClient
+
+        every { mockClient.newCall(any()) } returns mockCall
+        every { mockCall.execute() } returns mockResponse
+
+        every { mockResponse.code } returns 400
+        every { mockResponse.message } returns "Bad request"
+        every { mockResponse.body } returns mockBody
+        every { mockBody.string() } returns "error message"
+
+        assertThrows<DownloadFailedException> {
+            VCIClient("trace-id").requestCredential(
+                issuerMetadata = mockIssuerMetaData,
+                proof = mockProof,
+                accessToken = "token"
+            )
+        }
+    }
+
+    @Test
+    fun `should return null when response body empty`() {
+
+        val mockIssuerMetaData = mockk<IssuerMetaData> {
+            every { credentialAudience } returns "audience"
+            every { credentialEndpoint } returns "https://example.com"
+            every { credentialType } returns arrayOf("test-type")
+            every { credentialFormat } returns CredentialFormat.LDP_VC
+            every { doctype } returns "test-doctype"
+            every { claims } returns emptyMap()
+            every { downloadTimeoutInMilliSeconds } returns 30000
+        }
+        val mockProof = mockk<Proof>(relaxed = true)
+
+        mockkConstructor(OkHttpClient.Builder::class)
+
+        val mockClient = mockk<OkHttpClient>()
+        val mockCall = mockk<okhttp3.Call>()
+        val mockResponse = mockk<Response>()
+        val mockBody = mockk<okhttp3.ResponseBody>()
+        every { mockResponse.message } returns "Bad Request"
+
+        every { anyConstructed<OkHttpClient.Builder>().callTimeout(any<Long>(), any()) } returns OkHttpClient.Builder()
+        every { anyConstructed<OkHttpClient.Builder>().build() } returns mockClient
+
+        every { mockClient.newCall(any()) } returns mockCall
+        every { mockCall.execute() } returns mockResponse
+
+        every { mockResponse.code } returns 200
+        every { mockResponse.body } returns mockBody
+        every { mockBody.byteStream() } returns "".byteInputStream()
+
+        val result = VCIClient("trace-id").requestCredential(
+            issuerMetadata = mockIssuerMetaData,
+            proof = mockProof,
+            accessToken = "token",
+        )
+
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `should throw NetworkRequestTimeoutException on timeout`() {
+
+        val mockIssuerMetaData = mockk<IssuerMetaData>(relaxed = true){
+                every { credentialAudience } returns "audience"
+                every { credentialEndpoint } returns "https://example.com"
+                every { credentialType } returns arrayOf("test-type")
+                every { credentialFormat } returns CredentialFormat.LDP_VC
+                every { doctype } returns "test-doctype"
+                every { claims } returns emptyMap()
+                every { downloadTimeoutInMilliSeconds } returns 30000
+        }
+        val mockProof = mockk<Proof>(relaxed = true)
+
+        mockkConstructor(OkHttpClient.Builder::class)
+
+        val mockClient = mockk<OkHttpClient>()
+        val mockCall = mockk<okhttp3.Call>()
+
+        every { anyConstructed<OkHttpClient.Builder>().callTimeout(any<Long>(), any()) } returns OkHttpClient.Builder()
+        every { anyConstructed<OkHttpClient.Builder>().build() } returns mockClient
+
+        every { mockClient.newCall(any()) } returns mockCall
+        every { mockCall.execute() } throws InterruptedIOException("timeout")
+
+        assertThrows<NetworkRequestTimeoutException> {
+            VCIClient("trace-id").requestCredential(
+                issuerMetadata = mockIssuerMetaData,
+                proof = mockProof,
+                accessToken = "token"
+            )
+        }
+    }
+
+    @Test
+    fun `should rethrow DownloadFailedException`() {
+
+        val mockIssuerMetaData = mockk<IssuerMetaData>(relaxed = true)
+        val mockProof = mockk<Proof>(relaxed = true)
+
+        mockkConstructor(OkHttpClient.Builder::class)
+
+        val mockClient = mockk<OkHttpClient>()
+        val mockCall = mockk<okhttp3.Call>()
+
+        every { anyConstructed<OkHttpClient.Builder>().callTimeout(any<Long>(), any()) } returns OkHttpClient.Builder()
+        every { anyConstructed<OkHttpClient.Builder>().build() } returns mockClient
+
+        every { mockClient.newCall(any()) } returns mockCall
+        every { mockCall.execute() } throws DownloadFailedException("failure")
+
+        assertThrows<DownloadFailedException> {
+            VCIClient("trace-id").requestCredential(
+                issuerMetadata = mockIssuerMetaData,
+                proof = mockProof,
+                accessToken = "token"
+            )
+        }
     }
 
 }
