@@ -263,4 +263,54 @@ class CredentialOfferFlowHandlerTest {
 
             assertEquals("Failed to download Credential: Batch credential request is not supported.", downloadFailedException.message)
         }
+
+    @Test
+    fun `should propagate network error successfully`() = runBlocking {
+        val networkException = RuntimeException("Network failure")
+        mockkConstructor(CredentialOfferService::class)
+        coEvery { anyConstructed<CredentialOfferService>().fetchCredentialOffer(any()) } throws CredentialOfferFetchFailedException(
+            "Credential offer URL not valid Network failure"
+        )
+
+        val ex = assertThrows<CredentialOfferFetchFailedException> {
+            CredentialOfferFlowHandler().downloadCredentials(
+                credentialOffer = "some-offer",
+                clientMetadata = mockClientMetadata,
+                getTxCode = txCode,
+                getTokenResponse = getTokenResponse,
+                getProofJwt = getProofJwt,
+                authorizationMethods = listOf(authorizationMethod),
+                onCheckIssuerTrust = onCheckIssuerTrust,
+            )
+        }
+        assertEquals(
+            "Download failed due to fetching credentialOffer Credential offer URL not valid Network failure",
+            ex.message
+        )
+    }
+
+    @Test
+    fun `should throw if issuer not trusted`() = runBlocking {
+        coEvery { onCheckIssuerTrust.invoke(any(), any()) } returns false
+        mockkConstructor(CredentialOfferService::class)
+        coEvery { anyConstructed<CredentialOfferService>().fetchCredentialOffer(any()) } returns CredentialOffer(
+            credentialIssuer = "https://issuer.example.com",
+            credentialConfigurationIds = listOf("UniversityDegreeCredential"),
+            grants = CredentialOfferGrants(
+                preAuthorizedGrant = PreAuthCodeGrant("abc123", null),
+                authorizationCodeGrant = null
+            )
+        )
+        val ex = assertThrows<CredentialOfferFetchFailedException> {
+            CredentialOfferFlowHandler().downloadCredentials(
+                credentialOffer = "some-offer",
+                clientMetadata = mockClientMetadata,
+                getTxCode = txCode,
+                getTokenResponse = getTokenResponse,
+                getProofJwt = getProofJwt,
+                authorizationMethods = listOf(authorizationMethod),
+                onCheckIssuerTrust = onCheckIssuerTrust,
+            )
+        }
+    }
 }
