@@ -70,8 +70,8 @@ Retrieve credential configurations supported for given issuer from its well-know
 | credentialIssuer | String | Yes      | N/A           | URI of the Credential Issuer |
 
 #### Returns
-Map of `credential_configurations_supported` objects containing details like `format`, `scope` and other configuration 
-information from the well-known endpoint of Credential Issuer, which can be used by the consumer to display supported 
+Map of `credential_configurations_supported` objects containing details like `format`, `scope` and other configuration
+information from the well-known endpoint of Credential Issuer, which can be used by the consumer to display supported
 credential types, etc.
 
 > Note: This method does not parse the metadata, it simply returns the raw Network response of well-known endpoint as a `Map<String, Any>`.
@@ -497,7 +497,7 @@ Presentation During Issuance flow allows the Wallet to present a verifiable pres
 
 This implementation follows - [OpenID4VCI v1.1 Specification Commit](https://github.com/openid/OpenID4VCI/blob/31636e9bb7f0eef6933175e1e41c78ce79a69783/1.1/openid-4-verifiable-credential-issuance-1_1.md)
 
-> Note: 
+> Note:
 > - While this library primarily implements OpenID4VCI draft 13 and 11, the Presentation During Issuance feature follows the v1.1 specification as mentioned above.
 > - For Presentation During Issuance flow, this VCI client library internally uses [inji-openid4vp](https://github.com/inji/inji-openid4vp/tree/master/kotlin) library to construct the VP and handle the presentation exchange with the issuer.
 
