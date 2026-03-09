@@ -1,6 +1,6 @@
 # INJI VCI Client
 
-The **Inji VCI Client** is a Kotlin-based library built to simplify credential issuance via [OpenID for Verifiable Credential Issuance (OID4VCI)](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-13.html) protocol.  
+The **Inji VCI Client** is a Kotlin-based library built to simplify credential issuance via [OpenID for Verifiable Credential Issuance (OID4VCI)](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-13.html) protocol.
 It supports **Issuer Initiated (Credential Offer)** and **Wallet Initiated (Trusted Issuer)** flows, with secure proof handling, PKCE support, and custom error handling.
 
 
@@ -9,7 +9,7 @@ It supports **Issuer Initiated (Credential Offer)** and **Wallet Initiated (Trus
 Add the following dependency to your `build.gradle` to include the library from **Maven Central**:
 
 ```groovy
-implementation "io.mosip:inji-vci-client:0.7.0"
+implementation "io.inji:inji-vci-client:0.7.0"
 ```
 
 ## 🏗️ Construction of VCIClient instance
@@ -70,8 +70,8 @@ Retrieve credential configurations supported for given issuer from its well-know
 | credentialIssuer | String | Yes      | N/A           | URI of the Credential Issuer |
 
 #### Returns
-Map of `credential_configurations_supported` objects containing details like `format`, `scope` and other configuration 
-information from the well-known endpoint of Credential Issuer, which can be used by the consumer to display supported 
+Map of `credential_configurations_supported` objects containing details like `format`, `scope` and other configuration
+information from the well-known endpoint of Credential Issuer, which can be used by the consumer to display supported
 credential types, etc.
 
 > Note: This method does not parse the metadata, it simply returns the raw Network response of well-known endpoint as a `Map<String, Any>`.
@@ -493,7 +493,13 @@ AuthorizationMethod.RedirectToWeb(
 
 Presentation During Issuance flow allows the Wallet to present a verifiable presentation to the Credential Issuer during the credential download process, which can be used by the issuer to verify certain claims about the user before issuing the credential. The authorization for the download here is presentation of another credential (or a verifiable presentation) instead of user interaction-based authorization as in Redirect To Web flow.
 
-> Note: For Presentation During Issuance flow, this VCI client library internally uses [inji-openid4vp](https://github.com/inji/inji-openid4vp/tree/master/kotlin) library to construct the VP and handle the presentation exchange with the issuer.
+###### Specification Reference
+
+This implementation follows - [OpenID4VCI v1.1 Specification Commit](https://github.com/openid/OpenID4VCI/blob/31636e9bb7f0eef6933175e1e41c78ce79a69783/1.1/openid-4-verifiable-credential-issuance-1_1.md)
+
+> Note:
+> - While this library primarily implements OpenID4VCI draft 13 and 11, the Presentation During Issuance feature follows the v1.1 specification as mentioned above.
+> - For Presentation During Issuance flow, this VCI client library internally uses [inji-openid4vp](https://github.com/inji/inji-openid4vp/tree/master/kotlin) library to construct the VP and handle the presentation exchange with the issuer.
 
 **Parameters :**
 
@@ -685,5 +691,4 @@ Mock-based tests are available covering:
 - **Gradle:** 8.0+
 - **AGP (Android Gradle Plugin):** 8.0+
 
-Architecture decisions are noted as ADRs [here](https://github.com/mosip/inji-vci-client/tree/master/doc).
-**Note: The android library is available [here](https://github.com/mosip/inji-vci-client)**
+Architecture decisions are noted as ADRs [here](../doc/adr).
