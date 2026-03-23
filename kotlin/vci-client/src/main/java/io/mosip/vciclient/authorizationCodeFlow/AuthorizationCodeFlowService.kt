@@ -8,6 +8,7 @@ import io.mosip.vciclient.authorizationServer.AuthorizationServerMetadata
 import io.mosip.vciclient.authorizationServer.AuthorizationServerResolver
 import io.mosip.vciclient.constants.AuthorizeUserCallback
 import io.mosip.vciclient.constants.Constants
+import io.mosip.vciclient.constants.Constants.MISSING_INTERACTION_TYPE_ERROR
 import io.mosip.vciclient.constants.ProofJwtCallback
 import io.mosip.vciclient.constants.TokenResponseCallback
 import io.mosip.vciclient.credential.request.CredentialRequestExecutor
@@ -206,16 +207,32 @@ internal class AuthorizationCodeFlowService(
 
         return when {
             interactiveEndpoint != null -> {
-                obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
-                    endpoint = interactiveEndpoint,
-                    issuerMetadata = issuerMetadata,
-                    clientMetadata = clientMetadata,
-                    pkceSession = pkceSession,
-                    credentialConfigurationId = credentialConfigurationId,
-                    authorizationMethods = authorizationMethods,
-                    traceabilityId = traceabilityId
-                )
+                try {
+                    obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
+                        endpoint = interactiveEndpoint,
+                        issuerMetadata = issuerMetadata,
+                        clientMetadata = clientMetadata,
+                        pkceSession = pkceSession,
+                        credentialConfigurationId = credentialConfigurationId,
+                        authorizationMethods = authorizationMethods,
+                        traceabilityId = traceabilityId
+                    )
+                } catch (e: DownloadFailedException) {
+                    if (e.serverErrorCode == MISSING_INTERACTION_TYPE_ERROR) {
+                        logger.warning("Interactive authorization failed at $interactiveEndpoint: ${e.message}. Falling back to standard authorization endpoint if available.")
+                        obtainAuthorizationCodeViaAuthorizationEndpoint(
+                            authorizationServerMetadata = authorizationServerMetadata,
+                            issuerMetadata = issuerMetadata,
+                            clientMetadata = clientMetadata,
+                            pkceSession = pkceSession,
+                            authorizationMethods = authorizationMethods
+                        )
+                    }
+                    else
+                        throw e
+                }
             }
+
 
             else -> {
                 obtainAuthorizationCodeViaAuthorizationEndpoint(

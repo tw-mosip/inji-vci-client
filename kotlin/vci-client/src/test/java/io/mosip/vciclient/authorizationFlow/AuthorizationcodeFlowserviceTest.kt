@@ -381,6 +381,79 @@ class AuthorizationCodeFlowServiceTest {
         assertTrue(ex.message.contains("Credential request returned null"))
     }
 
+    @Test
+    fun `should fallback to authorization endpoint when interactive flow returns missing_interaction_type`() = runBlocking {
+        coEvery {
+            anyConstructed<AuthorizationServerResolver>().resolveForAuthCode(any(), any())
+        } returns mockk {
+            every { authorizationEndpoint } returns "https://auth.example.com"
+            every { tokenEndpoint } returns "https://token.example.com"
+            every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
+        }
+
+        val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
+
+        coEvery {
+            mockHandler.handle(any(), any(), any(), any(), any())
+        } returns AuthorizationResponse(
+            authorizationCode = null,
+            status = "error",
+            error = "missing_interaction_type",
+            errorDescription = "interaction type not supported"
+        )
+
+        val result = AuthorizationCodeFlowService(
+            interactiveAuthorizationHandler = mockHandler
+        ).requestCredentials(
+            issuerMetadata = resolvedIssuerMetadata,
+            credentialConfigurationId = credentialConfigurationId,
+            clientMetadata = clientMetadata,
+            getTokenResponse = getTokenResponse,
+            getProofJwt = getProofJwt,
+            jwtProofAlgorithmsSupported = listOf("ES256"),
+            authorizationMethods = listOf(authorizationMethod),
+        )
+
+        assertEquals(mockCredentialResponse, result)
+    }
+
+    @Test
+    fun `should not fallback and throw when interactive flow fails with different error`() = runBlocking {
+        coEvery {
+            anyConstructed<AuthorizationServerResolver>().resolveForAuthCode(any(), any())
+        } returns mockk {
+            every { authorizationEndpoint } returns "https://auth.example.com"
+            every { tokenEndpoint } returns "https://token.example.com"
+            every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
+        }
+
+        val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
+
+        coEvery {
+            mockHandler.handle(any(), any(), any(), any(), any())
+        } returns AuthorizationResponse(
+            authorizationCode = null,
+            status = "error",
+            error = "access_denied",
+            errorDescription = "user denied"
+        )
+
+        val ex = assertThrows<DownloadFailedException> {
+            AuthorizationCodeFlowService(
+                interactiveAuthorizationHandler = mockHandler
+            ).requestCredentials(
+                issuerMetadata = resolvedIssuerMetadata,
+                credentialConfigurationId = credentialConfigurationId,
+                clientMetadata = clientMetadata,
+                getTokenResponse = getTokenResponse,
+                getProofJwt = getProofJwt,
+                jwtProofAlgorithmsSupported = listOf("ES256"),
+                authorizationMethods = listOf(authorizationMethod),
+            )
+        }
+
+        assertTrue(ex.message.contains("code not received"))
+    }
 }
 
 
