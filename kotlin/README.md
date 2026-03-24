@@ -551,7 +551,7 @@ AuthorizationMethod.PresentationDuringIssuance(
 
 
 ### 3.3 Request Credential
-- Method: `requestCredential`
+- Method: `requestCredential` (deprecated use requestCredentialByCredentialOffer() or requestCredentialFromTrustedIssuer())
 - Request for credential from the providers (credential issuer), and receive the credential back.
 
 > Note: This method is deprecated and will be removed in future releases. Please migrate to [`fetchCredentialUsingCredentialOffer()`](#fetchcredentialusingcredentialoffer) or [`fetchCredentialFromTrustedIssuer()`](#fetchcredentialfromtrustedissuer).
