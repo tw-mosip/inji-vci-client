@@ -9,7 +9,7 @@ It supports **Issuer Initiated (Credential Offer)** and **Wallet Initiated (Trus
 Add the following dependency to your `build.gradle` to include the library from **Maven Central**:
 
 ```groovy
-implementation "io.inji:inji-vci-client:0.7.0"
+implementation "io.inji:inji-vci-client:0.8.0"
 ```
 
 ## 🏗️ Construction of VCIClient instance
@@ -94,6 +94,12 @@ mapOf(
   "credentialConfigId-2" to mapOf(
     "format" to "mso_mdoc",
     "doctype" to "org.iso.18013.5.1.mDL"
+  ),
+  "credentialConfigId-3" to mapOf(
+    "format" to "jwt_vc_json",
+    "credential_definition" to mapOf(
+        "type" to listOf("VerifiableCredential", "UniversityDegreeCredential")
+    )
   )
 )
 ```
@@ -545,7 +551,7 @@ AuthorizationMethod.PresentationDuringIssuance(
 
 
 ### 3.3 Request Credential
-- Method: `requestCredential`
+- Method: `requestCredential` (deprecated use requestCredentialByCredentialOffer() or requestCredentialFromTrustedIssuer())
 - Request for credential from the providers (credential issuer), and receive the credential back.
 
 > Note: This method is deprecated and will be removed in future releases. Please migrate to `requestCredentialByCredentialOffer()` or `requestCredentialFromTrustedIssuer()`.
