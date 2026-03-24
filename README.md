@@ -25,6 +25,7 @@ The implementation follows
     - `ldp_vc`
     - `mso_mdoc`
     - `vc+sd-jwt` / `dc+sd-jwt`
+    - `jwt_vc_json`
 - Presentation During Issuance (PDI) support for both download flows (For more details on PDI support, please refer to the [Presentation During Issuance documentation](./doc/presentation-during-issuance-support.md))
 
 > ⚠️ Consumer of this library is responsible for processing and rendering the credential after it is downloaded.
