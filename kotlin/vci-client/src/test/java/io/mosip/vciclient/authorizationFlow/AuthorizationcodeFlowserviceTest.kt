@@ -413,6 +413,41 @@ class AuthorizationCodeFlowServiceTest {
     }
 
     @Test
+    fun `should fallback to authorization endpoint when interactive flow returns missing_interaction_type`() = runBlocking {
+        coEvery {
+            anyConstructed<AuthorizationServerResolver>().resolveForAuthCode(any(), any())
+        } returns mockk {
+            every { authorizationEndpoint } returns "https://auth.example.com"
+            every { tokenEndpoint } returns "https://token.example.com"
+            every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
+        }
+
+        val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
+        coEvery {
+            mockHandler.handle(any(), any(), any(), any(), any(), any())
+        } returns AuthorizationResponse(
+            authorizationCode = null,
+            status = "error",
+            error = "missing_interaction_type",
+            errorDescription = "interaction type not supported"
+        )
+
+        val result = AuthorizationCodeFlowService(
+            interactiveAuthorizationHandler = mockHandler
+        ).requestCredentials(
+            issuerMetadata = resolvedIssuerMetadata,
+            credentialConfigurationId = credentialConfigurationId,
+            clientMetadata = clientMetadata,
+            getTokenResponse = getTokenResponse,
+            getProofJwt = getProofJwt,
+            jwtProofAlgorithmsSupported = listOf("ES256"),
+            authorizationMethods = listOf(authorizationMethod),
+        )
+
+        assertEquals(mockCredentialResponse, result)
+    }
+
+    @Test
     fun `should wrap interactive authorization client exception details`() = runBlocking {
         coEvery {
             anyConstructed<AuthorizationServerResolver>().resolveForAuthCode(any(), any())
@@ -423,6 +458,7 @@ class AuthorizationCodeFlowServiceTest {
         }
 
         val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
+
         coEvery {
             mockHandler.handle(any(), any(), any(), any(), any(), any())
         } throws InteractiveAuthorizationException(
@@ -450,6 +486,46 @@ class AuthorizationCodeFlowServiceTest {
         assertEquals("access_denied", ex.serverErrorCode)
         assertEquals("user cancelled", ex.serverErrorDescription)
         assertTrue(ex.message.contains("Interactive authorization failed at endpoint"))
+    }
+
+    @Test
+    fun `should not fallback and throw when interactive flow fails with different error`() = runBlocking {
+        coEvery {
+            anyConstructed<AuthorizationServerResolver>().resolveForAuthCode(any(), any())
+        } returns mockk {
+            every { authorizationEndpoint } returns "https://auth.example.com"
+            every { tokenEndpoint } returns "https://token.example.com"
+            every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
+        }
+
+        val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
+
+        coEvery {
+            mockHandler.handle(any(), any(), any(), any(), any(), any())
+        } returns AuthorizationResponse(
+            authorizationCode = null,
+            status = "error",
+            error = "access_denied",
+            errorDescription = "user denied"
+        )
+
+        val ex = assertThrows<DownloadFailedException> {
+            AuthorizationCodeFlowService(
+                interactiveAuthorizationHandler = mockHandler
+            ).requestCredentials(
+                issuerMetadata = resolvedIssuerMetadata,
+                credentialConfigurationId = credentialConfigurationId,
+                clientMetadata = clientMetadata,
+                getTokenResponse = getTokenResponse,
+                getProofJwt = getProofJwt,
+                jwtProofAlgorithmsSupported = listOf("ES256"),
+                authorizationMethods = listOf(authorizationMethod),
+            )
+        }
+
+        assertTrue(ex.message.contains("code not received"))
+        assertEquals("access_denied", ex.serverErrorCode)
+        assertEquals("user denied", ex.serverErrorDescription)
     }
 
     @Test
@@ -575,6 +651,4 @@ class AuthorizationCodeFlowServiceTest {
 
             assertEquals("auth-code", response["code"])
         }
-
 }
-
