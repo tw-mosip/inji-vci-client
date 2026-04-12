@@ -20,7 +20,7 @@ import io.mosip.vciclient.constants.AuthorizeUserCallback
 import io.mosip.vciclient.constants.ProofJwtCallback
 import io.mosip.vciclient.constants.TokenResponseCallback
 import io.mosip.vciclient.credential.request.CredentialRequestExecutor
-import io.mosip.vciclient.credential.response.CredentialResponse
+import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.credentialOffer.CredentialOffer
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
@@ -41,7 +41,7 @@ import org.junit.jupiter.api.assertThrows
 
 class AuthorizationCodeFlowServiceTest {
     private val downloadTimeout: Long = 5000L
-    private val mockCredentialResponse = mockk<CredentialResponse>()
+    private val mockCredentialResponse = mockk<CredentialResponseDraft13>()
     private val resolvedIssuerMetadata = mockk<IssuerMetadata>(relaxed = true) {
         every { scope } returns "openid"
     }
@@ -71,7 +71,7 @@ class AuthorizationCodeFlowServiceTest {
 
         every { anyConstructed<PKCESessionManager>().createSession() } returns pkceSession
         every {
-            anyConstructed<CredentialRequestExecutor>().requestCredential(
+            anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
                 any(),
                 any(),
                 any(),
@@ -114,7 +114,7 @@ class AuthorizationCodeFlowServiceTest {
         } returns "mock.jwt.proof"
 
         every {
-            anyConstructed<CredentialRequestExecutor>().requestCredential(
+            anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
                 any(),
                 any(),
                 any(),
@@ -141,7 +141,7 @@ class AuthorizationCodeFlowServiceTest {
     @Test
     fun `should return credential when flow is successful via non-interactive authorization flow`() =
         runBlocking {
-            val result = AuthorizationCodeFlowService().requestCredentials(
+            val result = AuthorizationCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -172,7 +172,7 @@ class AuthorizationCodeFlowServiceTest {
             } throws Exception("Token service failure")
 
             val downloadFailureException = assertThrows<DownloadFailedException> {
-                AuthorizationCodeFlowService().requestCredentials(
+                AuthorizationCodeFlowService().requestCredentialsDraft13(
                     issuerMetadata = resolvedIssuerMetadata,
                     credentialConfigurationId = credentialConfigurationId,
                     clientMetadata = clientMetadata,
@@ -218,7 +218,7 @@ class AuthorizationCodeFlowServiceTest {
 
 
             val result =
-                AuthorizationCodeFlowService(interactiveAuthorizationHandler = mockInteractiveAuthHandler).requestCredentials(
+                AuthorizationCodeFlowService(interactiveAuthorizationHandler = mockInteractiveAuthHandler).requestCredentialsDraft13(
                     issuerMetadata = resolvedIssuerMetadata,
                     credentialConfigurationId = credentialConfigurationId,
                     clientMetadata = clientMetadata,
@@ -239,7 +239,7 @@ class AuthorizationCodeFlowServiceTest {
         } throws RuntimeException("resolver failure")
 
         val ex = assertThrows<DownloadFailedException> {
-            AuthorizationCodeFlowService().requestCredentials(
+            AuthorizationCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -268,7 +268,7 @@ class AuthorizationCodeFlowServiceTest {
         every { resolvedIssuerMetadata.tokenEndpoint } returns null
 
         val ex = assertThrows<DownloadFailedException> {
-            AuthorizationCodeFlowService().requestCredentials(
+            AuthorizationCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -305,7 +305,7 @@ class AuthorizationCodeFlowServiceTest {
         val ex = assertThrows<DownloadFailedException> {
             AuthorizationCodeFlowService(
                 interactiveAuthorizationHandler = mockHandler
-            ).requestCredentials(
+            ).requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -321,7 +321,7 @@ class AuthorizationCodeFlowServiceTest {
     @Test
     fun `should throw when no authorizeUser callback is provided`() = runBlocking {
         val ex = assertThrows<DownloadFailedException> {
-            AuthorizationCodeFlowService().requestCredentials(
+            AuthorizationCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -344,7 +344,7 @@ class AuthorizationCodeFlowServiceTest {
         }
 
         val ex = assertThrows<DownloadFailedException> {
-            AuthorizationCodeFlowService().requestCredentials(
+            AuthorizationCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -363,13 +363,13 @@ class AuthorizationCodeFlowServiceTest {
     @Test
     fun `should throw when credential request returns null`() = runBlocking {
         every {
-            anyConstructed<CredentialRequestExecutor>().requestCredential(
+            anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
                 any(), any(), any(), any(), any()
             )
         } returns null
 
         val ex = assertThrows<DownloadFailedException> {
-            AuthorizationCodeFlowService().requestCredentials(
+            AuthorizationCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -394,7 +394,7 @@ class AuthorizationCodeFlowServiceTest {
         )
 
         val ex = assertThrows<DownloadFailedException> {
-            AuthorizationCodeFlowService().requestCredentials(
+            AuthorizationCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -434,7 +434,7 @@ class AuthorizationCodeFlowServiceTest {
 
         val result = AuthorizationCodeFlowService(
             interactiveAuthorizationHandler = mockHandler
-        ).requestCredentials(
+        ).requestCredentialsDraft13(
             issuerMetadata = resolvedIssuerMetadata,
             credentialConfigurationId = credentialConfigurationId,
             clientMetadata = clientMetadata,
@@ -470,7 +470,7 @@ class AuthorizationCodeFlowServiceTest {
         val ex = assertThrows<DownloadFailedException> {
             AuthorizationCodeFlowService(
                 interactiveAuthorizationHandler = mockHandler
-            ).requestCredentials(
+            ).requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -512,7 +512,7 @@ class AuthorizationCodeFlowServiceTest {
         val ex = assertThrows<DownloadFailedException> {
             AuthorizationCodeFlowService(
                 interactiveAuthorizationHandler = mockHandler
-            ).requestCredentials(
+            ).requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -546,7 +546,7 @@ class AuthorizationCodeFlowServiceTest {
         val ex = assertThrows<DownloadFailedException> {
             AuthorizationCodeFlowService(
                 interactiveAuthorizationHandler = mockHandler
-            ).requestCredentials(
+            ).requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -566,7 +566,7 @@ class AuthorizationCodeFlowServiceTest {
     @Test
     fun `should wrap credential executor client exception details`() = runBlocking {
         every {
-            anyConstructed<CredentialRequestExecutor>().requestCredential(
+            anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
                 any(),
                 any(),
                 any(),
@@ -580,7 +580,7 @@ class AuthorizationCodeFlowServiceTest {
         )
 
         val ex = assertThrows<DownloadFailedException> {
-            AuthorizationCodeFlowService().requestCredentials(
+            AuthorizationCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -604,7 +604,7 @@ class AuthorizationCodeFlowServiceTest {
     @Test
     fun `should wrap unexpected credential executor failures`() = runBlocking {
         every {
-            anyConstructed<CredentialRequestExecutor>().requestCredential(
+            anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
                 any(),
                 any(),
                 any(),
@@ -614,7 +614,7 @@ class AuthorizationCodeFlowServiceTest {
         } throws RuntimeException("credential request crashed")
 
         val ex = assertThrows<DownloadFailedException> {
-            AuthorizationCodeFlowService().requestCredentials(
+            AuthorizationCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetadata,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,

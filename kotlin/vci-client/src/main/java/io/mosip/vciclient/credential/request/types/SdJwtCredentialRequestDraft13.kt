@@ -12,7 +12,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
-class SdJwtCredentialRequest(
+class SdJwtCredentialRequestDraft13(
     override val accessToken: String,
     override val issuerMetadata: IssuerMetadata,
     override val proof: Proof,

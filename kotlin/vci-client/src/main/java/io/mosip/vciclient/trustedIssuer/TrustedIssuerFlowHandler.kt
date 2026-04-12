@@ -4,42 +4,78 @@ import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.constants.Constants
+import io.mosip.vciclient.constants.OID4VCIVersion
+import io.mosip.vciclient.constants.ProofJwtCallback
+import io.mosip.vciclient.constants.ProofsCallback
+import io.mosip.vciclient.constants.TokenResponseCallback
 import io.mosip.vciclient.credential.response.CredentialResponse
+import io.mosip.vciclient.credential.response.CredentialResponseDraft13
+import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataResult
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
-import io.mosip.vciclient.constants.ProofJwtCallback
-import io.mosip.vciclient.constants.TokenResponseCallback
 
-class TrustedIssuerFlowHandler {
-    private val issuerMetadataService = IssuerMetadataService()
-    private val authorizationCodeFlowService = AuthorizationCodeFlowService()
-
+class TrustedIssuerFlowHandler internal constructor(
+    private val authService: AuthorizationCodeFlowService = AuthorizationCodeFlowService(),
+    private val issuerMetadataService: IssuerMetadataService = IssuerMetadataService(),
+) {
     suspend fun downloadCredentials(
         credentialIssuer: String,
         credentialConfigurationId: String,
         clientMetadata: ClientMetadata,
         getTokenResponse: TokenResponseCallback,
-        getProofJwt: ProofJwtCallback,
+        getProofs: ProofsCallback,
         authorizationMethods: List<AuthorizationMethod>,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
     ): CredentialResponse {
-        val issuerMetadataResult: IssuerMetadataResult =
-            issuerMetadataService.fetchIssuerMetadataResult(
-                credentialIssuer,
-                credentialConfigurationId
+        val issuerMetadata = loadIssuerMetadata(credentialIssuer, credentialConfigurationId)
+        val proofSigningAlgorithms = issuerMetadata.extractJwtProofSigningAlgorithms(
+            credentialConfigurationId
+        )
+
+        return when (issuerMetadata.issuerMetadata.specVersion) {
+            OID4VCIVersion.V1 -> authService.requestCredentials(
+                issuerMetadata = issuerMetadata.issuerMetadata,
+                credentialConfigurationId = credentialConfigurationId,
+                clientMetadata = clientMetadata,
+                getTokenResponse = getTokenResponse,
+                getProofs = getProofs,
+                authorizationMethods = authorizationMethods,
+                downloadTimeOutInMillis = downloadTimeoutInMillis,
+                jwtProofAlgorithmsSupported = proofSigningAlgorithms
             )
 
-        return authorizationCodeFlowService.requestCredentials(
-            issuerMetadata = issuerMetadataResult.issuerMetadata,
-            credentialConfigurationId = credentialConfigurationId,
-            clientMetadata = clientMetadata,
-            getTokenResponse = getTokenResponse,
-            getProofJwt = getProofJwt,
-            downloadTimeOutInMillis = downloadTimeoutInMillis,
-            jwtProofAlgorithmsSupported = issuerMetadataResult.extractJwtProofSigningAlgorithms(
-                credentialConfigurationId
-            ),
-            authorizationMethods = authorizationMethods
+            OID4VCIVersion.DRAFT13 -> {
+                val proofJwtCallback: ProofJwtCallback = { issuer, nonce, algorithms ->
+                    val proofs = getProofs(issuer, nonce, algorithms)
+                    proofs.firstProof
+                        ?: throw DownloadFailedException("Draft13 issuer requires a single JWT proof")
+                }
+                val draft13Response = authService.requestCredentialsDraft13(
+                    issuerMetadata = issuerMetadata.issuerMetadata,
+                    credentialConfigurationId = credentialConfigurationId,
+                    clientMetadata = clientMetadata,
+                    getTokenResponse = getTokenResponse,
+                    getProofJwt = proofJwtCallback,
+                    authorizationMethods = authorizationMethods,
+                    downloadTimeOutInMillis = downloadTimeoutInMillis,
+                    jwtProofAlgorithmsSupported = proofSigningAlgorithms
+                )
+                CredentialResponse(
+                    credentials = listOf(draft13Response.credential),
+                    credentialConfigurationId = draft13Response.credentialConfigurationId,
+                    credentialIssuer = draft13Response.credentialIssuer
+                )
+            }
+        }
+    }
+
+    private suspend fun loadIssuerMetadata(
+        credentialIssuer: String,
+        credentialConfigurationId: String,
+    ): IssuerMetadataResult {
+        return issuerMetadataService.fetchIssuerMetadataResult(
+            credentialIssuer,
+            credentialConfigurationId
         )
     }
 }

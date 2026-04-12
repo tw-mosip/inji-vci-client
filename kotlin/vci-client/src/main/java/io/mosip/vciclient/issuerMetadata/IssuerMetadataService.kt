@@ -2,6 +2,7 @@ package io.mosip.vciclient.issuerMetadata
 
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.constants.CredentialFormat
+import io.mosip.vciclient.constants.OID4VCIVersion
 import io.mosip.vciclient.exception.IssuerMetadataFetchException
 import io.mosip.vciclient.exception.VCIClientException
 import io.mosip.vciclient.networkManager.HttpMethod
@@ -26,6 +27,11 @@ class IssuerMetadataService {
     ): IssuerMetadataResult = withContext(Dispatchers.IO) {
         try {
             val rawIssuerMetadata = getOrFetchCachedMetadata(credentialIssuer)
+
+            validateCredentialIssuerMatch(
+                expected = credentialIssuer,
+                rawMetadata = rawIssuerMetadata
+            )
 
             val resolvedIssuerMetadata = resolveMetadata(
                 credentialConfigurationId = credentialConfigurationId,
@@ -54,8 +60,13 @@ class IssuerMetadataService {
         }
     }
 
-    fun fetchCredentialConfigurationsSupported(credentialIssuer: String): Map<String, Any> {
+    suspend fun fetchCredentialConfigurationsSupported(credentialIssuer: String): Map<String, Any> {
         val rawIssuerMetadata = fetchAndParseIssuerMetadata(credentialIssuer)
+
+        validateCredentialIssuerMatch(
+            expected = credentialIssuer,
+            rawMetadata = rawIssuerMetadata
+        )
 
         val configurations = rawIssuerMetadata["credential_configurations_supported"] as? Map<*, *>
             ?: throw IssuerMetadataFetchException("Missing or invalid 'credential_configurations_supported' in issuer metadata.")
@@ -76,7 +87,7 @@ class IssuerMetadataService {
         return configurations as Map<String, Any>
     }
 
-    fun fetchAndParseIssuerMetadata(credentialIssuer: String): Map<String, Any> {
+    suspend fun fetchAndParseIssuerMetadata(credentialIssuer: String): Map<String, Any> = withContext(Dispatchers.IO) {
         val wellKnownUrl = "$credentialIssuer$CREDENTIAL_ISSUER_WELL_KNOWN_URI_SUFFIX"
 
         try {
@@ -91,7 +102,7 @@ class IssuerMetadataService {
                 throw IssuerMetadataFetchException("Issuer metadata response is empty.")
             }
 
-            return JsonUtils.toMap(body)
+            return@withContext JsonUtils.toMap(body)
         } catch (e: IssuerMetadataFetchException) {
             throw e
         } catch (e: VCIClientException) {
@@ -109,7 +120,20 @@ class IssuerMetadataService {
         }
     }
 
-    private fun getOrFetchCachedMetadata(credentialIssuer: String) =
+    private fun validateCredentialIssuerMatch(
+        expected: String,
+        rawMetadata: Map<String, Any>
+    ) {
+        val actual = rawMetadata["credential_issuer"] as? String
+            ?: throw IssuerMetadataFetchException("Missing credential_issuer in issuer metadata")
+        if (expected != actual) {
+            throw IssuerMetadataFetchException(
+                "credential_issuer mismatch: expected '$expected', got '$actual'"
+            )
+        }
+    }
+
+    private suspend fun getOrFetchCachedMetadata(credentialIssuer: String) =
         cachedRawMetadata[credentialIssuer] ?: run {
             val fetched = fetchAndParseIssuerMetadata(credentialIssuer)
             cachedRawMetadata[credentialIssuer] = fetched
@@ -132,6 +156,8 @@ class IssuerMetadataService {
             ?: throw IssuerMetadataFetchException("Missing credential_issuer")
         val format = credentialType["format"] as? String
         val scope = credentialType["scope"] as? String ?: "openid"
+        val nonceEndpoint = rawIssuerMetadata["nonce_endpoint"] as? String
+        val specVersion = detectSpecVersion(rawIssuerMetadata, credentialType)
 
         return when (format) {
             CredentialFormat.MSO_MDOC.value -> {
@@ -146,7 +172,9 @@ class IssuerMetadataService {
                     doctype = doctype,
                     claims = claims,
                     scope = scope,
-                    authorizationServers = rawIssuerMetadata["authorization_servers"] as? List<String>
+                    authorizationServers = rawIssuerMetadata["authorization_servers"] as? List<String>,
+                    nonceEndpoint = nonceEndpoint,
+                    specVersion = specVersion
                 )
             }
 
@@ -164,6 +192,8 @@ class IssuerMetadataService {
                     credentialFormat = CredentialFormat.LDP_VC,
                     authorizationServers = rawIssuerMetadata["authorization_servers"] as? List<String>,
                     scope = scope,
+                    nonceEndpoint = nonceEndpoint,
+                    specVersion = specVersion
                 )
             }
 
@@ -179,7 +209,9 @@ class IssuerMetadataService {
                     context = null,
                     credentialFormat = CredentialFormat.JWT_VC_JSON,
                     authorizationServers = rawIssuerMetadata["authorization_servers"] as? List<String>,
-                    scope = scope
+                    scope = scope,
+                    nonceEndpoint = nonceEndpoint,
+                    specVersion = specVersion
                 )
             }
 
@@ -198,11 +230,33 @@ class IssuerMetadataService {
                     vct = vct,
                     claims = claims,
                     scope = scope,
-                    authorizationServers = rawIssuerMetadata["authorization_servers"] as? List<String>
+                    authorizationServers = rawIssuerMetadata["authorization_servers"] as? List<String>,
+                    nonceEndpoint = nonceEndpoint,
+                    specVersion = specVersion
                 )
             }
 
             else -> throw IssuerMetadataFetchException("Unsupported or missing credential format in configuration")
         }
+    }
+
+    private fun detectSpecVersion(
+        rawIssuerMetadata: Map<String, Any>,
+        credentialConfiguration: Map<*, *>
+    ): OID4VCIVersion {
+        val nonceEndpoint = rawIssuerMetadata["nonce_endpoint"] as? String
+        if (!nonceEndpoint.isNullOrEmpty()) {
+            return OID4VCIVersion.V1
+        }
+
+        if (credentialConfiguration["credential_metadata"] != null) {
+            return OID4VCIVersion.V1
+        }
+
+        if (credentialConfiguration["display"] != null) {
+            return OID4VCIVersion.DRAFT13
+        }
+
+        return OID4VCIVersion.V1
     }
 }

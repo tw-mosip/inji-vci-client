@@ -3,6 +3,7 @@ package io.mosip.vciclient.common
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import io.mosip.vciclient.proof.CredentialRequestProofs
 
 /**
  *  Created singleton instance of Gson and use it in the library to avoid expensive calls
@@ -13,6 +14,7 @@ class JsonUtils {
         private val gsonForSerialization: Gson = GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .disableHtmlEscaping()
+            .registerTypeAdapter(CredentialRequestProofs::class.java, CredentialRequestProofs.Serializer())
             .create()
 
         private val gsonForDeserialization: Gson = GsonBuilder()

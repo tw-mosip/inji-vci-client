@@ -202,6 +202,30 @@ class IssuerMetadataServiceTest {
     }
 
     @Test
+    fun `fetchIssuerMetadataResult should throw if credential_issuer does not match expected`() = runBlocking {
+        mockJsonResponse(MISMATCHED_CREDENTIAL_ISSUER_JSON)
+
+        val ex = assertThrows<IssuerMetadataFetchException> {
+            IssuerMetadataService().fetchIssuerMetadataResult(issuerUrl, "UniversityDegreeCredential")
+        }
+        assertTrue(ex.message.contains("credential_issuer mismatch"))
+        assertTrue(ex.message.contains("https://mock.issuer"))
+        assertTrue(ex.message.contains("https://other.issuer"))
+    }
+
+    @Test
+    fun `fetchCredentialConfigurationsSupported should throw if credential_issuer does not match expected`() = runBlocking {
+        mockJsonResponse(MISMATCHED_CREDENTIAL_ISSUER_JSON)
+
+        val ex = assertThrows<IssuerMetadataFetchException> {
+            IssuerMetadataService().fetchCredentialConfigurationsSupported(issuerUrl)
+        }
+        assertTrue(ex.message.contains("credential_issuer mismatch"))
+        assertTrue(ex.message.contains("https://mock.issuer"))
+        assertTrue(ex.message.contains("https://other.issuer"))
+    }
+
+    @Test
     fun `should throw if network call throws`() = runBlocking {
         every { NetworkManager.sendRequest(wellKnownUrl, any(), any()) } throws Exception("Invalid request")
 
@@ -213,7 +237,7 @@ class IssuerMetadataServiceTest {
     }
 
     @Test
-    fun `fetchCredentialConfigurationsSupported should return configuration map on success`() {
+    fun `fetchCredentialConfigurationsSupported should return configuration map on success`() = runBlocking {
         every {
             NetworkManager.sendRequest(wellKnownUrl, any(), any())
         } returns NetworkResponse(MULTIPLE_VALID_CONFIGS_JSON, null)
@@ -226,7 +250,7 @@ class IssuerMetadataServiceTest {
     }
 
     @Test
-    fun `fetchCredentialConfigurationsSupported should throw if format is missing in config`() {
+    fun `fetchCredentialConfigurationsSupported should throw if format is missing in config`() = runBlocking {
         every {
             NetworkManager.sendRequest(wellKnownUrl, any(), any())
         } returns NetworkResponse(CONFIG_WITHOUT_FORMAT_JSON, null)
@@ -383,6 +407,7 @@ class IssuerMetadataServiceTest {
 
         const val CONFIG_WITHOUT_FORMAT_JSON = """
 {
+  "credential_issuer": "https://mock.issuer",
   "credential_configurations_supported": {
     "vc1": {
       "scope": "test-scope"
@@ -393,9 +418,26 @@ class IssuerMetadataServiceTest {
 
         const val MULTIPLE_VALID_CONFIGS_JSON = """
 {
+  "credential_issuer": "https://mock.issuer",
   "credential_configurations_supported": {
     "vc1": { "format": "ldp_vc" },
     "vc2": { "format": "mso_mdoc", "doctype": "org.iso.18013.5.1.mDL" }
+  }
+}
+"""
+
+        const val MISMATCHED_CREDENTIAL_ISSUER_JSON = """
+{
+  "credential_issuer": "https://other.issuer",
+  "credential_endpoint": "https://other.issuer/endpoint",
+  "credential_configurations_supported": {
+    "UniversityDegreeCredential": {
+      "format": "ldp_vc",
+      "credential_definition": {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        "type": ["VerifiableCredential"]
+      }
+    }
   }
 }
 """

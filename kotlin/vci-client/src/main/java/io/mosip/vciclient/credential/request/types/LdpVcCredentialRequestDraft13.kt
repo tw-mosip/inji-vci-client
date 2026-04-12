@@ -1,5 +1,6 @@
 package io.mosip.vciclient.credential.request.types
 
+import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.common.JsonUtils
 import io.mosip.vciclient.constants.Constants.APPLICATION_JSON
 import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
@@ -7,22 +8,20 @@ import io.mosip.vciclient.credential.request.CredentialRequest
 import io.mosip.vciclient.credential.request.util.ValidatorResult
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
 import io.mosip.vciclient.proof.Proof
-import io.mosip.vciclient.exception.InvalidDataProvidedException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
-class JwtVcCredentialRequest(
+class LdpVcCredentialRequestDraft13(
     override val accessToken: String,
     override val issuerMetadata: IssuerMetadata,
     override val proof: Proof,
 ) : CredentialRequest {
-
     override fun constructRequest(): Request {
         return Request.Builder()
-            .url(issuerMetadata.credentialEndpoint!!)
-            .addHeader("Authorization", "Bearer $accessToken")
+            .url(this.issuerMetadata.credentialEndpoint)
+            .addHeader("Authorization", "Bearer ${this.accessToken}")
             .addHeader(CONTENT_TYPE, APPLICATION_JSON)
             .post(generateRequestBody())
             .build()
@@ -30,36 +29,39 @@ class JwtVcCredentialRequest(
 
     override fun validateIssuerMetaData(): ValidatorResult {
         val validatorResult = ValidatorResult()
-        if (issuerMetadata.credentialEndpoint.isNullOrEmpty()) {
-            validatorResult.addInvalidField("credentialEndpoint")
-        }
-        if (issuerMetadata.credentialType.isNullOrEmpty()) {
+        if(issuerMetadata.credentialType.isNullOrEmpty()){
             validatorResult.addInvalidField("credentialType")
         }
         return validatorResult
     }
 
     private fun generateRequestBody(): RequestBody {
-        val definition = JwtVcCredentialDefinition(
-            type = issuerMetadata.credentialType ?: throw InvalidDataProvidedException("Credential type is missing in issuer metadata")
-        )
-        val request = JwtVcRequestBody(
-            format = issuerMetadata.credentialFormat.value,
-            credentialDefinition = definition,
-            proof = proof
+        val credentialRequestBody = LdpVcCredentialRequestBody(
+            credentialDefinition = CredentialDefinition(type = this.issuerMetadata.credentialType!!, context = this.getCredentialRequestContext()),
+            proof = proof,
+            format = this.issuerMetadata.credentialFormat.value
         ).toJson()
-        return request.toRequestBody(APPLICATION_JSON.toMediaTypeOrNull())
+        return credentialRequestBody
+            .toRequestBody(APPLICATION_JSON.toMediaTypeOrNull())
+    }
+
+    private fun getCredentialRequestContext(): List<String> {
+       return this.issuerMetadata.context ?: listOf("https://www.w3.org/2018/credentials/v1")
     }
 }
 
-private data class JwtVcCredentialDefinition(
-    val type: List<String>
-)
-
-private data class JwtVcRequestBody(
+private data class LdpVcCredentialRequestBody(
     val format: String,
-    val credentialDefinition: JwtVcCredentialDefinition,
-    val proof: Proof
+    val credentialDefinition: CredentialDefinition,
+    val proof: Proof,
 ) {
-    fun toJson(): String = JsonUtils.serialize(this)
+    fun toJson(): String {
+        return JsonUtils.serialize(this)
+    }
 }
+
+private data class CredentialDefinition(
+    @SerializedName("@context")
+    val context: List<String>,
+    val type: List<String>,
+)

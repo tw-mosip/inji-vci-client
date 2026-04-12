@@ -15,12 +15,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.net.URI
 
-class LdpVcCredentialRequestTest {
+class LdpVcCredentialRequestDraft13Test {
     @Test
     fun `should create JSON in expected format`() {
         val credentialEndpoint = "https://credentialendpoint/"
 
-        val ldpVcRequest: Request = LdpVcCredentialRequest(
+        val ldpVcRequest: Request = LdpVcCredentialRequestDraft13(
             "accessToken",
             IssuerMetadata(
                 "/credentialAudience",
@@ -46,7 +46,7 @@ class LdpVcCredentialRequestTest {
     @Test
     fun `should return isValid as true when required issuerMetadata details are available`() {
 
-        val ldpVcRequest: LdpVcCredentialRequest = LdpVcCredentialRequest(
+        val ldpVcRequest: LdpVcCredentialRequestDraft13 = LdpVcCredentialRequestDraft13(
             "accessToken",
             IssuerMetadata(
                 "/credentialAudience",
@@ -66,7 +66,7 @@ class LdpVcCredentialRequestTest {
     @Test
     fun `should return validator result with isValid as false & invalidFields when required issuerMetadata details are not available`() {
 
-        val ldpVcRequest = LdpVcCredentialRequest(
+        val ldpVcRequest = LdpVcCredentialRequestDraft13(
             "accessToken",
             IssuerMetadata(
                 "/credentialAudience",

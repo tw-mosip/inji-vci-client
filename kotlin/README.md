@@ -18,6 +18,7 @@ Version `0.8.0` introduces two notable improvements:
 
 - Support for the `jwt_vc_json` credential format across issuer metadata parsing and credential request.
 - Enhanced structured error handling so wallet applications can distinguish between library-level failures and issuer or authorization server error payloads.
+- Issuer metadata fetches now validate that the `credential_issuer` returned by the well-known endpoint matches the requested issuer, per [OID4VCI Section 13.5](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-13.html#section-13.5).
 
 ## 🏗️ Construction of VCIClient instance
 

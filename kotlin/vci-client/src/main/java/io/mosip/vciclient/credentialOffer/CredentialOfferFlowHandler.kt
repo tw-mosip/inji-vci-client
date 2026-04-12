@@ -5,18 +5,126 @@ import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.constants.CheckIssuerTrustCallback
 import io.mosip.vciclient.constants.Constants
+import io.mosip.vciclient.constants.OID4VCIVersion
 import io.mosip.vciclient.constants.ProofJwtCallback
+import io.mosip.vciclient.constants.ProofsCallback
 import io.mosip.vciclient.constants.TokenResponseCallback
 import io.mosip.vciclient.constants.TxCodeCallback
 import io.mosip.vciclient.credential.response.CredentialResponse
+import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.exception.CredentialOfferFetchFailedException
 import io.mosip.vciclient.exception.DownloadFailedException
+import io.mosip.vciclient.issuerMetadata.IssuerMetadataResult
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
 import io.mosip.vciclient.preAuthCodeFlow.PreAuthCodeFlowService
 
-class CredentialOfferFlowHandler {
-
+class CredentialOfferFlowHandler internal constructor(
+    private val credentialOfferService: CredentialOfferService = CredentialOfferService(),
+    private val issuerMetadataService: IssuerMetadataService = IssuerMetadataService(),
+    private val preAuthFlowService: PreAuthCodeFlowService = PreAuthCodeFlowService(),
+    private val authorizationCodeFlowService: AuthorizationCodeFlowService = AuthorizationCodeFlowService(),
+) {
     suspend fun downloadCredentials(
+        credentialOffer: String,
+        clientMetadata: ClientMetadata,
+        getTxCode: TxCodeCallback?,
+        getTokenResponse: TokenResponseCallback,
+        getProofs: ProofsCallback,
+        authorizationMethods: List<AuthorizationMethod>,
+        onCheckIssuerTrust: CheckIssuerTrustCallback? = null,
+        downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
+        traceabilityId: String? = null,
+    ): CredentialResponse {
+        val result = executeDownloadCredentials(
+            credentialOffer = credentialOffer,
+            clientMetadata = clientMetadata,
+            getTxCode = getTxCode,
+            authorizationMethods = authorizationMethods,
+            onCheckIssuerTrust = onCheckIssuerTrust,
+            downloadTimeoutInMillis = downloadTimeoutInMillis,
+            traceabilityId = traceabilityId
+        ) { offer, issuerMetadataResponse, credentialConfigurationId, proofSigningAlgorithms ->
+            when (issuerMetadataResponse.issuerMetadata.specVersion) {
+                OID4VCIVersion.V1 -> {
+                    if (offer.isPreAuthorizedFlow()) {
+                        preAuthFlowService.requestCredentials(
+                            issuerMetadata = issuerMetadataResponse.issuerMetadata,
+                            jwtProofSigningAlgorithms = proofSigningAlgorithms,
+                            getTokenResponse = getTokenResponse,
+                            getProofs = getProofs,
+                            credentialConfigurationId = credentialConfigurationId,
+                            getTxCode = getTxCode,
+                            downloadTimeoutInMillis = downloadTimeoutInMillis,
+                            offer = offer
+                        )
+                    } else if (offer.isAuthorizationCodeFlow()) {
+                        authorizationCodeFlowService.requestCredentials(
+                            issuerMetadata = issuerMetadataResponse.issuerMetadata,
+                            credentialConfigurationId = credentialConfigurationId,
+                            clientMetadata = clientMetadata,
+                            getTokenResponse = getTokenResponse,
+                            getProofs = getProofs,
+                            authorizationMethods = authorizationMethods,
+                            credentialOffer = offer,
+                            downloadTimeOutInMillis = downloadTimeoutInMillis,
+                            jwtProofAlgorithmsSupported = proofSigningAlgorithms,
+                            traceabilityId = traceabilityId
+                        )
+                    } else {
+                        throw CredentialOfferFetchFailedException("Credential offer does not contain a supported grant type")
+                    }
+                }
+
+                OID4VCIVersion.DRAFT13 -> {
+                    val proofJwtCallback: ProofJwtCallback = { issuer, nonce, algorithms ->
+                        val proofs = getProofs(issuer, nonce, algorithms)
+                        proofs.firstProof
+                            ?: throw DownloadFailedException("Draft13 issuer requires a single JWT proof")
+                    }
+
+                    val draft13Response = if (offer.isPreAuthorizedFlow()) {
+                        preAuthFlowService.requestCredentialsDraft13(
+                            issuerMetadata = issuerMetadataResponse.issuerMetadata,
+                            jwtProofSigningAlgorithms = proofSigningAlgorithms,
+                            getTokenResponse = getTokenResponse,
+                            getProofJwt = proofJwtCallback,
+                            credentialConfigurationId = credentialConfigurationId,
+                            getTxCode = getTxCode,
+                            downloadTimeoutInMillis = downloadTimeoutInMillis,
+                            offer = offer
+                        )
+                    } else if (offer.isAuthorizationCodeFlow()) {
+                        authorizationCodeFlowService.requestCredentialsDraft13(
+                            issuerMetadata = issuerMetadataResponse.issuerMetadata,
+                            credentialConfigurationId = credentialConfigurationId,
+                            clientMetadata = clientMetadata,
+                            getTokenResponse = getTokenResponse,
+                            getProofJwt = proofJwtCallback,
+                            authorizationMethods = authorizationMethods,
+                            credentialOffer = offer,
+                            downloadTimeOutInMillis = downloadTimeoutInMillis,
+                            jwtProofAlgorithmsSupported = proofSigningAlgorithms,
+                            traceabilityId = traceabilityId
+                        )
+                    } else {
+                        throw CredentialOfferFetchFailedException("Credential offer does not contain a supported grant type")
+                    }
+
+                    CredentialResponse(
+                        credentials = listOf(draft13Response.credential),
+                        credentialConfigurationId = draft13Response.credentialConfigurationId,
+                        credentialIssuer = draft13Response.credentialIssuer
+                    )
+                }
+            }
+        }
+        if (result.credentials.isNullOrEmpty()) {
+            throw CredentialOfferFetchFailedException("No credential response found")
+        }
+        return result
+    }
+
+    suspend fun downloadCredentialsDraft13(
         credentialOffer: String,
         clientMetadata: ClientMetadata,
         getTxCode: TxCodeCallback?,
@@ -25,33 +133,21 @@ class CredentialOfferFlowHandler {
         authorizationMethods: List<AuthorizationMethod>,
         onCheckIssuerTrust: CheckIssuerTrustCallback? = null,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
-        traceabilityId: String? = null
-    ): CredentialResponse {
-        val offer = CredentialOfferService().fetchCredentialOffer(credentialOffer)
-        if (offer.credentialConfigurationIds.size > 1) {
-            throw DownloadFailedException("Batch credential request is not supported.")
-        }
-        val credentialConfigurationId = offer.credentialConfigurationIds.firstOrNull() ?: ""
-        val issuerMetadataResult = IssuerMetadataService().fetchIssuerMetadataResult(
-            offer.credentialIssuer,
-            credentialConfigurationId
-        )
-
-        val issuerDisplay =
-            issuerMetadataResult.raw["display"] as? List<Map<String, Any>> ?: listOf(emptyMap())
-        ensureIssuerTrust(
-            credentialIssuer = offer.credentialIssuer,
-            issuerDisplay = issuerDisplay,
-            onCheckIssuerTrust = onCheckIssuerTrust
-        )
-
-        val credentialResponse = when {
-            offer.isPreAuthorizedFlow() -> {
-                PreAuthCodeFlowService().requestCredentials(
-                    issuerMetadata = issuerMetadataResult.issuerMetadata,
-                    jwtProofSigningAlgorithms = issuerMetadataResult.extractJwtProofSigningAlgorithms(
-                        credentialConfigurationId
-                    ),
+        traceabilityId: String? = null,
+    ): CredentialResponseDraft13 {
+        val result = executeDownloadCredentials(
+            credentialOffer = credentialOffer,
+            clientMetadata = clientMetadata,
+            getTxCode = getTxCode,
+            authorizationMethods = authorizationMethods,
+            onCheckIssuerTrust = onCheckIssuerTrust,
+            downloadTimeoutInMillis = downloadTimeoutInMillis,
+            traceabilityId = traceabilityId
+        ) { offer, issuerMetadataResponse, credentialConfigurationId, proofSigningAlgorithms ->
+            if (offer.isPreAuthorizedFlow()) {
+                preAuthFlowService.requestCredentialsDraft13(
+                    issuerMetadata = issuerMetadataResponse.issuerMetadata,
+                    jwtProofSigningAlgorithms = proofSigningAlgorithms,
                     getTokenResponse = getTokenResponse,
                     getProofJwt = getProofJwt,
                     credentialConfigurationId = credentialConfigurationId,
@@ -59,39 +155,71 @@ class CredentialOfferFlowHandler {
                     downloadTimeoutInMillis = downloadTimeoutInMillis,
                     offer = offer
                 )
-            }
-
-            offer.isAuthorizationCodeFlow() -> {
-                AuthorizationCodeFlowService().requestCredentials(
-                    issuerMetadata = issuerMetadataResult.issuerMetadata,
-                    credentialConfigurationId = offer.credentialConfigurationIds.first(),
+            } else if (offer.isAuthorizationCodeFlow()) {
+                authorizationCodeFlowService.requestCredentialsDraft13(
+                    issuerMetadata = issuerMetadataResponse.issuerMetadata,
+                    credentialConfigurationId = credentialConfigurationId,
                     clientMetadata = clientMetadata,
                     getTokenResponse = getTokenResponse,
                     getProofJwt = getProofJwt,
+                    authorizationMethods = authorizationMethods,
                     credentialOffer = offer,
                     downloadTimeOutInMillis = downloadTimeoutInMillis,
-                    jwtProofAlgorithmsSupported = issuerMetadataResult.extractJwtProofSigningAlgorithms(
-                        credentialConfigurationId
-                    ),
-                    authorizationMethods = authorizationMethods,
-                    traceabilityId = traceabilityId,
+                    jwtProofAlgorithmsSupported = proofSigningAlgorithms,
+                    traceabilityId = traceabilityId
                 )
-            }
-
-            else -> {
+            } else {
                 throw CredentialOfferFetchFailedException("Credential offer does not contain a supported grant type")
             }
         }
-        if (credentialResponse.credential.isJsonNull) {
+        if (result.credential.isJsonNull) {
             throw CredentialOfferFetchFailedException("No credential response found")
         }
-        return credentialResponse
+        return result
+    }
+
+    private suspend fun <Response> executeDownloadCredentials(
+        credentialOffer: String,
+        clientMetadata: ClientMetadata,
+        getTxCode: TxCodeCallback?,
+        authorizationMethods: List<AuthorizationMethod>,
+        onCheckIssuerTrust: CheckIssuerTrustCallback?,
+        downloadTimeoutInMillis: Long,
+        traceabilityId: String?,
+        executeFlow: suspend (CredentialOffer, IssuerMetadataResult, String, List<String>) -> Response,
+    ): Response {
+        val offer = credentialOfferService.fetchCredentialOffer(credentialOffer)
+        if (offer.credentialConfigurationIds.size > 1) {
+            throw DownloadFailedException("Batch credential request is not supported.")
+        }
+
+        val credentialConfigurationId = offer.credentialConfigurationIds.firstOrNull()
+            ?: throw CredentialOfferFetchFailedException("Credential offer does not contain a supported grant type")
+        val issuerMetadataResponse = issuerMetadataService.fetchIssuerMetadataResult(
+            offer.credentialIssuer,
+            credentialConfigurationId
+        )
+        val issuerDisplay =
+            issuerMetadataResponse.raw["display"] as? List<Map<String, Any>> ?: listOf(emptyMap())
+
+        ensureIssuerTrust(
+            credentialIssuer = offer.credentialIssuer,
+            issuerDisplay = issuerDisplay,
+            onCheckIssuerTrust = onCheckIssuerTrust
+        )
+
+        return executeFlow(
+            offer,
+            issuerMetadataResponse,
+            credentialConfigurationId,
+            issuerMetadataResponse.extractJwtProofSigningAlgorithms(credentialConfigurationId)
+        )
     }
 
     private suspend fun ensureIssuerTrust(
         credentialIssuer: String,
         issuerDisplay: List<Map<String, Any>>,
-        onCheckIssuerTrust: CheckIssuerTrustCallback?
+        onCheckIssuerTrust: CheckIssuerTrustCallback?,
     ) {
         if (onCheckIssuerTrust != null) {
             val consented = onCheckIssuerTrust(credentialIssuer, issuerDisplay)
@@ -101,6 +229,3 @@ class CredentialOfferFlowHandler {
         }
     }
 }
-
-
-
