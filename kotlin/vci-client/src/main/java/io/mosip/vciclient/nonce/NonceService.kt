@@ -10,6 +10,8 @@ import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
 import io.mosip.vciclient.networkManager.NetworkManager
 import io.mosip.vciclient.token.TokenResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -18,16 +20,16 @@ class NonceService(
     private val session: NetworkManager = NetworkManager
 ) {
     companion object {
-        fun extractNonceFromTokenResponse(tokenResponse: TokenResponse): String {
+        fun extractNonceFromTokenResponse(tokenResponse: TokenResponse): String? {
             val cNonce = tokenResponse.cNonce
             if (!cNonce.isNullOrEmpty()) {
                 return cNonce
             }
-            throw DownloadFailedException("No c_nonce in token response")
+            return null
         }
     }
 
-    fun fetchNonce(
+    suspend fun fetchNonce(
         issuerMetadata: IssuerMetadata,
         timeoutInMillis: Long = DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
     ): String? {
@@ -43,10 +45,12 @@ class NonceService(
             .post("{}".toRequestBody(APPLICATION_JSON.toMediaType()))
             .build()
 
-        val response = session.sendRequest(
-            request = request,
-            timeoutMillis = timeoutInMillis
-        )
+        val response = withContext(Dispatchers.IO) {
+            session.sendRequest(
+                request = request,
+                timeoutMillis = timeoutInMillis
+            )
+        }
 
         val nonceResponse = JsonUtils.deserialize(response.body, NonceResponse::class.java)
             ?: throw DownloadFailedException("Failed to parse nonce response.")

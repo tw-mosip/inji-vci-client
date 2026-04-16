@@ -164,7 +164,7 @@ class PreAuthCodeFlowService(
         }
     }
 
-    private fun resolveNonce(
+    private suspend fun resolveNonce(
         issuerMetadata: IssuerMetadata,
         timeoutInMillis: Long,
     ): String? {

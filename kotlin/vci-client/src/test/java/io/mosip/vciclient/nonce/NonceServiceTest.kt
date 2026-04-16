@@ -4,6 +4,7 @@ import io.mosip.vciclient.constants.CredentialFormat
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
 import io.mosip.vciclient.token.TokenResponse
+import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -31,7 +32,7 @@ class NonceServiceTest {
     }
 
     @Test
-    fun `fetchNonce should return null when issuer does not expose nonce endpoint`() {
+    fun `fetchNonce should return null when issuer does not expose nonce endpoint`() = runBlocking {
         val issuerMetadata = issuerMetadata(nonceEndpoint = null)
 
         val nonce = nonceService.fetchNonce(issuerMetadata)
@@ -40,7 +41,7 @@ class NonceServiceTest {
     }
 
     @Test
-    fun `fetchNonce should post json and return c nonce from response body`() {
+    fun `fetchNonce should post json and return c nonce from response body`() = runBlocking {
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
@@ -73,11 +74,13 @@ class NonceServiceTest {
         )
 
         val exception = assertThrows(DownloadFailedException::class.java) {
-            nonceService.fetchNonce(
-                issuerMetadata = issuerMetadata(
-                    nonceEndpoint = server.url("/nonce").toString()
+            runBlocking {
+                nonceService.fetchNonce(
+                    issuerMetadata = issuerMetadata(
+                        nonceEndpoint = server.url("/nonce").toString()
+                    )
                 )
-            )
+            }
         }
 
         assertEquals(
@@ -100,21 +103,16 @@ class NonceServiceTest {
     }
 
     @Test
-    fun `extractNonceFromTokenResponse should fail when c nonce is missing`() {
+    fun `extractNonceFromTokenResponse should return null when c nonce is missing`() {
         val tokenResponse = TokenResponse(
             accessToken = "access-token",
             tokenType = "Bearer",
             cNonce = null
         )
 
-        val exception = assertThrows(DownloadFailedException::class.java) {
-            NonceService.extractNonceFromTokenResponse(tokenResponse)
-        }
+        val nonce = NonceService.extractNonceFromTokenResponse(tokenResponse)
 
-        assertEquals(
-            "Failed to download Credential: No c_nonce in token response",
-            exception.message
-        )
+        assertNull(nonce)
     }
 
     private fun issuerMetadata(nonceEndpoint: String?) = IssuerMetadata(

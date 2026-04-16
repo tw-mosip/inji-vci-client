@@ -67,7 +67,7 @@ class PreAuthCodeFlowServiceV1Test {
                 txCode = null
             )
         } returns TokenResponse("access-token", "Bearer")
-        every { nonceService.fetchNonce(issuerMetadata, 12_000) } returns "nonce-123"
+        coEvery { nonceService.fetchNonce(issuerMetadata, 12_000) } returns "nonce-123"
         every {
             executor.requestCredential(
                 issuerMetadata = issuerMetadata,
@@ -103,7 +103,7 @@ class PreAuthCodeFlowServiceV1Test {
             tokenEndpoint = "https://auth.example.com/token"
         )
         coEvery { tokenService.getAccessToken(any(), any(), any(), any()) } returns TokenResponse("access-token", "Bearer")
-        every { nonceService.fetchNonce(issuerMetadata, any()) } returns "nonce-123"
+        coEvery { nonceService.fetchNonce(issuerMetadata, any()) } returns "nonce-123"
 
         val exception = assertThrows(DownloadFailedException::class.java) {
             runBlocking {

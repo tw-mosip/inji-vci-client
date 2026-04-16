@@ -16,7 +16,7 @@ typealias ProofJwtCallback = (suspend (
     cNonce: String?,
     proofSigningAlgorithmsSupported: List<String>
 ) -> String)
-typealias ProofsCallback = (suspend (
+internal typealias ProofsCallback = (suspend (
     credentialIssuer: String,
     nonce: String?,
     proofSigningAlgorithmsSupported: List<String>

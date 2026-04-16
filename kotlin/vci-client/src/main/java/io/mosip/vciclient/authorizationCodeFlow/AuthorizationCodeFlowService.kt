@@ -414,7 +414,7 @@ internal class AuthorizationCodeFlowService(
         }
     }
 
-    private fun resolveNonce(
+    private suspend fun resolveNonce(
         issuerMetadata: IssuerMetadata,
         timeoutInMillis: Long,
     ): String? {

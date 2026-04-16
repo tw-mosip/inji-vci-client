@@ -9,7 +9,6 @@ import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.constants.CredentialFormat
 import io.mosip.vciclient.constants.OID4VCIVersion
 import io.mosip.vciclient.credential.response.CredentialResponse
-import io.mosip.vciclient.exception.CredentialOfferFetchFailedException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataResult
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
@@ -18,7 +17,6 @@ import io.mosip.vciclient.proof.CredentialRequestProofs
 import io.mosip.vciclient.token.TokenResponse
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class CredentialOfferFlowHandlerV1Test {
@@ -149,7 +147,7 @@ class CredentialOfferFlowHandlerV1Test {
     }
 
     @Test
-    fun `downloadCredentials should fail when v1 flow returns no credentials`() {
+    fun `downloadCredentials should propagate empty credential response from v1 flow`() = runBlocking {
         val offer = CredentialOffer(
             credentialIssuer = "https://issuer.example.com",
             credentialConfigurationIds = listOf("UniversityDegreeCredential"),
@@ -157,6 +155,7 @@ class CredentialOfferFlowHandlerV1Test {
                 preAuthorizedGrant = PreAuthCodeGrant(preAuthCode = "pre-auth-code")
             )
         )
+        val emptyResponse = CredentialResponse(credentials = emptyList())
 
         coEvery { credentialOfferService.fetchCredentialOffer("offer") } returns offer
         coEvery {
@@ -164,25 +163,18 @@ class CredentialOfferFlowHandlerV1Test {
         } returns issuerMetadataResult
         coEvery {
             preAuthFlowService.requestCredentials(any(), any(), any(), any(), any(), any(), any(), any())
-        } returns CredentialResponse(credentials = emptyList())
+        } returns emptyResponse
 
-        val exception = assertThrows(CredentialOfferFetchFailedException::class.java) {
-            runBlocking {
-                handler.downloadCredentials(
-                    credentialOffer = "offer",
-                    clientMetadata = clientMetadata,
-                    getTxCode = null,
-                    getTokenResponse = tokenCallback,
-                    getProofs = { _, _, _ -> CredentialRequestProofs(proofs = listOf("proof-1")) },
-                    authorizationMethods = authorizationMethods,
-                    onCheckIssuerTrust = { _, _ -> true }
-                )
-            }
-        }
-
-        assertEquals(
-            "Failed to fetch credential offer: No credential response found",
-            exception.message
+        val response = handler.downloadCredentials(
+            credentialOffer = "offer",
+            clientMetadata = clientMetadata,
+            getTxCode = null,
+            getTokenResponse = tokenCallback,
+            getProofs = { _, _, _ -> CredentialRequestProofs(proofs = listOf("proof-1")) },
+            authorizationMethods = authorizationMethods,
+            onCheckIssuerTrust = { _, _ -> true }
         )
+
+        assertEquals(emptyResponse, response)
     }
 }

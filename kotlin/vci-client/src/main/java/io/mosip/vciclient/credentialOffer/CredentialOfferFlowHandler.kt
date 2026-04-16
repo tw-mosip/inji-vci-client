@@ -37,12 +37,7 @@ class CredentialOfferFlowHandler internal constructor(
     ): CredentialResponse {
         val result = executeDownloadCredentials(
             credentialOffer = credentialOffer,
-            clientMetadata = clientMetadata,
-            getTxCode = getTxCode,
-            authorizationMethods = authorizationMethods,
             onCheckIssuerTrust = onCheckIssuerTrust,
-            downloadTimeoutInMillis = downloadTimeoutInMillis,
-            traceabilityId = traceabilityId
         ) { offer, issuerMetadataResponse, credentialConfigurationId, proofSigningAlgorithms ->
             when (issuerMetadataResponse.issuerMetadata.specVersion) {
                 OID4VCIVersion.V1 -> {
@@ -109,7 +104,10 @@ class CredentialOfferFlowHandler internal constructor(
                     } else {
                         throw CredentialOfferFetchFailedException("Credential offer does not contain a supported grant type")
                     }
-
+                    if(draft13Response.credential.isJsonNull)
+                    {
+                        throw CredentialOfferFetchFailedException("No credential response found")
+                    }
                     CredentialResponse(
                         credentials = listOf(draft13Response.credential),
                         credentialConfigurationId = draft13Response.credentialConfigurationId,
@@ -117,9 +115,6 @@ class CredentialOfferFlowHandler internal constructor(
                     )
                 }
             }
-        }
-        if (result.credentials.isNullOrEmpty()) {
-            throw CredentialOfferFetchFailedException("No credential response found")
         }
         return result
     }
@@ -137,12 +132,7 @@ class CredentialOfferFlowHandler internal constructor(
     ): CredentialResponseDraft13 {
         val result = executeDownloadCredentials(
             credentialOffer = credentialOffer,
-            clientMetadata = clientMetadata,
-            getTxCode = getTxCode,
-            authorizationMethods = authorizationMethods,
             onCheckIssuerTrust = onCheckIssuerTrust,
-            downloadTimeoutInMillis = downloadTimeoutInMillis,
-            traceabilityId = traceabilityId
         ) { offer, issuerMetadataResponse, credentialConfigurationId, proofSigningAlgorithms ->
             if (offer.isPreAuthorizedFlow()) {
                 preAuthFlowService.requestCredentialsDraft13(
@@ -180,12 +170,7 @@ class CredentialOfferFlowHandler internal constructor(
 
     private suspend fun <Response> executeDownloadCredentials(
         credentialOffer: String,
-        clientMetadata: ClientMetadata,
-        getTxCode: TxCodeCallback?,
-        authorizationMethods: List<AuthorizationMethod>,
         onCheckIssuerTrust: CheckIssuerTrustCallback?,
-        downloadTimeoutInMillis: Long,
-        traceabilityId: String?,
         executeFlow: suspend (CredentialOffer, IssuerMetadataResult, String, List<String>) -> Response,
     ): Response {
         val offer = credentialOfferService.fetchCredentialOffer(credentialOffer)
@@ -194,7 +179,7 @@ class CredentialOfferFlowHandler internal constructor(
         }
 
         val credentialConfigurationId = offer.credentialConfigurationIds.firstOrNull()
-            ?: throw CredentialOfferFetchFailedException("Credential offer does not contain a supported grant type")
+            ?: throw CredentialOfferFetchFailedException("Credential offer does not contain any credential configuration IDs")
         val issuerMetadataResponse = issuerMetadataService.fetchIssuerMetadataResult(
             offer.credentialIssuer,
             credentialConfigurationId
