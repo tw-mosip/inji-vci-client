@@ -15,7 +15,7 @@ import io.mosip.vciclient.constants.CheckIssuerTrustCallback
 import io.mosip.vciclient.constants.ProofJwtCallback
 import io.mosip.vciclient.constants.TokenResponseCallback
 import io.mosip.vciclient.constants.TxCodeCallback
-import io.mosip.vciclient.credential.response.CredentialResponse
+import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.exception.CredentialOfferFetchFailedException
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataResult
@@ -31,10 +31,10 @@ import org.junit.Test
 import org.junit.jupiter.api.assertThrows
 
 class CredentialOfferFlowHandlerTest {
-    private val mockCredentialResponse = CredentialResponse(
-        JsonPrimitive("dummy-credential"),
-        "SampleCredential",
-        "https://issuer.example.com/issuer"
+    private val mockCredentialResponse = CredentialResponseDraft13(
+        credential = JsonPrimitive("dummy-credential"),
+        credentialConfigurationId = "SampleCredential",
+        credentialIssuer = "https://issuer.example.com/issuer"
     )
     private val mockCredentialOffer = mockk<CredentialOffer>(
         relaxed = true
@@ -111,7 +111,7 @@ class CredentialOfferFlowHandlerTest {
         )
 
         coEvery {
-            anyConstructed<PreAuthCodeFlowService>().requestCredentials(
+            anyConstructed<PreAuthCodeFlowService>().requestCredentialsDraft13(
                 any(),
                 listOf("ES256"),
                 any(),
@@ -125,7 +125,7 @@ class CredentialOfferFlowHandlerTest {
         mockkConstructor(CredentialOfferService::class)
         coEvery { anyConstructed<CredentialOfferService>().fetchCredentialOffer(any()) } returns offer
 
-        val result = CredentialOfferFlowHandler().downloadCredentials(
+        val result = CredentialOfferFlowHandler().downloadCredentialsDraft13(
             credentialOffer = "some-offer",
             clientMetadata = mockClientMetadata,
             getTxCode = txCode,
@@ -150,7 +150,7 @@ class CredentialOfferFlowHandlerTest {
         coEvery { anyConstructed<CredentialOfferService>().fetchCredentialOffer(any()) } returns offer
 
         assertThrows<CredentialOfferFetchFailedException> {
-            CredentialOfferFlowHandler().downloadCredentials(
+            CredentialOfferFlowHandler().downloadCredentialsDraft13(
                 credentialOffer = "some-offer",
                 clientMetadata = mockClientMetadata,
                 getTxCode = txCode,
@@ -174,7 +174,7 @@ class CredentialOfferFlowHandlerTest {
         )
 
         coEvery {
-            anyConstructed<PreAuthCodeFlowService>().requestCredentials(
+            anyConstructed<PreAuthCodeFlowService>().requestCredentialsDraft13(
                 any(),
                 any(),
                 any(),
@@ -183,17 +183,17 @@ class CredentialOfferFlowHandlerTest {
                 any(),
                 offer = any()
             )
-        } returns CredentialResponse(
-            JsonNull.INSTANCE,
-            "SampleCredential",
-            "https://issuer.example.com/issuer"
+        } returns CredentialResponseDraft13(
+            credential = JsonNull.INSTANCE,
+            credentialConfigurationId = "SampleCredential",
+            credentialIssuer = "https://issuer.example.com/issuer"
         )
 
         mockkConstructor(CredentialOfferService::class)
         coEvery { anyConstructed<CredentialOfferService>().fetchCredentialOffer(any()) } returns offer
 
         assertThrows<CredentialOfferFetchFailedException> {
-            CredentialOfferFlowHandler().downloadCredentials(
+            CredentialOfferFlowHandler().downloadCredentialsDraft13(
                 credentialOffer = "some-offer",
                 clientMetadata = mockClientMetadata,
                 getTxCode = txCode,
@@ -224,7 +224,7 @@ class CredentialOfferFlowHandlerTest {
             } returns offer
 
             assertThrows<CredentialOfferFetchFailedException> {
-                CredentialOfferFlowHandler().downloadCredentials(
+                CredentialOfferFlowHandler().downloadCredentialsDraft13(
                     credentialOffer = "some-offer",
                     clientMetadata = mockClientMetadata,
                     getTxCode = txCode,
@@ -253,7 +253,7 @@ class CredentialOfferFlowHandlerTest {
             coEvery { anyConstructed<CredentialOfferService>().fetchCredentialOffer(any()) } returns offer
 
             val downloadFailedException = assertThrows<DownloadFailedException> {
-                CredentialOfferFlowHandler().downloadCredentials(
+                CredentialOfferFlowHandler().downloadCredentialsDraft13(
                     credentialOffer = "some-offer",
                     clientMetadata = mockClientMetadata,
                     getTxCode = txCode,
@@ -283,7 +283,7 @@ class CredentialOfferFlowHandlerTest {
         val handler = CredentialOfferFlowHandler()
         val ex = assertThrows<CredentialOfferFetchFailedException> {
             runBlocking {
-                handler.downloadCredentials(
+                handler.downloadCredentialsDraft13(
                     credentialOffer = "dummy-offer",
                     clientMetadata = mockClientMetadata,
                     getTxCode = txCode,
@@ -310,7 +310,7 @@ class CredentialOfferFlowHandlerTest {
         every { mockCredentialOffer.grants } returns grants
         every { mockCredentialOffer.credentialConfigurationIds } returns listOf("config1")
         coEvery {
-            anyConstructed<PreAuthCodeFlowService>().requestCredentials(
+            anyConstructed<PreAuthCodeFlowService>().requestCredentialsDraft13(
                 any(),
                 any(),
                 any(),
@@ -320,15 +320,15 @@ class CredentialOfferFlowHandlerTest {
                 any(),
                 any()
             )
-        } returns CredentialResponse(
-            JsonNull.INSTANCE,
-            "SampleCredential",
-            "https://issuer.example.com/issuer"
+        } returns CredentialResponseDraft13(
+            credential = JsonNull.INSTANCE,
+            credentialConfigurationId = "SampleCredential",
+            credentialIssuer = "https://issuer.example.com/issuer"
         )
         val handler = CredentialOfferFlowHandler()
         val ex = assertThrows<CredentialOfferFetchFailedException> {
             runBlocking {
-                handler.downloadCredentials(
+                handler.downloadCredentialsDraft13(
                     credentialOffer = "dummy-offer",
                     clientMetadata = mockClientMetadata,
                     getTxCode = txCode,
@@ -354,7 +354,7 @@ class CredentialOfferFlowHandlerTest {
         val handler = CredentialOfferFlowHandler()
         val ex = assertThrows<DownloadFailedException> {
             runBlocking {
-                handler.downloadCredentials(
+                handler.downloadCredentialsDraft13(
                     credentialOffer = "dummy-offer",
                     clientMetadata = mockClientMetadata,
                     getTxCode = txCode,
@@ -377,7 +377,7 @@ class CredentialOfferFlowHandlerTest {
         every { mockCredentialOffer.credentialConfigurationIds } returns listOf("config1")
         coEvery { onCheckIssuerTrust.invoke(any(), any()) } returns false
         coEvery {
-            anyConstructed<PreAuthCodeFlowService>().requestCredentials(
+            anyConstructed<PreAuthCodeFlowService>().requestCredentialsDraft13(
                 any(),
                 any(),
                 any(),
@@ -391,7 +391,7 @@ class CredentialOfferFlowHandlerTest {
         val handler = CredentialOfferFlowHandler()
         val ex = assertThrows<CredentialOfferFetchFailedException> {
             runBlocking {
-                handler.downloadCredentials(
+                handler.downloadCredentialsDraft13(
                     credentialOffer = "dummy-offer",
                     clientMetadata = mockClientMetadata,
                     getTxCode = txCode,
@@ -439,7 +439,7 @@ class CredentialOfferFlowHandlerTest {
         } returns true
 
         coEvery {
-            anyConstructed<AuthorizationCodeFlowService>().requestCredentials(
+            anyConstructed<AuthorizationCodeFlowService>().requestCredentialsDraft13(
                 issuerMetadata = issuerMetadataResult.issuerMetadata,
                 credentialConfigurationId = "UniversityDegreeCredential",
                 clientMetadata = mockClientMetadata,
@@ -453,7 +453,7 @@ class CredentialOfferFlowHandlerTest {
             )
         } returns mockCredentialResponse
 
-        val result = CredentialOfferFlowHandler().downloadCredentials(
+        val result = CredentialOfferFlowHandler().downloadCredentialsDraft13(
             credentialOffer = "some-offer",
             clientMetadata = mockClientMetadata,
             getTxCode = txCode,

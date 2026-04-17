@@ -17,12 +17,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.net.URI
 
-class MsoMsoMdocCredentialRequestTest {
+class MsoMdocCredentialRequestDraft13Test {
     @Test
     fun `should create JSON in expected format`() {
         val credentialEndpoint = "https://credentialendpoint/"
 
-        val msoMdocCredentialRequest: Request = MsoMdocCredentialRequest(
+        val msoMdocCredentialRequest: Request = MsoMdocCredentialRequestDraft13(
             "accessToken",
             IssuerMetadata(
                 "/credentialAudience",
@@ -45,14 +45,14 @@ class MsoMsoMdocCredentialRequestTest {
         assertEquals(URI(credentialEndpoint), msoMdocCredentialRequest.url.toUri())
         assertEquals("POST", msoMdocCredentialRequest.method)
         assertEquals(
-            "{\"format\":\"mso_mdoc\",\"doctype\":\"org.iso.18013.5.1.mDL\",\"proof\":{\"proof_type\":\"jwt\",\"jwt\":\"headerEncoded.payloadEncoded.signature\"}}",
+            "{\"format\":\"mso_mdoc\",\"doctype\":\"org.iso.18013.5.1.mDL\",\"proof\":{\"jwt\":\"headerEncoded.payloadEncoded.signature\",\"proof_type\":\"jwt\"}}",
             getRequestBodyInJsonString(msoMdocCredentialRequest.body!!)
         )
     }
 
     @Test
     fun `should return isValid as true when required issuerMetadata details are available`() {
-        val msoMdocCredentialRequest = MsoMdocCredentialRequest(
+        val msoMdocCredentialRequest = MsoMdocCredentialRequestDraft13(
             "accessToken",
             IssuerMetadata(
                 "/credentialAudience",
@@ -72,7 +72,7 @@ class MsoMsoMdocCredentialRequestTest {
 
     @Test
     fun `should return validator result with isValid as false & invalidFields when required issuerMetadata detail - doctype is not available`() {
-        val validatorResult: ValidatorResult = MsoMdocCredentialRequest(
+        val validatorResult: ValidatorResult = MsoMdocCredentialRequestDraft13(
             "accessToken",
             IssuerMetadata(
                 "/credentialAudience",

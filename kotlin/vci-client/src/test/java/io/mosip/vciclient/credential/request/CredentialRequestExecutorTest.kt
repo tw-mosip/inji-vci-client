@@ -1,13 +1,13 @@
 package io.mosip.vciclient.credential.request
 
-import io.mosip.vciclient.credential.response.CredentialResponse
+import io.mosip.vciclient.credential.response.CredentialResponseDraft13
+import io.mosip.vciclient.proof.CredentialRequestProofs
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.NetworkRequestFailedException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
-import io.mosip.vciclient.proof.Proof
+import io.mosip.vciclient.proof.jwt.JWTProof
 import io.mosip.vciclient.constants.CredentialFormat
-import io.mockk.mockk
 import io.mosip.vciclient.constants.Constants.APPLICATION_JSON
 import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
 import okhttp3.mockwebserver.MockResponse
@@ -17,6 +17,7 @@ import org.junit.Before
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.concurrent.TimeUnit
@@ -25,7 +26,7 @@ class CredentialRequestExecutorTest {
 
     private lateinit var mockWebServer: MockWebServer
     private lateinit var resolvedMeta: IssuerMetadata
-    private val mockProof = mockk<Proof>()
+    private val mockProof = JWTProof("headerEncoded.payloadEncoded.signature")
     private val accessToken = "mock-access-token"
 
     @Before
@@ -54,7 +55,7 @@ class CredentialRequestExecutorTest {
         mockWebServer.enqueue(
             MockResponse().setBody(json).setResponseCode(200).addHeader(CONTENT_TYPE, APPLICATION_JSON)
         )
-        val response = CredentialRequestExecutor().requestCredential(
+        val response = CredentialRequestExecutor().requestCredentialDraft13(
             issuerMetadata = resolvedMeta,
             credentialConfigurationId = "SampleCredential",
             proof = mockProof,
@@ -62,15 +63,49 @@ class CredentialRequestExecutorTest {
         )
 
         assertNotNull(response)
-        assertTrue(response is CredentialResponse)
+        assertTrue(response is CredentialResponseDraft13)
+    }
+
+    @Test
+    fun `should return v1 CredentialResponse on successful fetch`() {
+        val json = """{"credentials":[{"id":"credential-1"}]}"""
+        mockWebServer.enqueue(
+            MockResponse().setBody(json).setResponseCode(200).addHeader(CONTENT_TYPE, APPLICATION_JSON)
+        )
+
+        val response = CredentialRequestExecutor().requestCredential(
+            issuerMetadata = resolvedMeta.copy(credentialFormat = CredentialFormat.JWT_VC_JSON),
+            credentialConfigurationId = "SampleCredential",
+            proofs = CredentialRequestProofs(proofs = listOf("proof-1")),
+            accessToken = accessToken
+        )
+
+        assertNotNull(response)
+        assertEquals("SampleCredential", response?.credentialConfigurationId)
+        assertEquals("https://audience", response?.credentialIssuer)
+        assertEquals(1, response?.credentials?.size)
     }
 
     @Test
     fun `should return null when response body is empty`() {
         mockWebServer.enqueue(MockResponse().setBody("").setResponseCode(200))
 
-        val result = CredentialRequestExecutor().requestCredential(
+        val result = CredentialRequestExecutor().requestCredentialDraft13(
             resolvedMeta,"SampleCredential", mockProof, accessToken
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `should return null when v1 response body is empty`() {
+        mockWebServer.enqueue(MockResponse().setBody("").setResponseCode(200))
+
+        val result = CredentialRequestExecutor().requestCredential(
+            issuerMetadata = resolvedMeta.copy(credentialFormat = CredentialFormat.JWT_VC_JSON),
+            credentialConfigurationId = "SampleCredential",
+            proofs = CredentialRequestProofs(proofs = listOf("proof-1")),
+            accessToken = accessToken
         )
 
         assertNull(result)
@@ -83,7 +118,7 @@ class CredentialRequestExecutorTest {
         )
 
         val ex = assertThrows<DownloadFailedException> {
-            CredentialRequestExecutor().requestCredential(
+            CredentialRequestExecutor().requestCredentialDraft13(
                 resolvedMeta,"SampleCredential", mockProof, accessToken
             )
         }
@@ -97,7 +132,7 @@ class CredentialRequestExecutorTest {
         )
 
         val ex = assertThrows<DownloadFailedException> {
-            CredentialRequestExecutor().requestCredential(
+            CredentialRequestExecutor().requestCredentialDraft13(
                 resolvedMeta,"SampleCredential", mockProof, accessToken, downloadTimeoutInMillis = 500
             )
         }
@@ -113,7 +148,7 @@ class CredentialRequestExecutorTest {
         )
 
         val ex = assertThrows<DownloadFailedException> {
-            CredentialRequestExecutor().requestCredential(
+            CredentialRequestExecutor().requestCredentialDraft13(
                 resolvedMeta, "SampleCredential",mockProof, accessToken
             )
         }
@@ -129,7 +164,7 @@ class CredentialRequestExecutorTest {
         )
 
         val ex = assertThrows<DownloadFailedException> {
-            CredentialRequestExecutor().requestCredential(
+            CredentialRequestExecutor().requestCredentialDraft13(
                 issuerMetadata = resolvedMeta,
                 credentialConfigurationId = "SampleCredential",
                 proof = mockProof,

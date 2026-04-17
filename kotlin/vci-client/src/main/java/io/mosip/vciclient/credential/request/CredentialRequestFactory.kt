@@ -1,70 +1,65 @@
 package io.mosip.vciclient.credential.request
 
-import io.mosip.vciclient.constants.CredentialFormat
-import io.mosip.vciclient.credential.request.types.LdpVcCredentialRequest
-import io.mosip.vciclient.credential.request.types.MsoMdocCredentialRequest
-import io.mosip.vciclient.credential.request.types.SdJwtCredentialRequest
-import io.mosip.vciclient.credential.request.types.JwtVcCredentialRequest
+import io.mosip.vciclient.common.JsonUtils
+import io.mosip.vciclient.constants.Constants.APPLICATION_JSON
+import io.mosip.vciclient.constants.Constants.CONTENT_TYPE
+import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidDataProvidedException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
-import io.mosip.vciclient.proof.Proof
+import io.mosip.vciclient.proof.CredentialRequestProofs
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class CredentialRequestFactory {
-    companion object {
-        fun createCredentialRequest(
-            credentialFormat: CredentialFormat,
-            accessToken: String,
-            issuerMetadata: IssuerMetadata,
-            proof: Proof,
-        ): Request {
-            when (credentialFormat) {
-                CredentialFormat.LDP_VC -> {
-                    return validateAndConstructRequest(
-                        LdpVcCredentialRequest(
-                            accessToken,
-                            issuerMetadata,
-                            proof
-                        )
-                    )
-                }
-
-                CredentialFormat.JWT_VC_JSON -> {
-                    return validateAndConstructRequest(
-                        JwtVcCredentialRequest(
-                            accessToken,
-                            issuerMetadata,
-                            proof
-                        )
-                    )
-                }
-
-                CredentialFormat.MSO_MDOC -> {
-                    return validateAndConstructRequest(
-                        MsoMdocCredentialRequest(
-                            accessToken,
-                            issuerMetadata,
-                            proof
-                        )
-                    )
-                }
-
-                CredentialFormat.VC_SD_JWT, CredentialFormat.DC_SD_JWT ->
-                    return validateAndConstructRequest(
-                        SdJwtCredentialRequest(
-                            accessToken,
-                            issuerMetadata,
-                            proof
-                        )
-                    )
-            }
+    fun createCredentialRequest(
+        accessToken: String,
+        issuer: IssuerMetadata,
+        credentialConfigurationId: String,
+        proofs: CredentialRequestProofs,
+    ): Request {
+        if (proofs.isEmpty) {
+            throw InvalidDataProvidedException("Proof collection cannot be empty")
         }
 
-        private fun validateAndConstructRequest(credentialRequest: CredentialRequest): Request {
-            val issuerMetaDataValidatorResult = credentialRequest.validateIssuerMetaData()
-            if (issuerMetaDataValidatorResult.isValid)
-                return credentialRequest.constructRequest()
-            throw InvalidDataProvidedException(issuerMetaDataValidatorResult.invalidFields.toString())
+        val requestBody = makeRequestBody(
+            credentialConfigurationId = credentialConfigurationId,
+            proofs = proofs
+        )
+
+        return constructBaseRequest(accessToken, issuer)
+            .post(requestBody.toRequestBody(APPLICATION_JSON.toMediaTypeOrNull()))
+            .build()
+    }
+
+    fun constructBaseRequest(
+        accessToken: String,
+        issuer: IssuerMetadata,
+    ): Request.Builder {
+        if (issuer.credentialEndpoint.isEmpty()) {
+            throw DownloadFailedException("Invalid credential endpoint URL")
         }
+
+        return Request.Builder()
+            .url(issuer.credentialEndpoint)
+            .addHeader("Authorization", "Bearer $accessToken")
+            .addHeader(CONTENT_TYPE, APPLICATION_JSON)
+    }
+
+    fun makeRequestBody(
+        credentialConfigurationId: String,
+        proofs: CredentialRequestProofs,
+    ): String {
+        return JsonUtils.serialize(
+            CredentialRequestBody(
+                credentialConfigurationId = credentialConfigurationId,
+                proofs = proofs
+            )
+        )
     }
 }
+
+private data class CredentialRequestBody(
+    val credentialConfigurationId: String,
+    val proofs: CredentialRequestProofs,
+)

@@ -16,7 +16,9 @@ import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import io.mosip.vciclient.VCIClient
+import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
+import io.mosip.vciclient.proof.CredentialRequestProofs
 import io.mosip.vciclient.token.TokenRequest
 import io.mosip.vciclient.token.TokenResponse
 import kotlinx.coroutines.Dispatchers
@@ -43,17 +45,25 @@ class VCIClientWrapper {
 
     suspend fun startCredentialOfferFlow(scanned: String, onResult: (String) -> Unit) {
         try {
-            val response = client.requestCredentialByCredentialOffer(
+            val response = client.fetchCredentialsUsingCredentialOffer(
                 credentialOffer = scanned,
                 clientMetadata = ClientMetadata("wallet", "https://sampleApp"),
                 getTxCode = null,
-                authorizeUser = { _ -> "dummy-auth-code" },
+                authorizations = listOf(
+                    AuthorizationMethod.RedirectToWeb(
+                        openWebPage = { _ -> mapOf("code" to "dummy-auth-code") }
+                    )
+                ),
                 getTokenResponse = { exchangeToken(it, proxy = false) },
-                getProofJwt = { credentialIssuer, cNonce, _ ->
-                    signProofJWT(
-                        cNonce = cNonce,
-                        issuer = credentialIssuer,
-                        isTrusted = false,
+                getProofs = { credentialIssuer, nonce, _ ->
+                    CredentialRequestProofs(
+                        proofs = listOf(
+                            signProofJWT(
+                                cNonce = nonce,
+                                issuer = credentialIssuer,
+                                isTrusted = false,
+                            )
+                        )
                     )
                 }
             )
@@ -67,28 +77,35 @@ class VCIClientWrapper {
 
     suspend fun startTrustedIssuerFlow(onResult: (String) -> Unit) {
         try {
-            val response = client.requestCredentialFromTrustedIssuer(
+            val response = client.fetchCredentialsFromTrustedIssuer(
                 credentialIssuer = credentialIssuer,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = ClientMetadata(
                     clientId = clientId,
                     redirectUri = redirectUri
                 ),
-                authorizeUser = { authUrl ->
-                    suspendCancellableCoroutine { cont ->
-
-                        NotificationCenter.post("ShowAuthWebView", authUrl)
-                        NotificationCenter.once("AuthCodeReceived") { code ->
-                            cont.resume(code)
+                authorizations = listOf(
+                    AuthorizationMethod.RedirectToWeb(
+                        openWebPage = { authUrl ->
+                            suspendCancellableCoroutine { cont ->
+                                NotificationCenter.post("ShowAuthWebView", authUrl)
+                                NotificationCenter.once("AuthCodeReceived") { code ->
+                                    cont.resume(mapOf("code" to code))
+                                }
+                            }
                         }
-                    }
-                },
+                    )
+                ),
                 getTokenResponse = { exchangeToken(it, proxy = true) },
-                getProofJwt = { credentialIssuer, cNonce, _ ->
-                    signProofJWT(
-                        cNonce = cNonce,
-                        issuer = credentialIssuer,
-                        isTrusted = true
+                getProofs = { credentialIssuer, nonce, _ ->
+                    CredentialRequestProofs(
+                        proofs = listOf(
+                            signProofJWT(
+                                cNonce = nonce,
+                                issuer = credentialIssuer,
+                                isTrusted = true
+                            )
+                        )
                     )
                 }
             )
@@ -100,7 +117,7 @@ class VCIClientWrapper {
         }
     }
 
-     fun fetchCredentialTypes(
+    suspend fun fetchCredentialTypes(
         credentialIssuer: String,
         onResult: (String, List<String>) -> Unit
     ) {

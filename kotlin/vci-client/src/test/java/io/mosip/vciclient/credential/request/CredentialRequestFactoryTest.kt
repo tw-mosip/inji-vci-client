@@ -8,13 +8,15 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
-class CredentialRequestFactoryTest {
+class CredentialRequestFactoryDraft13Test {
     @Test
     fun `should throw exception when required details are not available in Issuer metadata based on VC format`() {
+        val factory = CredentialRequestFactoryDraft13()
+
         assertThrows(
             InvalidDataProvidedException::class.java,
         ) {
-            CredentialRequestFactory.createCredentialRequest(
+            factory.createCredentialRequest(
                 CredentialFormat.MSO_MDOC, "access-token",
                 IssuerMetadata(
                     "/credentialAudience",
@@ -26,7 +28,7 @@ class CredentialRequestFactoryTest {
         assertThrows(
             InvalidDataProvidedException::class.java,
         ) {
-            CredentialRequestFactory.createCredentialRequest(
+            factory.createCredentialRequest(
                 CredentialFormat.MSO_MDOC, "access-token",
                 IssuerMetadata(
                     "/credentialAudience",
@@ -40,7 +42,7 @@ class CredentialRequestFactoryTest {
         assertThrows(
             InvalidDataProvidedException::class.java,
         ) {
-            CredentialRequestFactory.createCredentialRequest(
+            factory.createCredentialRequest(
                 CredentialFormat.VC_SD_JWT, "access-token",
                 IssuerMetadata(
                     "/credentialAudience",
@@ -54,9 +56,10 @@ class CredentialRequestFactoryTest {
 
     @Test
     fun `should return valid request when format is JWT_VC_JSON`() {
+        val factory = CredentialRequestFactoryDraft13()
         val targetFormat = CredentialFormat.JWT_VC_JSON
-        
-        val request = CredentialRequestFactory.createCredentialRequest(
+
+        val request = factory.createCredentialRequest(
             targetFormat, "access-token",
             IssuerMetadata(
                 "/credentialAudience",

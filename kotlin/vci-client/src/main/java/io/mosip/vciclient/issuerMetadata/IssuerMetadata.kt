@@ -1,6 +1,7 @@
 package io.mosip.vciclient.issuerMetadata
 
 import io.mosip.vciclient.constants.CredentialFormat
+import io.mosip.vciclient.constants.OID4VCIVersion
 
 data class IssuerMetadata(
     val credentialIssuer: String,
@@ -12,6 +13,8 @@ data class IssuerMetadata(
     val claims: Map<String, Any>? = null,
     val authorizationServers: List<String>? = null,
     val tokenEndpoint: String? = null,
-    val vct: String? =null,
-    val scope: String = "openId"
+    val nonceEndpoint: String? = null,
+    val vct: String? = null,
+    val scope: String = "openId",
+    val specVersion: OID4VCIVersion = OID4VCIVersion.V1,
 )

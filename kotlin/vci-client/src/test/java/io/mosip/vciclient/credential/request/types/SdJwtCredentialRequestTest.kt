@@ -13,7 +13,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
-class SdJwtCredentialRequestTest {
+class SdJwtCredentialRequestDraft13Test {
 
     private val sampleAccessToken = "test-access-token"
     private val sampleCredentialEndpoint = "https://issuer.example.com/credential"
@@ -41,7 +41,7 @@ class SdJwtCredentialRequestTest {
 
     @Test
     fun `constructRequest should build a valid POST HTTP request`() {
-        val request = SdJwtCredentialRequest(
+        val request = SdJwtCredentialRequestDraft13(
             accessToken = sampleAccessToken,
             issuerMetadata = issuerMetadata,
             proof = sampleProof
@@ -56,7 +56,7 @@ class SdJwtCredentialRequestTest {
 
     @Test
     fun `validateIssuerMetaData should return valid when vct is present`() {
-        val validatorResult = SdJwtCredentialRequest(
+        val validatorResult = SdJwtCredentialRequestDraft13(
             accessToken = sampleAccessToken,
             issuerMetadata = issuerMetadata,
             proof = sampleProof
@@ -69,7 +69,7 @@ class SdJwtCredentialRequestTest {
     fun `validateIssuerMetaData should return invalid when vct is null`() {
         every { issuerMetadata.vct } returns null
 
-        val validatorResult = SdJwtCredentialRequest(
+        val validatorResult = SdJwtCredentialRequestDraft13(
             accessToken = sampleAccessToken,
             issuerMetadata = issuerMetadata,
             proof = sampleProof
@@ -83,7 +83,7 @@ class SdJwtCredentialRequestTest {
     fun `validateIssuerMetaData should return invalid when vct is empty`() {
         every { issuerMetadata.vct } returns ""
 
-        val validatorResult = SdJwtCredentialRequest(
+        val validatorResult = SdJwtCredentialRequestDraft13(
             accessToken = sampleAccessToken,
             issuerMetadata = issuerMetadata,
             proof = sampleProof
@@ -95,7 +95,7 @@ class SdJwtCredentialRequestTest {
 
     @Test
     fun `constructRequest should include claims and proof in body JSON`() {
-        val request = SdJwtCredentialRequest(
+        val request = SdJwtCredentialRequestDraft13(
             accessToken = sampleAccessToken,
             issuerMetadata = issuerMetadata,
             proof = sampleProof

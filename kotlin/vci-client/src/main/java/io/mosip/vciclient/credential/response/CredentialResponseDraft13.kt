@@ -4,14 +4,13 @@ import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import io.mosip.vciclient.common.JsonUtils
 
-data class CredentialResponse(
-    @SerializedName("credentials")
-    val credentials: List<JsonElement>? = null,
+data class CredentialResponseDraft13(
+    val credential: JsonElement,
 
-    @SerializedName(value = "credential_configuration_id", alternate = ["credentialConfigurationId"])
+    @SerializedName(value = "credentialConfigurationId")
     var credentialConfigurationId: String? = null,
 
-    @SerializedName(value = "credential_issuer", alternate = ["credentialIssuer"])
+    @SerializedName(value = "credentialIssuer")
     var credentialIssuer: String? = null,
 ) {
     fun toJsonString(): String {

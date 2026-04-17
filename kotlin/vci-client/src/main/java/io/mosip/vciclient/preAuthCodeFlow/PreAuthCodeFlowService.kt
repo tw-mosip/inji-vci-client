@@ -2,21 +2,71 @@ package io.mosip.vciclient.preAuthCodeFlow
 
 import io.mosip.vciclient.authorizationServer.AuthorizationServerResolver
 import io.mosip.vciclient.constants.Constants
+import io.mosip.vciclient.constants.ProofJwtCallback
+import io.mosip.vciclient.constants.ProofsCallback
+import io.mosip.vciclient.constants.TokenResponseCallback
+import io.mosip.vciclient.constants.TxCodeCallback
 import io.mosip.vciclient.credential.request.CredentialRequestExecutor
 import io.mosip.vciclient.credential.response.CredentialResponse
+import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.credentialOffer.CredentialOffer
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidDataProvidedException
-import io.mosip.vciclient.issuerMetadata.IssuerMetadata
-import io.mosip.vciclient.proof.jwt.JWTProof
-import io.mosip.vciclient.token.TokenService
-import io.mosip.vciclient.constants.ProofJwtCallback
-import io.mosip.vciclient.constants.TokenResponseCallback
-import io.mosip.vciclient.constants.TxCodeCallback
 import io.mosip.vciclient.exception.VCIClientException
+import io.mosip.vciclient.issuerMetadata.IssuerMetadata
+import io.mosip.vciclient.nonce.NonceService
+import io.mosip.vciclient.proof.jwt.JWTProof
+import io.mosip.vciclient.token.TokenResponse
+import io.mosip.vciclient.token.TokenService
 
-class PreAuthCodeFlowService {
+class PreAuthCodeFlowService(
+    private val authServerResolver: AuthorizationServerResolver = AuthorizationServerResolver(),
+    private val tokenService: TokenService = TokenService(),
+    private val credentialExecutor: CredentialRequestExecutor = CredentialRequestExecutor(),
+    private val nonceService: NonceService = NonceService(),
+) {
     suspend fun requestCredentials(
+        issuerMetadata: IssuerMetadata,
+        jwtProofSigningAlgorithms: List<String>,
+        getTokenResponse: TokenResponseCallback,
+        getProofs: ProofsCallback,
+        credentialConfigurationId: String,
+        getTxCode: TxCodeCallback? = null,
+        downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
+        offer: CredentialOffer,
+    ): CredentialResponse {
+        return executeRequestCredentials(
+            issuerMetadata = issuerMetadata,
+            getTokenResponse = getTokenResponse,
+            getTxCode = getTxCode,
+            downloadTimeoutInMillis = downloadTimeoutInMillis,
+            offer = offer
+        ) { token ->
+            val nonce = resolveNonce(issuerMetadata, downloadTimeoutInMillis)
+            val proofs = try {
+                getProofs(
+                    issuerMetadata.credentialIssuer,
+                    nonce,
+                    jwtProofSigningAlgorithms
+                )
+            } catch (e: Exception) {
+                throw DownloadFailedException(
+                    "Failed to obtain proofs from callback: ${e.message}",
+                    cause = e
+                )
+            }
+
+            credentialExecutor.requestCredential(
+                issuerMetadata = issuerMetadata,
+                credentialConfigurationId = credentialConfigurationId,
+                proofs = proofs,
+                accessToken = token.accessToken,
+                downloadTimeoutInMillis = downloadTimeoutInMillis
+            )
+        }
+    }
+
+    suspend fun requestCredentialsDraft13(
         issuerMetadata: IssuerMetadata,
         jwtProofSigningAlgorithms: List<String>,
         getTokenResponse: TokenResponseCallback,
@@ -25,11 +75,48 @@ class PreAuthCodeFlowService {
         getTxCode: TxCodeCallback? = null,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
         offer: CredentialOffer,
-    ): CredentialResponse {
+    ): CredentialResponseDraft13 {
+        return executeRequestCredentials(
+            issuerMetadata = issuerMetadata,
+            getTokenResponse = getTokenResponse,
+            getTxCode = getTxCode,
+            downloadTimeoutInMillis = downloadTimeoutInMillis,
+            offer = offer
+        ) { token ->
+            val nonce = NonceService.extractNonceFromTokenResponse(token)
+            val jwt = try {
+                getProofJwt(
+                    issuerMetadata.credentialIssuer,
+                    nonce,
+                    jwtProofSigningAlgorithms
+                )
+            } catch (e: Exception) {
+                throw DownloadFailedException(
+                    "Failed to obtain proof JWT from callback: ${e.message}",
+                    cause = e
+                )
+            }
+
+            credentialExecutor.requestCredentialDraft13(
+                issuerMetadata = issuerMetadata,
+                credentialConfigurationId = credentialConfigurationId,
+                proof = JWTProof(jwt),
+                accessToken = token.accessToken,
+                downloadTimeoutInMillis = downloadTimeoutInMillis
+            )
+        }
+    }
+
+    private suspend fun <Response> executeRequestCredentials(
+        issuerMetadata: IssuerMetadata,
+        getTokenResponse: TokenResponseCallback,
+        getTxCode: TxCodeCallback?,
+        downloadTimeoutInMillis: Long,
+        offer: CredentialOffer,
+        requestCredential: suspend (TokenResponse) -> Response?,
+    ): Response {
         try {
-
-
-            val authorizationServerMetadata = AuthorizationServerResolver().resolveForPreAuth(
+            val authorizationServerMetadata = authServerResolver.resolveForPreAuth(
                 issuerMetadata = issuerMetadata,
                 credentialOffer = offer
             )
@@ -43,34 +130,23 @@ class PreAuthCodeFlowService {
             val txCode: String? = if (offer.grants.preAuthorizedGrant.txCode != null) {
                 val txCodeInfo = offer.grants.preAuthorizedGrant.txCode
                 getTxCode?.invoke(txCodeInfo.inputMode, txCodeInfo.description, txCodeInfo.length)
-            } else null
+            } else {
+                null
+            }
 
             if (offer.grants.preAuthorizedGrant.txCode != null && txCode == null) {
                 throw DownloadFailedException("tx_code required but no provider was given.")
             }
 
-            val token = TokenService().getAccessToken(
+            val token = tokenService.getAccessToken(
                 getTokenResponse = getTokenResponse,
                 tokenEndpoint = tokenEndpoint,
                 preAuthCode = grant.preAuthCode,
                 txCode = txCode
             )
 
-            val jwt = getProofJwt(
-                issuerMetadata.credentialIssuer,
-                token.cNonce,
-                jwtProofSigningAlgorithms
-            )
-
-            val proof = JWTProof(jwt)
-
-            return CredentialRequestExecutor().requestCredential(
-                issuerMetadata,
-                credentialConfigurationId,
-                proof,
-                accessToken = token.accessToken,
-                downloadTimeoutInMillis
-            ) ?: throw DownloadFailedException("Credential request failed.")
+            return requestCredential(token)
+                ?: throw DownloadFailedException("Credential request failed.")
         } catch (e: DownloadFailedException) {
             throw e
         } catch (e: VCIClientException) {
@@ -86,5 +162,12 @@ class PreAuthCodeFlowService {
                 cause = e
             )
         }
+    }
+
+    private suspend fun resolveNonce(
+        issuerMetadata: IssuerMetadata,
+        timeoutInMillis: Long,
+    ): String? {
+        return nonceService.fetchNonce(issuerMetadata, timeoutInMillis)
     }
 }

@@ -9,7 +9,7 @@ import io.mockk.unmockkAll
 import io.mosip.vciclient.authorizationServer.AuthorizationServerResolver
 import io.mosip.vciclient.common.Util
 import io.mosip.vciclient.credential.request.CredentialRequestExecutor
-import io.mosip.vciclient.credential.response.CredentialResponse
+import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.credentialOffer.CredentialOffer
 import io.mosip.vciclient.credentialOffer.CredentialOfferGrants
 import io.mosip.vciclient.credentialOffer.PreAuthCodeGrant
@@ -31,7 +31,7 @@ import kotlin.test.assertTrue
 
 class PreAuthCodeFlowServiceTest {
 
-    private val mockCredentialResponse = mockk<CredentialResponse>()
+    private val mockCredentialResponse = mockk<CredentialResponseDraft13>()
     private val resolvedIssuerMetaData = mockk<IssuerMetadata>()
     private val credentialConfigurationId = "UniversityDegreeCredential"
 
@@ -57,7 +57,7 @@ class PreAuthCodeFlowServiceTest {
         }
 
         every {
-            anyConstructed<CredentialRequestExecutor>().requestCredential(
+            anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
                 any(), any(), any(), any(), any()
             )
         } returns mockCredentialResponse
@@ -114,7 +114,7 @@ class PreAuthCodeFlowServiceTest {
             )
         )
 
-        val result = PreAuthCodeFlowService().requestCredentials(
+        val result = PreAuthCodeFlowService().requestCredentialsDraft13(
             issuerMetadata = resolvedIssuerMetaData,
             jwtProofSigningAlgorithms = listOf("ES256"),
             getTokenResponse = mockk(relaxed = true),
@@ -144,7 +144,7 @@ class PreAuthCodeFlowServiceTest {
             )
 
             val exception = assertThrows<DownloadFailedException> {
-                PreAuthCodeFlowService().requestCredentials(
+                PreAuthCodeFlowService().requestCredentialsDraft13(
                     issuerMetadata = resolvedIssuerMetaData,
                     jwtProofSigningAlgorithms = listOf("ES256"),
                     getTokenResponse = mockk(relaxed = true),
@@ -175,7 +175,7 @@ class PreAuthCodeFlowServiceTest {
         )
 
         val exception = assertThrows<DownloadFailedException> {
-            PreAuthCodeFlowService().requestCredentials(
+            PreAuthCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetaData,
                 jwtProofSigningAlgorithms = listOf("ES256"),
                 getTokenResponse =  mockk(relaxed = true),
@@ -201,7 +201,7 @@ class PreAuthCodeFlowServiceTest {
 
         val exception = assertThrows<DownloadFailedException> {
             runBlocking {
-                PreAuthCodeFlowService().requestCredentials(
+                PreAuthCodeFlowService().requestCredentialsDraft13(
                     issuerMetadata = resolvedIssuerMetaData,
                     jwtProofSigningAlgorithms = listOf("ES256"),
                     getTokenResponse = mockk(relaxed = true),
@@ -243,7 +243,7 @@ class PreAuthCodeFlowServiceTest {
         )
 
         val ex = assertThrows<DownloadFailedException> {
-            PreAuthCodeFlowService().requestCredentials(
+            PreAuthCodeFlowService().requestCredentialsDraft13(
                 issuerMetadata = resolvedIssuerMetaData,
                 jwtProofSigningAlgorithms = listOf("ES256"),
                 getTokenResponse = mockk(relaxed = true),

@@ -14,7 +14,7 @@ import org.junit.Before
 import org.junit.Test
 import okio.Buffer
 
-class JwtVcCredentialRequestTest {
+class JwtVcCredentialRequestDraft13Test {
 
     private val sampleAccessToken = "test-access-token"
     private val sampleCredentialEndpoint = "https://issuer.example.com/credential"
@@ -40,7 +40,7 @@ class JwtVcCredentialRequestTest {
 
     @Test
     fun `constructRequest should build a valid POST request with correct body JSON`() {
-        val request = JwtVcCredentialRequest(
+        val request = JwtVcCredentialRequestDraft13(
             accessToken = sampleAccessToken,
             issuerMetadata = issuerMetadata,
             proof = sampleProof
@@ -63,7 +63,7 @@ class JwtVcCredentialRequestTest {
 
     @Test
     fun `validateIssuerMetaData should return valid when credentialType is present`() {
-        val validatorResult = JwtVcCredentialRequest(
+        val validatorResult = JwtVcCredentialRequestDraft13(
             accessToken = sampleAccessToken,
             issuerMetadata = issuerMetadata,
             proof = sampleProof
@@ -76,7 +76,7 @@ class JwtVcCredentialRequestTest {
     fun `validateIssuerMetaData should return invalid when credentialType is null`() {
         every { issuerMetadata.credentialType } returns null
 
-        val validatorResult = JwtVcCredentialRequest(
+        val validatorResult = JwtVcCredentialRequestDraft13(
             accessToken = sampleAccessToken,
             issuerMetadata = issuerMetadata,
             proof = sampleProof
@@ -90,7 +90,7 @@ class JwtVcCredentialRequestTest {
     fun `validateIssuerMetaData should return invalid when credentialType is empty`() {
         every { issuerMetadata.credentialType } returns emptyList()
 
-        val validatorResult = JwtVcCredentialRequest(
+        val validatorResult = JwtVcCredentialRequestDraft13(
             accessToken = sampleAccessToken,
             issuerMetadata = issuerMetadata,
             proof = sampleProof
