@@ -1,6 +1,7 @@
-package io.mosip.vciclient.authorizationFlow
+package io.mosip.vciclient.authorizationCodeFlow
 
 import com.google.gson.JsonPrimitive
+import io.mosip.vciclient.credential.response.CredentialItem
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -64,7 +65,7 @@ class AuthorizationCodeFlowServiceV1Test {
     fun `requestCredentials should fetch nonce and request credential for v1 issuers`() {
         runBlocking {
             val expectedResponse = CredentialResponse(
-                credentials = listOf(JsonPrimitive("credential-1"))
+                credentials = listOf(CredentialItem(JsonPrimitive("credential-1")))
             )
 
             every { pkceSessionManager.createSession() } returns pkceSession

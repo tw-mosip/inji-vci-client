@@ -21,7 +21,7 @@ on:
       publication_type:
         description: 'Select artifact type to publish: aar, jar, or both (only for release)'
         required: true
-        default: both
+        default: aar
         type: string
 
       group_path:

@@ -1,6 +1,7 @@
 package io.mosip.vciclient.preAuthCodeFlow
 
 import com.google.gson.JsonPrimitive
+import io.mosip.vciclient.credential.response.CredentialItem
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -53,7 +54,7 @@ class PreAuthCodeFlowServiceV1Test {
 
     @Test
     fun `requestCredentials should fetch nonce and request v1 credential for pre auth offers`() = runBlocking {
-        val expectedResponse = CredentialResponse(credentials = listOf(JsonPrimitive("credential-1")))
+        val expectedResponse = CredentialResponse(credentials = listOf(CredentialItem(JsonPrimitive("credential-1"))))
 
         coEvery { resolver.resolveForPreAuth(issuerMetadata, offer) } returns AuthorizationServerMetadata(
             issuer = "https://auth.example.com",

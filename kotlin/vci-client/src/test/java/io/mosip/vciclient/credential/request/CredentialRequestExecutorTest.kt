@@ -68,7 +68,7 @@ class CredentialRequestExecutorTest {
 
     @Test
     fun `should return v1 CredentialResponse on successful fetch`() {
-        val json = """{"credentials":[{"id":"credential-1"}]}"""
+        val json = """{"credentials":[{"credential":"credential-1"}]}"""
         mockWebServer.enqueue(
             MockResponse().setBody(json).setResponseCode(200).addHeader(CONTENT_TYPE, APPLICATION_JSON)
         )

@@ -1,6 +1,7 @@
 package io.mosip.vciclient.credentialOffer
 
 import com.google.gson.JsonPrimitive
+import io.mosip.vciclient.credential.response.CredentialItem
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
@@ -68,7 +69,7 @@ class CredentialOfferFlowHandlerV1Test {
                 preAuthorizedGrant = PreAuthCodeGrant(preAuthCode = "pre-auth-code")
             )
         )
-        val expectedResponse = CredentialResponse(credentials = listOf(JsonPrimitive("credential-1")))
+        val expectedResponse = CredentialResponse(credentials = listOf(CredentialItem(JsonPrimitive("credential-1"))))
 
         coEvery { credentialOfferService.fetchCredentialOffer("offer") } returns offer
         coEvery {
@@ -110,7 +111,7 @@ class CredentialOfferFlowHandlerV1Test {
                 authorizationCodeGrant = AuthorizationCodeGrant(issuerState = "issuer-state")
             )
         )
-        val expectedResponse = CredentialResponse(credentials = listOf(JsonPrimitive("credential-1")))
+        val expectedResponse = CredentialResponse(credentials = listOf(CredentialItem(JsonPrimitive("credential-1"))))
 
         coEvery { credentialOfferService.fetchCredentialOffer("offer") } returns offer
         coEvery {
