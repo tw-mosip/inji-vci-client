@@ -1,6 +1,7 @@
 package io.mosip.vciclient.trustedIssuer
 
 import com.google.gson.JsonPrimitive
+import io.mosip.vciclient.credential.response.CredentialItem
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -40,7 +41,7 @@ class TrustedIssuerFlowHandlerTest {
     fun `downloadCredentials should delegate v1 issuers to requestCredentials`() = runBlocking {
         val issuerMetadataResult = issuerMetadataResult(specVersion = OID4VCIVersion.V1)
         val expectedResponse = CredentialResponse(
-            credentials = listOf(JsonPrimitive("credential-1")),
+            credentials = listOf(CredentialItem(JsonPrimitive("credential-1"))),
             credentialConfigurationId = credentialConfigurationId,
             credentialIssuer = credentialIssuer
         )
@@ -111,7 +112,7 @@ class TrustedIssuerFlowHandlerTest {
             downloadTimeoutInMillis = 10_000
         )
 
-        assertEquals(listOf(JsonPrimitive("credential-1")), response.credentials)
+        assertEquals(listOf(CredentialItem(JsonPrimitive("credential-1"))), response.credentials)
         assertEquals(credentialConfigurationId, response.credentialConfigurationId)
         assertEquals(credentialIssuer, response.credentialIssuer)
     }

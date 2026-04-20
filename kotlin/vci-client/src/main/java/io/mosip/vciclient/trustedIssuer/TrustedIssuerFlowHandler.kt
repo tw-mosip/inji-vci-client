@@ -8,8 +8,8 @@ import io.mosip.vciclient.constants.OID4VCIVersion
 import io.mosip.vciclient.constants.ProofJwtCallback
 import io.mosip.vciclient.constants.ProofsCallback
 import io.mosip.vciclient.constants.TokenResponseCallback
+import io.mosip.vciclient.credential.response.CredentialItem
 import io.mosip.vciclient.credential.response.CredentialResponse
-import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataResult
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
@@ -61,7 +61,7 @@ class TrustedIssuerFlowHandler internal constructor(
                     jwtProofAlgorithmsSupported = proofSigningAlgorithms
                 )
                 CredentialResponse(
-                    credentials = listOf(draft13Response.credential),
+                    credentials = listOf(CredentialItem(draft13Response.credential)),
                     credentialConfigurationId = draft13Response.credentialConfigurationId,
                     credentialIssuer = draft13Response.credentialIssuer
                 )

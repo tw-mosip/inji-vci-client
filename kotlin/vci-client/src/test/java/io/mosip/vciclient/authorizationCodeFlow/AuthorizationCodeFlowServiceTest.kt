@@ -1,4 +1,4 @@
-package io.mosip.vciclient.authorizationFlow
+package io.mosip.vciclient.authorizationCodeFlow
 
 import io.mockk.coEvery
 import io.mockk.every

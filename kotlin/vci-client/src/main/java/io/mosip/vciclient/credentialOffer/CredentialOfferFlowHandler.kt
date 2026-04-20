@@ -10,6 +10,7 @@ import io.mosip.vciclient.constants.ProofJwtCallback
 import io.mosip.vciclient.constants.ProofsCallback
 import io.mosip.vciclient.constants.TokenResponseCallback
 import io.mosip.vciclient.constants.TxCodeCallback
+import io.mosip.vciclient.credential.response.CredentialItem
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.exception.CredentialOfferFetchFailedException
@@ -109,7 +110,7 @@ class CredentialOfferFlowHandler internal constructor(
                         throw CredentialOfferFetchFailedException("No credential response found")
                     }
                     CredentialResponse(
-                        credentials = listOf(draft13Response.credential),
+                        credentials = listOf(CredentialItem(draft13Response.credential)),
                         credentialConfigurationId = draft13Response.credentialConfigurationId,
                         credentialIssuer = draft13Response.credentialIssuer
                     )

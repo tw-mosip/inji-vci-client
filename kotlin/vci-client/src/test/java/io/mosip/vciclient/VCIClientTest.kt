@@ -8,6 +8,7 @@ import io.mockk.unmockkAll
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
 import io.mosip.vciclient.constants.ProofsCallback
+import io.mosip.vciclient.credential.response.CredentialItem
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.credentialOffer.CredentialOfferFlowHandler
 import io.mosip.vciclient.exception.IssuerMetadataFetchException
@@ -25,7 +26,7 @@ import org.junit.jupiter.api.assertThrows
 class VCIClientTest {
 
     private val mockCredentialResponse = CredentialResponse(
-        credentials = listOf(JsonPrimitive("dummy-credential"))
+        credentials = listOf(CredentialItem(JsonPrimitive("dummy-credential")))
     )
 
     private lateinit var getProofs: ProofsCallback

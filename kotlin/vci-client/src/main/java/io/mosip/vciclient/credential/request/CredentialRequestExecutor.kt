@@ -56,6 +56,15 @@ class CredentialRequestExecutor(
                     JsonUtils.deserialize(responseBody, CredentialResponse::class.java)
                         ?: throw DownloadFailedException("Failed to parse credential response.")
 
+                credentialResponse.credentials?.forEachIndexed { index, item ->
+                    if (item == null) {
+                        throw DownloadFailedException("Invalid credential response: credentials[$index] is null.")
+                    }
+                    if (item.credential == null || item.credential.isJsonNull) {
+                        throw DownloadFailedException("Invalid credential response: credentials[$index] is missing the 'credential' key or has a null value.")
+                    }
+                }
+
                 credentialResponse.credentialConfigurationId = credentialConfigurationId
                 credentialResponse.credentialIssuer = issuerMetadata.credentialIssuer
 
