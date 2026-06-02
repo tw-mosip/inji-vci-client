@@ -1,9 +1,9 @@
 package io.mosip.vciclient.constants
 
 import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
-import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPTokenV2
-import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResultV2
-import io.mosip.openID4VP.constants.FormatType
+import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPToken
+import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResult
+import io.mosip.openID4VP.wallet.Credential
 import io.mosip.vciclient.proof.CredentialRequestProofs
 import io.mosip.vciclient.token.TokenRequest
 import io.mosip.vciclient.token.TokenResponse
@@ -23,8 +23,8 @@ typealias ProofsCallback = (suspend (
 ) -> CredentialRequestProofs)
 
 typealias CheckIssuerTrustCallback = (suspend (credentialIssuer: String, issuerDisplay: List<Map<String, Any>>) -> Boolean)
-typealias SelectCredentialsForPresentationCallback = (suspend (ovpRequest: AuthorizationRequest) -> Map<String, Map<FormatType, List<Any>>>)
+typealias SelectCredentialsForPresentationCallback = (suspend (ovpRequest: AuthorizationRequest) -> Map<String, List<Credential>>)
 typealias SignVerifiablePresentationCallback = suspend (
-    payload: List<UnsignedVPTokenV2>,
-) -> List<VPTokenSigningResultV2>
+    payload: List<UnsignedVPToken>,
+) -> List<VPTokenSigningResult>
 typealias OpenWebPageCallback = (suspend (authorizationUrl: String) -> Map<String, Any>)

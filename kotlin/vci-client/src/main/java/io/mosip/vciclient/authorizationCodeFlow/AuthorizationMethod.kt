@@ -13,7 +13,6 @@ sealed class AuthorizationMethod(val type: InteractionType) {
 
     class PresentationDuringIssuance(
         val selectCredentialsForPresentation: SelectCredentialsForPresentationCallback,
-        val signVerifiablePresentation: SignVerifiablePresentationCallback,
-        val ldpVpSignatureSuite: String? = null,
+        val signVerifiablePresentation: SignVerifiablePresentationCallback
     ) : AuthorizationMethod(type = InteractionType.OpenId4VpPresentation)
 }

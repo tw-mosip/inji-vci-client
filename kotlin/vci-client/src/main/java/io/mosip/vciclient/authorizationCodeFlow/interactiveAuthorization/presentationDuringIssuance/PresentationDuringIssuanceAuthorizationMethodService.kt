@@ -2,10 +2,10 @@ package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presen
 
 import io.mosip.openID4VP.OpenID4VP
 import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
-import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPTokenV2
-import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResultV2
-import io.mosip.openID4VP.constants.FormatType
+import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPToken
+import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResult
 import io.mosip.openID4VP.exceptions.OpenID4VPExceptions
+import io.mosip.openID4VP.wallet.Credential
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.AuthorizationMethodService
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.handler.InteractionType
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.request.AuthorizationRequestData
@@ -23,15 +23,13 @@ import kotlinx.coroutines.withContext
 import java.util.logging.Logger
 
 class PresentationDuringIssuanceAuthorizationMethodService(
-    private val selectCredentialsForPresentation: suspend (ovpRequest: AuthorizationRequest) -> Map<String, Map<FormatType, List<Any>>>,
+    private val selectCredentialsForPresentation: suspend (ovpRequest: AuthorizationRequest) -> Map<String, List<Credential>>,
     private val signVerifiablePresentation: suspend (
-        payload: List<UnsignedVPTokenV2>,
-    ) -> List<VPTokenSigningResultV2>,
-    private val ldpVpSignatureSuite: String? = null,
+        payload: List<UnsignedVPToken>,
+    ) -> List<VPTokenSigningResult>,
     private val traceabilityId: String? = null,
     private val openId4vp: OpenID4VP = OpenID4VP(
-        traceabilityId = traceabilityId ?: "",
-        walletMetadata = null
+        traceabilityId = traceabilityId ?: ""
     ),
 ) : AuthorizationMethodService {
 
@@ -102,46 +100,15 @@ class PresentationDuringIssuanceAuthorizationMethodService(
             )
         }
 
-        val holderId = extractHolderIdForLdpVc(selectedCredentials)
-
-        val flattenedFormatEntries = selectedCredentials.values.flatMap { formatMap ->
-            formatMap.map { it.key to it.value }
-        }
-        val hasLdpVc = flattenedFormatEntries.any { (formatType, _) ->
-            formatType == FormatType.LDP_VC
-        }
-        if (hasLdpVc && ldpVpSignatureSuite == null) {
-            throw InteractiveAuthorizationException("Missing signature suite for LDP VC")
-        }
-
-        val unsignedVpTokens = openId4vp.constructUnsignedVPTokenV2(
-            verifiableCredentials = selectedCredentials,
-            holderId = holderId,
-            signatureSuite = ldpVpSignatureSuite
+        val unsignedVpTokens = openId4vp.constructUnsignedVPToken(
+            selectedCredentials = selectedCredentials,
         )
 
         val signedVpTokens = signVerifiablePresentation(unsignedVpTokens)
 
-        return openId4vp.constructVPResponseV2(
+        return openId4vp.constructVPResponse(
             vpTokenSigningResults = signedVpTokens
         )
-    }
-
-    private fun extractHolderIdForLdpVc(
-        credentialsMap: Map<String, Map<FormatType, List<Any>>>
-    ): String? {
-        return credentialsMap.values.firstNotNullOfOrNull { formatMap ->
-            val ldpVc = formatMap[FormatType.LDP_VC]?.firstOrNull()
-            val vc = when (ldpVc) {
-                is String -> JsonUtils.deserialize(ldpVc, Map::class.java)
-                is Map<*, *> -> ldpVc
-                else -> null
-            }
-            val credentialSubject = vc?.get("credentialSubject") as? Map<*, *>
-            credentialSubject?.get("id") as? String
-        }
-            ?.trimEnd('=')
-            ?.plus("#0")
     }
 
 
