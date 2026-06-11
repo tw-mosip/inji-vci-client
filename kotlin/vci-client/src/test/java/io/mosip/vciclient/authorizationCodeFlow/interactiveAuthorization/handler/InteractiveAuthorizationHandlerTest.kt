@@ -97,7 +97,7 @@ class InteractiveAuthorizationHandlerTest {
             )
         )
         coEvery {
-            anyConstructed<OpenID4VP>().authenticateVerifier(any(), any(), any())
+            anyConstructed<OpenID4VP>().authenticateVerifier(any<Map<String, Any>>())
         } returns fakeAuthRequest
 
         coEvery {

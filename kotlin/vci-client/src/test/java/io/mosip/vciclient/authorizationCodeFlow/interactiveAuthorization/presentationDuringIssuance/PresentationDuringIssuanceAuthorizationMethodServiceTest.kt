@@ -54,9 +54,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         // ✅ IMPORTANT: mock positionally (avoid overload + named args mismatch)
         coEvery {
             mockOvp.authenticateVerifier(
-                authorizationRequest = any(),
-                any(),
-                any(),
+                authorizationRequest = any<Map<String, Any>>(),
             )
         } returns fakeAuthRequest
 
@@ -73,11 +71,13 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
 
     private fun validCredentialMap() =
         mapOf(
-            "id1" to listOf(io.mosip.openID4VP.wallet.Credential(
-                format = FormatType.LDP_VC,
-                data = """{ "credentialSubject": { "id": "did:example:123" } }""",
-                credentialId = "c1"
-            ))
+            "id1" to listOf(
+                Credential(
+                    format = FormatType.LDP_VC,
+                    data = """{ "credentialSubject": { "id": "did:example:123" } }""",
+                    credentialId = "c1"
+                )
+            )
         )
 
     // ------------------------------------------------------------------------
@@ -87,6 +87,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { emptyMap() },
             signVerifiablePresentation = { emptyList() },
+            openId4vp = mockOvp,
             traceabilityId = "test-trace-id",
         )
 
@@ -132,9 +133,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
 
         coVerify(exactly = 1) {
             mockOvp.authenticateVerifier(
-                authorizationRequest = any(),
-                any(),
-                any()
+                authorizationRequest = any<Map<String, Any>>(),
             )
         }
         coVerify(exactly = 1) { mockOvp.constructUnsignedVPToken(any()) }

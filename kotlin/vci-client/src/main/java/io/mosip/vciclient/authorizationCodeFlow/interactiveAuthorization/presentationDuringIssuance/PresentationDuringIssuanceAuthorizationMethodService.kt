@@ -2,6 +2,7 @@ package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presen
 
 import io.mosip.openID4VP.OpenID4VP
 import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
+import io.mosip.openID4VP.authorizationRequest.WalletConfig
 import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPToken
 import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResult
 import io.mosip.openID4VP.exceptions.OpenID4VPExceptions
@@ -29,7 +30,8 @@ class PresentationDuringIssuanceAuthorizationMethodService(
     ) -> List<VPTokenSigningResult>,
     private val traceabilityId: String? = null,
     private val openId4vp: OpenID4VP = OpenID4VP(
-        traceabilityId = traceabilityId ?: ""
+        traceabilityId = traceabilityId ?: "",
+        walletConfig = WalletConfig()
     ),
 ) : AuthorizationMethodService {
 
@@ -87,7 +89,7 @@ class PresentationDuringIssuanceAuthorizationMethodService(
 
 
     private fun validatePresentationRequest(request: Map<String, Any>): AuthorizationRequest {
-        return openId4vp.authenticateVerifier(request, emptyList(), false)
+        return openId4vp.authenticateVerifier(request)
     }
 
     private suspend fun handlePresentation(vpRequest: AuthorizationRequest): Map<String, Any> {
