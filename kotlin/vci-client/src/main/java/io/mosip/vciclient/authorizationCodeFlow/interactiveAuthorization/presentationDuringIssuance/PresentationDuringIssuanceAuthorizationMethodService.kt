@@ -23,20 +23,38 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.logging.Logger
 
-class PresentationDuringIssuanceAuthorizationMethodService(
-    private val selectCredentialsForPresentation: suspend (ovpRequest: AuthorizationRequest) -> Map<String, List<Credential>>,
+class PresentationDuringIssuanceAuthorizationMethodService : AuthorizationMethodService {
+    private val selectCredentialsForPresentation: suspend (ovpRequest: AuthorizationRequest) -> Map<String, List<Credential>>
     private val signVerifiablePresentation: suspend (
         payload: List<UnsignedVPToken>,
-    ) -> List<VPTokenSigningResult>,
-    private val traceabilityId: String? = null,
-    private val openId4vp: OpenID4VP = OpenID4VP(
-        traceabilityId = traceabilityId ?: "",
-        walletConfig = WalletConfig()
-    ),
-) : AuthorizationMethodService {
+    ) -> List<VPTokenSigningResult>
+    private val traceabilityId: String?
+    val openid4vpWalletConfig: WalletConfig
+    private val openId4vp: OpenID4VP
 
-    private val logTag = Util.getLogTag(javaClass.simpleName, traceabilityId)
-    private val logger = Logger.getLogger(logTag)
+    private val logTag: String
+    private val logger: Logger
+
+    constructor(
+        selectCredentialsForPresentation: suspend (ovpRequest: AuthorizationRequest) -> Map<String, List<Credential>>,
+        signVerifiablePresentation: suspend (
+            payload: List<UnsignedVPToken>,
+        ) -> List<VPTokenSigningResult>,
+        traceabilityId: String? = null,
+        openid4vpWalletConfig: WalletConfig,
+        openId4vp: OpenID4VP? = null,
+    ) {
+        this.selectCredentialsForPresentation = selectCredentialsForPresentation
+        this.signVerifiablePresentation = signVerifiablePresentation
+        this.traceabilityId = traceabilityId
+        this.openid4vpWalletConfig = openid4vpWalletConfig
+        this.openId4vp = openId4vp ?: OpenID4VP(
+            traceabilityId = traceabilityId ?: "",
+            walletConfig = openid4vpWalletConfig
+        )
+        this.logTag = Util.getLogTag(javaClass.simpleName, traceabilityId)
+        this.logger = Logger.getLogger(logTag)
+    }
 
     override fun type(): String = InteractionType.OpenId4VpPresentation.value
 

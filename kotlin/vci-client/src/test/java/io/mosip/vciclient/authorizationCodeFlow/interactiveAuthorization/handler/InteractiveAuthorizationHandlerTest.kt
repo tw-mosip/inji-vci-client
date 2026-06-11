@@ -5,16 +5,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mosip.openID4VP.OpenID4VP
-import io.mosip.openID4VP.authorizationRequest.AuthorizationPresentationExchangeRequest
-import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
-import io.mosip.openID4VP.authorizationRequest.presentationDefinition.PresentationDefinition
-import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPToken
-import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResult
-import io.mosip.openID4VP.wallet.Credential
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceAuthorizationMethodService
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceRequestData
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
@@ -25,6 +22,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import android.util.Base64
 import kotlin.test.assertFailsWith
 
 
@@ -62,53 +60,14 @@ class InteractiveAuthorizationHandlerTest {
     }
 
 
-//    @Test
+    @Test
     fun `should handle OpenID4VP presentation interaction successfully`() = runTest {
         val responseBody = mockPresentationInteractionResponse
 
-        // Create callbacks that return valid responses
-        val selectCredentialsForPresentation: suspend (AuthorizationRequest) -> Map<String, List<Credential>> = {
-            mapOf("id1" to listOf(mockk(relaxed = true)))
-        }
-        val signVerifiablePresentation: suspend (List<UnsignedVPToken>) -> List<VPTokenSigningResult> = {
-            listOf(mockk(relaxed = true))
-        }
+        // OpenID4VP constructor uses android.util.Base64; stub it in JVM unit tests.
+        mockkStatic(Base64::class)
+        every { Base64.encodeToString(any<ByteArray>(), any()) } returns "b64"
 
-        val presentationMethod = AuthorizationMethod.PresentationDuringIssuance(
-            selectCredentialsForPresentation = selectCredentialsForPresentation,
-            signVerifiablePresentation = signVerifiablePresentation,
-        )
-
-        // Mock OpenID4VP
-        mockkConstructor(OpenID4VP::class)
-        val fakeAuthRequest = AuthorizationPresentationExchangeRequest(
-            clientId = "https://trusted.com",
-            redirectUri = "",
-            responseType = "",
-            state = "",
-            nonce = "",
-            responseMode = "",
-            responseUri = null,
-            walletNonce = "",
-            clientMetadata = null,
-            presentationDefinition = PresentationDefinition(
-                id = "pd-id",
-                inputDescriptors = emptyList()
-            )
-        )
-        coEvery {
-            anyConstructed<OpenID4VP>().authenticateVerifier(any<Map<String, Any>>())
-        } returns fakeAuthRequest
-
-        coEvery {
-            anyConstructed<OpenID4VP>().constructUnsignedVPToken(any())
-        } returns listOf(mockk(relaxed = true))
-
-        coEvery {
-            anyConstructed<OpenID4VP>().constructVPResponse(any())
-        } returns mapOf("vp_token" to "signed-vp-token")
-
-        // Mock NetworkManager to return different responses for different calls
         every {
             NetworkManager.sendRequest(
                 url = endpoint,
@@ -116,14 +75,20 @@ class InteractiveAuthorizationHandlerTest {
                 bodyParams = any(),
                 headers = any()
             )
-        } returns NetworkResponse(responseBody, null) andThen NetworkResponse(
-            """{
-              "status":"success",
-              "code":"auth-code-123",
-              "auth_session":"auth-session"
-            }""",
-            null
+        } returns NetworkResponse(responseBody, null)
+
+        val expectedAuthResponse = mockk<AuthorizationResponse>()
+
+        val presentationMethod = AuthorizationMethod.PresentationDuringIssuance(
+            selectCredentialsForPresentation = mockk(relaxed = true),
+            signVerifiablePresentation = mockk(relaxed = true),
         )
+
+        mockkConstructor(PresentationDuringIssuanceAuthorizationMethodService::class)
+        coEvery {
+            anyConstructed<PresentationDuringIssuanceAuthorizationMethodService>()
+                .authorizeUser(any<PresentationDuringIssuanceRequestData>())
+        } returns expectedAuthResponse
 
         val result = handler.handle(
             endpoint = endpoint,
@@ -134,7 +99,7 @@ class InteractiveAuthorizationHandlerTest {
             traceabilityId = "demo"
         )
 
-        assert(result != null)
+        assertEquals(expectedAuthResponse, result)
     }
 
 
@@ -218,7 +183,7 @@ class InteractiveAuthorizationHandlerTest {
             NetworkManager.sendRequest(any(), any(), any(), any())
         } returns NetworkResponse(responseBody, null)
 
-         assertFailsWith<InteractiveAuthorizationException> {
+        assertFailsWith<InteractiveAuthorizationException> {
             handler.handle(
                 endpoint,
                 clientMetadata,

@@ -9,6 +9,7 @@ import io.mockk.verify
 import io.mosip.openID4VP.OpenID4VP
 import io.mosip.openID4VP.authorizationRequest.AuthorizationPresentationExchangeRequest
 import io.mosip.openID4VP.authorizationRequest.AuthorizationRequest
+import io.mosip.openID4VP.authorizationRequest.WalletConfig
 import io.mosip.openID4VP.authorizationRequest.presentationDefinition.PresentationDefinition
 import io.mosip.openID4VP.authorizationResponse.unsignedVPToken.UnsignedVPToken
 import io.mosip.openID4VP.authorizationResponse.vpTokenSigningResult.VPTokenSigningResult
@@ -58,6 +59,10 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
             )
         } returns fakeAuthRequest
 
+        coEvery { mockOvp.constructUnsignedVPToken(any()) } returns emptyList()
+        coEvery { mockOvp.constructVPResponse(any()) } returns emptyMap()
+        every { mockOvp.constructErrorInfo(any()) } returns mapOf("error" to "access_denied")
+
         every { NetworkManager.sendRequest(any(), any(), any(), any()) } returns
                 NetworkResponse("""{"status":"error"}""", null)
     }
@@ -82,17 +87,40 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
 
     // ------------------------------------------------------------------------
 
+
     @Test
     fun `should throw when request type is invalid`() = runTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { emptyMap() },
             signVerifiablePresentation = { emptyList() },
-            openId4vp = mockOvp,
+            openid4vpWalletConfig = WalletConfig(),
             traceabilityId = "test-trace-id",
+            openId4vp = mockOvp,
         )
 
         assertThrows<InteractiveAuthorizationException> {
             handler.authorizeUser(AuthorizationRequestData())
+        }
+    }
+
+    @Test
+    fun `should use injected OVP instance`() = runTest {
+        val injectedOvp = mockk<OpenID4VP>(relaxed = true)
+        coEvery { injectedOvp.authenticateVerifier(any<Map<String, Any>>()) } returns fakeAuthRequest
+        every { injectedOvp.constructErrorInfo(any()) } returns mapOf("error" to "access_denied")
+
+        val handler = PresentationDuringIssuanceAuthorizationMethodService(
+            selectCredentialsForPresentation = { emptyMap() },
+            signVerifiablePresentation = { emptyList() },
+            openid4vpWalletConfig = WalletConfig(isPresentationDefinitionUriSupported = false),
+            traceabilityId = "test-trace-id",
+            openId4vp = injectedOvp,
+        )
+
+        handler.authorizeUser(validRequest())
+
+        coVerify(exactly = 1) {
+            injectedOvp.authenticateVerifier(any<Map<String, Any>>())
         }
     }
 
@@ -122,8 +150,9 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
                     )
                 )
             },
+            openid4vpWalletConfig = WalletConfig(),
+            traceabilityId = "test-trace-id",
             openId4vp = mockOvp,
-            traceabilityId = "test-trace-id"
         )
 
         val result = handler.authorizeUser(validRequest())
@@ -146,8 +175,9 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { emptyMap() },
             signVerifiablePresentation = { emptyList() },
+            openid4vpWalletConfig = WalletConfig(),
+            traceabilityId = "test-trace-id",
             openId4vp = mockOvp,
-            traceabilityId = "test-trace-id"
         )
 
         handler.authorizeUser(validRequest())
@@ -172,8 +202,9 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { validCredentialMap() },
             signVerifiablePresentation = { emptyList() },
+            openid4vpWalletConfig = WalletConfig(),
+            traceabilityId = "test-trace-id",
             openId4vp = mockOvp,
-            traceabilityId = "test-trace-id"
         )
 
         assertThrows<InteractiveAuthorizationException> {
@@ -189,8 +220,9 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         val handler = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = { validCredentialMap() },
             signVerifiablePresentation = { emptyList() },
+            openid4vpWalletConfig = WalletConfig(),
+            traceabilityId = "test-trace-id",
             openId4vp = mockOvp,
-            traceabilityId = "test-trace-id"
         )
 
         assertThrows<InteractiveAuthorizationException> {
