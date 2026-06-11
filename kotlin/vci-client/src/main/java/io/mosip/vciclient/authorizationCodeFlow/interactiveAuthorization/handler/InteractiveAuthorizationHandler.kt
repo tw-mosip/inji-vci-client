@@ -60,9 +60,7 @@ class InteractiveAuthorizationHandler {
                 )
             }
 
-            val type = extractTypeAndThrowIfError(response.body)
-
-            when (type) {
+            when (val type = extractTypeAndThrowIfError(response.body)) {
                 InteractionType.OpenId4VpPresentation.value ->
                     handlePresentationInteraction(
                         response.body,
@@ -183,7 +181,7 @@ class InteractiveAuthorizationHandler {
         val authorizationService = PresentationDuringIssuanceAuthorizationMethodService(
             selectCredentialsForPresentation = presentationMethod.selectCredentialsForPresentation,
             signVerifiablePresentation = presentationMethod.signVerifiablePresentation,
-            ldpVpSignatureSuite = presentationMethod.ldpVpSignatureSuite,
+            openid4vpWalletConfig = presentationMethod.openid4vpWalletConfig,
             traceabilityId = traceabilityId
         )
 

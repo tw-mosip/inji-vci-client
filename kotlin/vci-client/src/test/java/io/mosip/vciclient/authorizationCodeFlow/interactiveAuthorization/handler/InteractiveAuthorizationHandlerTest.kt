@@ -5,11 +5,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
 import io.mosip.vciclient.authorizationCodeFlow.clientMetadata.ClientMetadata
-import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceRequestData
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceAuthorizationMethodService
+import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.presentationDuringIssuance.PresentationDuringIssuanceRequestData
 import io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.response.AuthorizationResponse
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.networkManager.HttpMethod
@@ -21,6 +22,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import android.util.Base64
 import kotlin.test.assertFailsWith
 
 
@@ -61,6 +63,10 @@ class InteractiveAuthorizationHandlerTest {
     @Test
     fun `should handle OpenID4VP presentation interaction successfully`() = runTest {
         val responseBody = mockPresentationInteractionResponse
+
+        // OpenID4VP constructor uses android.util.Base64; stub it in JVM unit tests.
+        mockkStatic(Base64::class)
+        every { Base64.encodeToString(any<ByteArray>(), any()) } returns "b64"
 
         every {
             NetworkManager.sendRequest(
@@ -177,7 +183,7 @@ class InteractiveAuthorizationHandlerTest {
             NetworkManager.sendRequest(any(), any(), any(), any())
         } returns NetworkResponse(responseBody, null)
 
-         assertFailsWith<InteractiveAuthorizationException> {
+        assertFailsWith<InteractiveAuthorizationException> {
             handler.handle(
                 endpoint,
                 clientMetadata,
