@@ -107,7 +107,11 @@ class PresentationDuringIssuanceAuthorizationMethodService : AuthorizationMethod
 
 
     private fun validatePresentationRequest(request: Map<String, Any>): AuthorizationRequest {
-        return openId4vp.authenticateVerifier(request)
+        val authorizationRequest = openId4vp.authenticateVerifier(request)
+        if (authorizationRequest.responseMode !in listOf("iar-post", "iar-post.jwt")) {
+            throw IllegalArgumentException("response_mode must be 'iar-post' or 'iar-post.jwt'")
+        }
+        return authorizationRequest
     }
 
     private suspend fun handlePresentation(vpRequest: AuthorizationRequest): Map<String, Any> {
@@ -172,5 +176,4 @@ class PresentationDuringIssuanceAuthorizationMethodService : AuthorizationMethod
             ?: throw InteractiveAuthorizationException("Issuer response deserialization failed")
     }
 }
-
 
