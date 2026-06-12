@@ -39,10 +39,10 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         fakeAuthRequest = AuthorizationPresentationExchangeRequest(
             clientId = "https://trusted.com",
             redirectUri = "",
-            responseType = "",
+            responseType = "vp_token",
             state = "",
             nonce = "",
-            responseMode = "",
+            responseMode = "iar-post",
             responseUri = null,
             walletNonce = "",
             clientMetadata = null,
@@ -125,6 +125,38 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
     }
 
     @Test
+    fun `should delegate request uri validation and accept iar post jwt mode`() = runTest {
+        val requestByReference = mapOf(
+            "request_uri" to "https://verifier.example.com/request/123"
+        )
+        val normalizedRequest = authorizationRequest(responseMode = "iar-post.jwt")
+        coEvery {
+            mockOvp.authenticateVerifier(requestByReference)
+        } returns normalizedRequest
+
+        var selectedRequest: AuthorizationRequest? = null
+        val handler = PresentationDuringIssuanceAuthorizationMethodService(
+            selectCredentialsForPresentation = {
+                selectedRequest = it
+                emptyMap()
+            },
+            signVerifiablePresentation = { emptyList() },
+            openid4vpWalletConfig = WalletConfig(),
+            traceabilityId = "test-trace-id",
+            openId4vp = mockOvp,
+        )
+
+        handler.authorizeUser(
+            validRequest().copy(ovpRequest = requestByReference)
+        )
+
+        coVerify(exactly = 1) {
+            mockOvp.authenticateVerifier(requestByReference)
+        }
+        Assert.assertSame(normalizedRequest, selectedRequest)
+    }
+
+    @Test
     fun `should successfully authorize and return success response`() = runTest {
         coEvery { mockOvp.constructUnsignedVPToken(any()) } returns listOf(
             UnsignedVPToken(FormatType.LDP_VC, "k1","ES256", "unsigned".toByteArray())
@@ -187,6 +219,33 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
         coVerify(exactly = 0) { mockOvp.constructUnsignedVPToken(any()) }
         coVerify(exactly = 0) { mockOvp.constructVPResponse(any()) }
     }
+
+    @Test
+    fun `should post error response when normalized response mode is unsupported`() = runTest {
+        coEvery {
+            mockOvp.authenticateVerifier(any<Map<String, Any>>())
+        } returns authorizationRequest(responseMode = "direct_post")
+
+        val handler = PresentationDuringIssuanceAuthorizationMethodService(
+            selectCredentialsForPresentation = {
+                Assert.fail("Credential selection must not run for an unsupported response mode")
+                emptyMap()
+            },
+            signVerifiablePresentation = { emptyList() },
+            openid4vpWalletConfig = WalletConfig(),
+            traceabilityId = "test-trace-id",
+            openId4vp = mockOvp,
+        )
+
+        handler.authorizeUser(validRequest())
+
+        verify(exactly = 1) {
+            mockOvp.constructErrorInfo(
+                match { it.message == "response_mode must be 'iar-post' or 'iar-post.jwt'" }
+            )
+        }
+        coVerify(exactly = 0) { mockOvp.constructUnsignedVPToken(any()) }
+    }
     
     @Test
     fun `should throw when network post fails`() = runTest {
@@ -229,4 +288,23 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
             handler.authorizeUser(validRequest())
         }
     }
+
+    private fun authorizationRequest(
+        responseType: String = "vp_token",
+        responseMode: String? = "iar-post"
+    ) = AuthorizationPresentationExchangeRequest(
+        clientId = "https://trusted.com",
+        redirectUri = "",
+        responseType = responseType,
+        state = "",
+        nonce = "",
+        responseMode = responseMode,
+        responseUri = null,
+        walletNonce = "",
+        clientMetadata = null,
+        presentationDefinition = PresentationDefinition(
+            id = "pd-id",
+            inputDescriptors = emptyList()
+        )
+    )
 }
