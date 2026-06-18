@@ -1,6 +1,6 @@
 # INJI VCI Client
 
-The **Inji VCI Client** is a library built to simplify credential issuance via [OpenID for Verifiable Credential Issuance (OID4VCI)](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-13.html) protocol.  
+The **Inji VCI Client** is a library built to simplify credential issuance via [OpenID for Verifiable Credential Issuance (OID4VCI)](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) protocol.  
 It supports **Issuer Initiated (Credential Offer)** and **Wallet Initiated (Trusted Issuer)** flows, with secure proof handling, PKCE support, and custom error handling.
 
 ---
@@ -8,7 +8,7 @@ It supports **Issuer Initiated (Credential Offer)** and **Wallet Initiated (Trus
 ## 📋 Specifications supported
 
 The implementation follows
-- OpenID for Verifiable Credential Issuance - draft 11
+- OpenID for Verifiable Credential Issuance - 1.0
 - OpenID for Verifiable Credential Issuance - draft 13
 
 ## ✨ Features
@@ -25,7 +25,6 @@ The implementation follows
     - `ldp_vc`
     - `mso_mdoc`
     - `vc+sd-jwt` / `dc+sd-jwt`
-    - `jwt_vc_json`
 - Presentation During Issuance (PDI) support for both download flows (For more details on PDI support, please refer to the [Presentation During Issuance documentation](./doc/presentation-during-issuance-support.md))
 
 > ⚠️ Consumer of this library is responsible for processing and rendering the credential after it is downloaded.
