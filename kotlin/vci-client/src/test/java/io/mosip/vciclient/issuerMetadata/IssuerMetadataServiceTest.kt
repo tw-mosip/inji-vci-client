@@ -60,6 +60,34 @@ class IssuerMetadataServiceTest {
     }
 
     @Test
+    fun `uses OID4VCI 1_0 insert-style well-known URL for a path-bearing issuer`() = runBlocking {
+        val pathIssuer = "https://mock.issuer/tenant1"
+        val v1Url = "https://mock.issuer/.well-known/openid-credential-issuer/tenant1"
+        val draft13Url = "https://mock.issuer/tenant1/.well-known/openid-credential-issuer"
+        every { NetworkManager.sendRequest(v1Url, any(), any()) } returns NetworkResponse(wellKnownResponse, null)
+
+        IssuerMetadataService().fetchAndParseIssuerMetadata(pathIssuer)
+
+        verify(exactly = 1) { NetworkManager.sendRequest(v1Url, any(), any()) }
+        verify(exactly = 0) { NetworkManager.sendRequest(draft13Url, any(), any()) }
+    }
+
+    @Test
+    fun `falls back to Draft 13 append-style well-known URL when the 1_0 location fails`() = runBlocking {
+        val pathIssuer = "https://mock.issuer/tenant1"
+        val v1Url = "https://mock.issuer/.well-known/openid-credential-issuer/tenant1"
+        val draft13Url = "https://mock.issuer/tenant1/.well-known/openid-credential-issuer"
+        every { NetworkManager.sendRequest(v1Url, any(), any()) } throws Exception("not found")
+        every { NetworkManager.sendRequest(draft13Url, any(), any()) } returns NetworkResponse(wellKnownResponse, null)
+
+        val result = IssuerMetadataService().fetchAndParseIssuerMetadata(pathIssuer)
+
+        assertEquals(wellKnownResponseMap, result)
+        verify(exactly = 1) { NetworkManager.sendRequest(v1Url, any(), any()) }
+        verify(exactly = 1) { NetworkManager.sendRequest(draft13Url, any(), any()) }
+    }
+
+    @Test
     fun `should parse ldp_vc metadata successfully`() = runBlocking {
         mockJsonResponse(LDP_VC_JSON)
 
