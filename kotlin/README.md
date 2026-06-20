@@ -687,7 +687,7 @@ They carry structured fields that help consumers identify whether the failure ca
 
 | Field                     | Type      | Meaning |
 |---------------------------|-----------|---------|
-| `code`                    | `String?` | The library-defined `VCI-*` error code. When the exception wraps another `VCIClientException`, `code` carries the **root** code resolved from the cause chain; otherwise it is the exception's own code. |
+| `code`                    | `String`  | The library-defined `VCI-*` error code. When the exception wraps another `VCIClientException`, `code` carries the **root** code resolved from the cause chain; otherwise it is the exception's own code. |
 | `message`                 | `String`  | Human-readable summary of the failure, ready for logging or diagnostics. |
 | `issuerErrorCode`         | `String?` | The issuer or authorization server `error` value when the remote service returned a structured OAuth/OID4VCI style error response. |
 | `issuerErrorDescription`  | `String?` | The upstream `error_description` value when available. If the response body is not parseable JSON, the raw response body may be propagated here for diagnostics. |

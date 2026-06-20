@@ -2,7 +2,7 @@ package io.mosip.vciclient.exception
 
 open class VCIClientException : Exception {
 
-    val code: String?
+    val code: String
     val issuerErrorCode: String?
     val issuerErrorDescription: String?
 
@@ -10,7 +10,7 @@ open class VCIClientException : Exception {
         get() = super.message ?: ""
 
     constructor(
-        code: String?,
+        code: String,
         message: String,
         issuerErrorCode: String? = null,
         issuerErrorDescription: String? = null,
