@@ -9,14 +9,14 @@ class NetworkRequestFailedException : VCIClientException {
 
     constructor(
         message: String?,
-        serverErrorCode: String? = null,
-        serverErrorDescription: String? = null,
+        issuerErrorCode: String? = null,
+        issuerErrorDescription: String? = null,
         cause: Throwable? = null
     ) : super(
         code = "VCI-006",
         message = "Network request failed, details - $message",
-        serverErrorCode = serverErrorCode,
-        serverErrorDescription = serverErrorDescription,
+        issuerErrorCode = issuerErrorCode,
+        issuerErrorDescription = issuerErrorDescription,
         cause = cause
     )
 }

@@ -389,8 +389,8 @@ class AuthorizationCodeFlowServiceTest {
             anyConstructed<AuthorizationServerResolver>().resolveForAuthCode(any(), any())
         } throws InvalidDataProvidedException(
             message = "issuer metadata missing",
-            serverErrorCode = "invalid_request",
-            serverErrorDescription = "credential issuer missing"
+            issuerErrorCode = "invalid_request",
+            issuerErrorDescription = "credential issuer missing"
         )
 
         val ex = assertThrows<DownloadFailedException> {
@@ -407,8 +407,8 @@ class AuthorizationCodeFlowServiceTest {
             )
         }
 
-        assertEquals("invalid_request", ex.serverErrorCode)
-        assertEquals("credential issuer missing", ex.serverErrorDescription)
+        assertEquals("invalid_request", ex.issuerErrorCode)
+        assertEquals("credential issuer missing", ex.issuerErrorDescription)
         assertTrue(ex.message.contains("Failed to resolve authorization server metadata"))
     }
 
@@ -463,8 +463,8 @@ class AuthorizationCodeFlowServiceTest {
             mockHandler.handle(any(), any(), any(), any(), any(), any())
         } throws InteractiveAuthorizationException(
             message = "interaction rejected",
-            serverErrorCode = "access_denied",
-            serverErrorDescription = "user cancelled"
+            issuerErrorCode = "access_denied",
+            issuerErrorDescription = "user cancelled"
         )
 
         val ex = assertThrows<DownloadFailedException> {
@@ -483,8 +483,8 @@ class AuthorizationCodeFlowServiceTest {
             )
         }
 
-        assertEquals("access_denied", ex.serverErrorCode)
-        assertEquals("user cancelled", ex.serverErrorDescription)
+        assertEquals("access_denied", ex.issuerErrorCode)
+        assertEquals("user cancelled", ex.issuerErrorDescription)
         assertTrue(ex.message.contains("Interactive authorization failed at endpoint"))
     }
 
@@ -524,8 +524,8 @@ class AuthorizationCodeFlowServiceTest {
         }
 
         assertTrue(ex.message.contains("code not received"))
-        assertEquals("access_denied", ex.serverErrorCode)
-        assertEquals("user denied", ex.serverErrorDescription)
+        assertEquals("access_denied", ex.issuerErrorCode)
+        assertEquals("user denied", ex.issuerErrorDescription)
     }
 
     @Test
@@ -575,8 +575,8 @@ class AuthorizationCodeFlowServiceTest {
             )
         } throws InvalidDataProvidedException(
             message = "proof missing",
-            serverErrorCode = "invalid_proof",
-            serverErrorDescription = "proof callback returned invalid JWT"
+            issuerErrorCode = "invalid_proof",
+            issuerErrorDescription = "proof callback returned invalid JWT"
         )
 
         val ex = assertThrows<DownloadFailedException> {
@@ -593,8 +593,8 @@ class AuthorizationCodeFlowServiceTest {
             )
         }
 
-        assertEquals("invalid_proof", ex.serverErrorCode)
-        assertEquals("proof callback returned invalid JWT", ex.serverErrorDescription)
+        assertEquals("invalid_proof", ex.issuerErrorCode)
+        assertEquals("proof callback returned invalid JWT", ex.issuerErrorDescription)
         assertEquals(
             "Failed to download Credential: Required details not provided proof missing",
             ex.message

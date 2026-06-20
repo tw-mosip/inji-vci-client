@@ -9,14 +9,14 @@ class CredentialOfferFetchFailedException : VCIClientException {
 
     constructor(
         message: String?,
-        serverErrorCode: String?,
-        serverErrorDescription: String?,
+        issuerErrorCode: String?,
+        issuerErrorDescription: String?,
         cause: Throwable? = null
     ) : super(
         code = "VCI-008",
         message = "Failed to fetch credential offer: $message",
-        serverErrorCode = serverErrorCode,
-        serverErrorDescription = serverErrorDescription,
+        issuerErrorCode = issuerErrorCode,
+        issuerErrorDescription = issuerErrorDescription,
         cause = cause
     )
 }

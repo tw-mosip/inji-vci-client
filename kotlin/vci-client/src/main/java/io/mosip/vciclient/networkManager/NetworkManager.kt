@@ -41,13 +41,13 @@ object NetworkManager {
                 val responseBody = response.body?.string().orEmpty()
 
                 if (!response.isSuccessful) {
-                    val (serverErrorCode, serverErrorDescription) =
+                    val (issuerErrorCode, issuerErrorDescription) =
                         parseServerErrorResponse(responseBody)
 
                     throw NetworkRequestFailedException(
                         message = "HTTP ${response.code}",
-                        serverErrorCode = serverErrorCode,
-                        serverErrorDescription = serverErrorDescription
+                        issuerErrorCode = issuerErrorCode,
+                        issuerErrorDescription = issuerErrorDescription
                     )
                 }
 
@@ -110,20 +110,20 @@ object NetworkManager {
 
 
     private fun parseServerErrorResponse(responseBody: String): Pair<String?, String?> {
-        var serverErrorCode: String? = null
-        var serverErrorDescription: String? = null
+        var issuerErrorCode: String? = null
+        var issuerErrorDescription: String? = null
 
         try {
             val json = JSONObject(responseBody)
-            serverErrorCode = json.optString(ERROR_CODE)
-            serverErrorDescription = json.optString(ERROR_DESCRIPTION)
+            issuerErrorCode = json.optString(ERROR_CODE)
+            issuerErrorDescription = json.optString(ERROR_DESCRIPTION)
 
         } catch (_: Exception) {
             Logger.getLogger(NetworkManager::class.java.name)
                 .warning("Failed to parse server error response")
             return Pair(null, responseBody)
         }
-        return Pair(serverErrorCode, serverErrorDescription)
+        return Pair(issuerErrorCode, issuerErrorDescription)
     }
 }
 

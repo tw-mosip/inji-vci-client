@@ -9,14 +9,14 @@ class InvalidDataProvidedException : VCIClientException {
 
     constructor(
         message: String?,
-        serverErrorCode: String? = null,
-        serverErrorDescription: String? = null,
+        issuerErrorCode: String? = null,
+        issuerErrorDescription: String? = null,
         cause: Throwable? = null
     ) : super(
         code = "VCI-004",
         message = "Required details not provided $message",
-        serverErrorCode = serverErrorCode,
-        serverErrorDescription = serverErrorDescription,
+        issuerErrorCode = issuerErrorCode,
+        issuerErrorDescription = issuerErrorDescription,
         cause = cause
     )
 }

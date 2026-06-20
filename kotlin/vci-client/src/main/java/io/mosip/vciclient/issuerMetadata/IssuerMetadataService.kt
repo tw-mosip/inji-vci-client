@@ -49,8 +49,8 @@ class IssuerMetadataService {
         } catch (e: VCIClientException) {
             throw IssuerMetadataFetchException(
                 e.message,
-                serverErrorCode = e.serverErrorCode,
-                serverErrorDescription = e.serverErrorDescription,
+                issuerErrorCode = e.issuerErrorCode,
+                issuerErrorDescription = e.issuerErrorDescription,
                 cause = e
             )
         } catch (e: Exception) {
@@ -128,8 +128,8 @@ class IssuerMetadataService {
         } catch (e: VCIClientException) {
             throw IssuerMetadataFetchException(
                 e.message,
-                serverErrorCode = e.serverErrorCode,
-                serverErrorDescription = e.serverErrorDescription,
+                issuerErrorCode = e.issuerErrorCode,
+                issuerErrorDescription = e.issuerErrorDescription,
                 cause = e
             )
         } catch (e: Exception) {

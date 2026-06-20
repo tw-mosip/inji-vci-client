@@ -9,14 +9,14 @@ class IssuerMetadataFetchException : VCIClientException {
 
     constructor(
         message: String?,
-        serverErrorCode: String? = null,
-        serverErrorDescription: String? = null,
+        issuerErrorCode: String? = null,
+        issuerErrorDescription: String? = null,
         cause: Throwable? = null
     ) : super(
         code = "VCI-009",
         message = "Failed to fetch issuerMetadata: $message",
-        serverErrorCode = serverErrorCode,
-        serverErrorDescription = serverErrorDescription,
+        issuerErrorCode = issuerErrorCode,
+        issuerErrorDescription = issuerErrorDescription,
         cause = cause
     )
 }

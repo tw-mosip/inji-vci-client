@@ -167,8 +167,8 @@ class InteractiveAuthorizationHandlerTest {
             )
         }
 
-        assertEquals("access_denied", ex.serverErrorCode)
-        assertEquals("user cancelled the flow", ex.serverErrorDescription)
+        assertEquals("access_denied", ex.issuerErrorCode)
+        assertEquals("user cancelled the flow", ex.issuerErrorDescription)
         assertEquals(
             "Failed to authorize via interaction: authorization server error: access_denied - user cancelled the flow",
             ex.message

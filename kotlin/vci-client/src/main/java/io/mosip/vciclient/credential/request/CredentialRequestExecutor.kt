@@ -85,8 +85,8 @@ class CredentialRequestExecutor(
             throw DownloadFailedException(
                 message = e.message,
                 cause = e,
-                serverErrorCode = e.serverErrorCode,
-                serverErrorDescription = e.serverErrorDescription
+                issuerErrorCode = e.issuerErrorCode,
+                issuerErrorDescription = e.issuerErrorDescription
             )
         } catch (e: InvalidPublicKeyException) {
             throw DownloadFailedException(
@@ -157,8 +157,8 @@ class CredentialRequestExecutor(
             throw DownloadFailedException(
                 message = e.message,
                 cause = e,
-                serverErrorCode = e.serverErrorCode,
-                serverErrorDescription = e.serverErrorDescription
+                issuerErrorCode = e.issuerErrorCode,
+                issuerErrorDescription = e.issuerErrorDescription
             )
         } catch (e: InvalidPublicKeyException) {
             throw DownloadFailedException(

@@ -2,25 +2,23 @@ package io.mosip.vciclient.exception
 
 open class VCIClientException : Exception {
 
-    val code: String
-    val sourceErrorCode: String?
-    val serverErrorCode: String?
-    val serverErrorDescription: String?
+    val code: String?
+    val issuerErrorCode: String?
+    val issuerErrorDescription: String?
 
     override val message: String
         get() = super.message ?: ""
 
     constructor(
-        code: String,
+        code: String?,
         message: String,
-        serverErrorCode: String? = null,
-        serverErrorDescription: String? = null,
+        issuerErrorCode: String? = null,
+        issuerErrorDescription: String? = null,
         cause: Throwable? = null
     ) : super(message, cause) {
-        this.code = code
-        this.sourceErrorCode = extractRootCode(cause)
-        this.serverErrorCode = serverErrorCode
-        this.serverErrorDescription = serverErrorDescription
+        this.code = extractRootCode(cause) ?: code
+        this.issuerErrorCode = issuerErrorCode
+        this.issuerErrorDescription = issuerErrorDescription
     }
 
     companion object {
