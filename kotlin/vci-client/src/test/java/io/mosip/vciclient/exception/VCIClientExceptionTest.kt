@@ -26,6 +26,23 @@ class VCIClientExceptionTest {
     }
 
     @Test
+    fun `code resolves to deepest root code across multi-level chain`() {
+        val root = InvalidDataProvidedException("missing field")
+        val mid = AuthorizationServerDiscoveryException(
+            message = "discovery failed",
+            issuerErrorCode = null,
+            issuerErrorDescription = null,
+            cause = root
+        )
+        val outer = NetworkRequestFailedException(
+            message = "token endpoint failed",
+            cause = mid
+        )
+
+        assertEquals("VCI-004", outer.code)
+    }
+
+    @Test
     fun `should construct invalid access token exception with server details`() {
         val exception = InvalidAccessTokenException(
             message = "expired",
