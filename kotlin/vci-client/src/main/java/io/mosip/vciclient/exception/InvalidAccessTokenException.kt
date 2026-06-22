@@ -9,14 +9,14 @@ class InvalidAccessTokenException : VCIClientException {
 
     constructor(
         message: String?,
-        serverErrorCode: String?,
-        serverErrorDescription: String?,
+        issuerErrorCode: String?,
+        issuerErrorDescription: String?,
         cause: Throwable? = null
     ) : super(
         code = "VCI-003",
         message = "Access token is invalid - $message",
-        serverErrorCode = serverErrorCode,
-        serverErrorDescription = serverErrorDescription,
+        issuerErrorCode = issuerErrorCode,
+        issuerErrorDescription = issuerErrorDescription,
         cause = cause
     )
 }

@@ -9,14 +9,14 @@ class InvalidPublicKeyException : VCIClientException {
 
     constructor(
         message: String?,
-        serverErrorCode: String? = null,
-        serverErrorDescription: String? = null,
+        issuerErrorCode: String? = null,
+        issuerErrorDescription: String? = null,
         cause: Throwable? = null
     ) : super(
         code = "VCI-005",
         message = "Invalid public key passed $message",
-        serverErrorCode = serverErrorCode,
-        serverErrorDescription = serverErrorDescription,
+        issuerErrorCode = issuerErrorCode,
+        issuerErrorDescription = issuerErrorDescription,
         cause = cause
     )
 }

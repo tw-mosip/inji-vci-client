@@ -224,8 +224,8 @@ class VCIClientTest {
         } throws VCIClientException(
             code = "VCI-777",
             message = "trusted issuer failed",
-            serverErrorCode = "invalid_request",
-            serverErrorDescription = "missing proof"
+            issuerErrorCode = "invalid_request",
+            issuerErrorDescription = "missing proof"
         )
 
         val exception = assertThrows<VCIClientException> {
@@ -242,8 +242,8 @@ class VCIClientTest {
         }
 
         assertEquals("VCI-777", exception.code)
-        assertEquals("invalid_request", exception.serverErrorCode)
-        assertEquals("missing proof", exception.serverErrorDescription)
+        assertEquals("invalid_request", exception.issuerErrorCode)
+        assertEquals("missing proof", exception.issuerErrorDescription)
     }
 
     @Test
@@ -279,8 +279,8 @@ class VCIClientTest {
         } throws VCIClientException(
             code = "VCI-778",
             message = "credential offer failed",
-            serverErrorCode = "access_denied",
-            serverErrorDescription = "issuer blocked"
+            issuerErrorCode = "access_denied",
+            issuerErrorDescription = "issuer blocked"
         )
 
         val exception = assertThrows<VCIClientException> {
@@ -298,7 +298,7 @@ class VCIClientTest {
         }
 
         assertEquals("VCI-778", exception.code)
-        assertEquals("access_denied", exception.serverErrorCode)
-        assertEquals("issuer blocked", exception.serverErrorDescription)
+        assertEquals("access_denied", exception.issuerErrorCode)
+        assertEquals("issuer blocked", exception.issuerErrorDescription)
     }
 }

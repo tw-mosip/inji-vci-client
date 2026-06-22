@@ -9,14 +9,14 @@ class AuthorizationServerDiscoveryException : VCIClientException {
 
     constructor(
         message: String?,
-        serverErrorCode: String?,
-        serverErrorDescription: String?,
+        issuerErrorCode: String?,
+        issuerErrorDescription: String?,
         cause: Throwable? = null
     ) : super(
         code = "VCI-001",
         message = "Failed to discover authorization server : $message",
-        serverErrorCode = serverErrorCode,
-        serverErrorDescription = serverErrorDescription,
+        issuerErrorCode = issuerErrorCode,
+        issuerErrorDescription = issuerErrorDescription,
         cause = cause
     )
 }

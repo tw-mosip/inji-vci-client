@@ -152,8 +152,8 @@ class PreAuthCodeFlowService(
         } catch (e: VCIClientException) {
             throw DownloadFailedException(
                 "Pre-Authorized Code Flow failed: ${e.message}",
-                e.serverErrorCode,
-                e.serverErrorDescription,
+                e.issuerErrorCode,
+                e.issuerErrorDescription,
                 e
             )
         } catch (e: Exception) {

@@ -46,8 +46,8 @@ internal class CredentialOfferService {
         } catch (e: VCIClientException) {
             throw CredentialOfferFetchFailedException(
                 e.message,
-                e.serverErrorCode,
-                e.serverErrorDescription,
+                e.issuerErrorCode,
+                e.issuerErrorDescription,
                 e
             )
         } catch (e: Exception) {

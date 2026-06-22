@@ -64,8 +64,8 @@ class NetworkManagerTest {
             NetworkManager.sendRequest(server.url("/error").toString(), HttpMethod.GET, headers = mapOf())
         }
 
-        assertEquals("invalid_request", exception.serverErrorCode)
-        assertEquals("missing proof", exception.serverErrorDescription)
+        assertEquals("invalid_request", exception.issuerErrorCode)
+        assertEquals("missing proof", exception.issuerErrorDescription)
     }
 
     @Test
@@ -80,8 +80,8 @@ class NetworkManagerTest {
             NetworkManager.sendRequest(server.url("/error").toString(), HttpMethod.GET, headers = mapOf())
         }
 
-        assertNull(exception.serverErrorCode)
-        assertEquals("upstream failed", exception.serverErrorDescription)
+        assertNull(exception.issuerErrorCode)
+        assertEquals("upstream failed", exception.issuerErrorDescription)
     }
 
     @Test

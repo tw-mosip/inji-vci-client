@@ -93,8 +93,8 @@ class PresentationDuringIssuanceAuthorizationMethodService : AuthorizationMethod
             throw InteractiveAuthorizationException(
                 "Error during presentation authorization: ${ex.message}",
                 cause = ex,
-                serverErrorCode = ex.serverErrorCode,
-                serverErrorDescription = ex.serverErrorDescription
+                issuerErrorCode = ex.issuerErrorCode,
+                issuerErrorDescription = ex.issuerErrorDescription
             )
         } catch (ex: Exception) {
             throw InteractiveAuthorizationException(
@@ -162,8 +162,8 @@ class PresentationDuringIssuanceAuthorizationMethodService : AuthorizationMethod
             throw InteractiveAuthorizationException(
                 "Error while posting VP response: ${ex.message}",
                 cause = ex,
-                serverErrorCode = ex.serverErrorCode,
-                serverErrorDescription = ex.serverErrorDescription
+                issuerErrorCode = ex.issuerErrorCode,
+                issuerErrorDescription = ex.issuerErrorDescription
             )
         } catch (ex: Exception) {
             throw InteractiveAuthorizationException(

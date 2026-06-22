@@ -29,8 +29,8 @@ class VCIClient(val traceabilityId: String) {
                 "VCI-010",
                 exception.message,
                 cause = exception,
-                serverErrorCode = exception.serverErrorCode,
-                serverErrorDescription = exception.serverErrorDescription
+                issuerErrorCode = exception.issuerErrorCode,
+                issuerErrorDescription = exception.issuerErrorDescription
             )
         } catch (e: Exception) {
             logger.severe("Fetching issuer metadata failed due to ${e.message}")
@@ -49,8 +49,8 @@ class VCIClient(val traceabilityId: String) {
                 "VCI-010",
                 exception.message,
                 cause = exception,
-                serverErrorCode = exception.serverErrorCode,
-                serverErrorDescription = exception.serverErrorDescription
+                issuerErrorCode = exception.issuerErrorCode,
+                issuerErrorDescription = exception.issuerErrorDescription
             )
         } catch (e: Exception) {
             logger.severe("Fetching credentialConfigurationsSupported from issuer metadata failed")
@@ -83,8 +83,8 @@ class VCIClient(val traceabilityId: String) {
                 code = e.code,
                 message = e.message,
                 cause = e,
-                serverErrorCode = e.serverErrorCode,
-                serverErrorDescription = e.serverErrorDescription
+                issuerErrorCode = e.issuerErrorCode,
+                issuerErrorDescription = e.issuerErrorDescription
             )
         } catch (e: Exception) {
             logger.severe("Downloading credential failed due to ${e.message}")
@@ -119,8 +119,8 @@ class VCIClient(val traceabilityId: String) {
                 code = e.code,
                 message = e.message,
                 cause = e,
-                serverErrorCode = e.serverErrorCode,
-                serverErrorDescription = e.serverErrorDescription
+                issuerErrorCode = e.issuerErrorCode,
+                issuerErrorDescription = e.issuerErrorDescription
             )
         } catch (e: Exception) {
             logger.severe("Downloading credential failed due to ${e.message}")

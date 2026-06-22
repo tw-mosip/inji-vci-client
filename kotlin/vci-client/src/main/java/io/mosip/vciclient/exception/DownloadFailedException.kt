@@ -9,14 +9,14 @@ class DownloadFailedException : VCIClientException {
 
     constructor(
         message: String?,
-        serverErrorCode: String? = null,
-        serverErrorDescription: String? = null,
+        issuerErrorCode: String? = null,
+        issuerErrorDescription: String? = null,
         cause: Throwable? = null
     ) : super(
         code = "VCI-002",
         message = "Failed to download Credential: $message",
-        serverErrorCode = serverErrorCode,
-        serverErrorDescription = serverErrorDescription,
+        issuerErrorCode = issuerErrorCode,
+        issuerErrorDescription = issuerErrorDescription,
         cause = cause
     )
 }

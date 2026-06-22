@@ -152,8 +152,8 @@ internal class AuthorizationCodeFlowService(
             } catch (e: VCIClientException) {
                 throw DownloadFailedException(
                     "Failed to resolve authorization server metadata for issuer ${issuerMetadata.credentialIssuer}: ${e.message} ",
-                    serverErrorCode = e.serverErrorCode,
-                    serverErrorDescription = e.serverErrorDescription,
+                    issuerErrorCode = e.issuerErrorCode,
+                    issuerErrorDescription = e.issuerErrorDescription,
                     cause = e
                 )
             } catch (e: Exception) {
@@ -179,8 +179,8 @@ internal class AuthorizationCodeFlowService(
             } catch (e: VCIClientException) {
                 throw DownloadFailedException(
                     "Failed to obtain access token via authorization code flow: ${e.message}",
-                    serverErrorCode = e.serverErrorCode,
-                    serverErrorDescription = e.serverErrorDescription,
+                    issuerErrorCode = e.issuerErrorCode,
+                    issuerErrorDescription = e.issuerErrorDescription,
                     cause = e
                 )
             } catch (e: Exception) {
@@ -197,8 +197,8 @@ internal class AuthorizationCodeFlowService(
         } catch (e: VCIClientException) {
             throw DownloadFailedException(
                 e.message,
-                serverErrorCode = e.serverErrorCode,
-                serverErrorDescription = e.serverErrorDescription,
+                issuerErrorCode = e.issuerErrorCode,
+                issuerErrorDescription = e.issuerErrorDescription,
                 cause = e
             )
         } catch (e: Exception) {
@@ -289,7 +289,7 @@ internal class AuthorizationCodeFlowService(
                     traceabilityId = traceabilityId
                 )
             } catch (e: DownloadFailedException) {
-                if (e.serverErrorCode == MISSING_INTERACTION_TYPE_ERROR) {
+                if (e.issuerErrorCode == MISSING_INTERACTION_TYPE_ERROR) {
                     logger.warning("Interactive authorization failed at $interactiveEndpoint: ${e.message}. Falling back to standard authorization endpoint if available.")
                     obtainAuthorizationCodeViaAuthorizationEndpoint(
                         authorizationServerMetadata = authorizationServerMetadata,
@@ -338,8 +338,8 @@ internal class AuthorizationCodeFlowService(
         } catch (e: VCIClientException) {
             throw DownloadFailedException(
                 "Interactive authorization failed at endpoint $endpoint : ${e.message}",
-                serverErrorCode = e.serverErrorCode,
-                serverErrorDescription = e.serverErrorDescription,
+                issuerErrorCode = e.issuerErrorCode,
+                issuerErrorDescription = e.issuerErrorDescription,
                 cause = e
             )
         } catch (e: Exception) {
@@ -352,8 +352,8 @@ internal class AuthorizationCodeFlowService(
         return response.authorizationCode
             ?: throw DownloadFailedException(
                 "Authorization failed: code not received from interactive authorization endpoint $endpoint. Error : ${response.error}, Description: ${response.errorDescription}",
-                serverErrorCode = response.error,
-                serverErrorDescription = response.errorDescription
+                issuerErrorCode = response.error,
+                issuerErrorDescription = response.errorDescription
             )
     }
 
@@ -393,8 +393,8 @@ internal class AuthorizationCodeFlowService(
             } catch (e: VCIClientException) {
                 throw DownloadFailedException(
                     "Authorization failed at authorization endpoint $authorizationEndpoint: ${e.message}",
-                    serverErrorCode = e.serverErrorCode,
-                    serverErrorDescription = e.serverErrorDescription,
+                    issuerErrorCode = e.issuerErrorCode,
+                    issuerErrorDescription = e.issuerErrorDescription,
                     cause = e
                 )
             } catch (e: Exception) {

@@ -122,7 +122,7 @@ class CredentialRequestExecutorTest {
                 resolvedMeta,"SampleCredential", mockProof, accessToken
             )
         }
-        assertTrue(ex.serverErrorDescription?.contains("Bad Request") == true)
+        assertTrue(ex.issuerErrorDescription?.contains("Bad Request") == true)
     }
 
     @Test
@@ -174,7 +174,7 @@ class CredentialRequestExecutorTest {
 
         assertTrue(ex.cause is NetworkRequestFailedException)
         assertTrue(ex.message.contains("HTTP 400"))
-        assertTrue(ex.serverErrorCode == "invalid_proof")
-        assertTrue(ex.serverErrorDescription == "proof is missing")
+        assertTrue(ex.issuerErrorCode == "invalid_proof")
+        assertTrue(ex.issuerErrorDescription == "proof is missing")
     }
 }

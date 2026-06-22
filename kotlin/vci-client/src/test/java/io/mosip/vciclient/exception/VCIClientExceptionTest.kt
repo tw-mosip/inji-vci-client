@@ -11,15 +11,14 @@ class VCIClientExceptionTest {
         val root = AuthorizationServerDiscoveryException("resolver failure")
         val wrapped = NetworkRequestFailedException(
             message = "token endpoint failed",
-            serverErrorCode = "server_error",
-            serverErrorDescription = "temporary issue",
+            issuerErrorCode = "server_error",
+            issuerErrorDescription = "temporary issue",
             cause = root
         )
 
-        assertEquals("VCI-001", wrapped.sourceErrorCode)
-        assertEquals("VCI-006", wrapped.code)
-        assertEquals("server_error", wrapped.serverErrorCode)
-        assertEquals("temporary issue", wrapped.serverErrorDescription)
+        assertEquals("VCI-001", wrapped.code)
+        assertEquals("server_error", wrapped.issuerErrorCode)
+        assertEquals("temporary issue", wrapped.issuerErrorDescription)
         assertEquals(
             "Network request failed, details - token endpoint failed",
             wrapped.message
@@ -27,17 +26,34 @@ class VCIClientExceptionTest {
     }
 
     @Test
+    fun `code resolves to deepest root code across multi-level chain`() {
+        val root = InvalidDataProvidedException("missing field")
+        val mid = AuthorizationServerDiscoveryException(
+            message = "discovery failed",
+            issuerErrorCode = null,
+            issuerErrorDescription = null,
+            cause = root
+        )
+        val outer = NetworkRequestFailedException(
+            message = "token endpoint failed",
+            cause = mid
+        )
+
+        assertEquals("VCI-004", outer.code)
+    }
+
+    @Test
     fun `should construct invalid access token exception with server details`() {
         val exception = InvalidAccessTokenException(
             message = "expired",
-            serverErrorCode = "invalid_token",
-            serverErrorDescription = "token expired",
+            issuerErrorCode = "invalid_token",
+            issuerErrorDescription = "token expired",
             cause = IllegalStateException("expired")
         )
 
         assertEquals("VCI-003", exception.code)
-        assertEquals("invalid_token", exception.serverErrorCode)
-        assertEquals("token expired", exception.serverErrorDescription)
+        assertEquals("invalid_token", exception.issuerErrorCode)
+        assertEquals("token expired", exception.issuerErrorDescription)
         assertEquals("Access token is invalid - expired", exception.message)
     }
 
@@ -46,8 +62,8 @@ class VCIClientExceptionTest {
         val exception = InvalidDataProvidedException("credential issuer missing")
 
         assertEquals("VCI-004", exception.code)
-        assertNull(exception.serverErrorCode)
-        assertNull(exception.serverErrorDescription)
+        assertNull(exception.issuerErrorCode)
+        assertNull(exception.issuerErrorDescription)
         assertEquals(
             "Required details not provided credential issuer missing",
             exception.message
@@ -58,13 +74,13 @@ class VCIClientExceptionTest {
     fun `should construct authorization server discovery exception with server details`() {
         val exception = AuthorizationServerDiscoveryException(
             message = "metadata endpoint unavailable",
-            serverErrorCode = "temporarily_unavailable",
-            serverErrorDescription = "retry later"
+            issuerErrorCode = "temporarily_unavailable",
+            issuerErrorDescription = "retry later"
         )
 
         assertEquals("VCI-001", exception.code)
-        assertEquals("temporarily_unavailable", exception.serverErrorCode)
-        assertEquals("retry later", exception.serverErrorDescription)
+        assertEquals("temporarily_unavailable", exception.issuerErrorCode)
+        assertEquals("retry later", exception.issuerErrorDescription)
         assertEquals(
             "Failed to discover authorization server : metadata endpoint unavailable",
             exception.message
@@ -76,8 +92,8 @@ class VCIClientExceptionTest {
         val exception = NetworkRequestFailedException("connection reset")
 
         assertEquals("VCI-006", exception.code)
-        assertNull(exception.serverErrorCode)
-        assertNull(exception.serverErrorDescription)
+        assertNull(exception.issuerErrorCode)
+        assertNull(exception.issuerErrorDescription)
         assertEquals(
             "Network request failed, details - connection reset",
             exception.message
