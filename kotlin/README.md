@@ -3,6 +3,42 @@
 The **Inji VCI Client** is a Kotlin-based library built to simplify credential issuance via [OpenID for Verifiable Credential Issuance (OID4VCI)](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) protocol.
 It supports **Issuer Initiated (Credential Offer)** and **Wallet Initiated (Trusted Issuer)** flows, with secure proof handling, PKCE support, and custom error handling.
 
+---
+
+## Specifications supported
+
+The implementation follows
+- OpenID for Verifiable Credential Issuance 1.0
+- OpenID for Verifiable Credential Issuance draft 13 compatibility for issuers that still expose the older metadata and request/response format
+
+## Features
+
+- Request credentials from OID4VCI-compliant credential issuers
+- Supports both:
+  - Issuer Initiated Flow (Credential Offer Flow).
+  - Wallet Initiated Flow (Trusted Issuer Flow).
+- Authorization server discovery for both flows
+- PKCE-compliant OAuth 2.0 Authorization Code flow (RFC 7636)
+  - PKCE session is managed internally by the library
+- Well-defined **exception handling** with `VCI-XXX` error codes (see more on [this](#-error-handling))
+- Support for multiple Credential formats:
+  - `ldp_vc`
+  - `mso_mdoc`
+  - `vc+sd-jwt` / `dc+sd-jwt`
+  - `jwt_vc_json`
+
+[//]: # (The reference for PDI is intentionally pointing to the common doc folder in the root of the repository, as the PDI support and its documentation are common for both the Kotlin and Swift libraries.)
+- Presentation During Issuance (PDI) support for both download flows (For more details on PDI support, please refer to the [Presentation During Issuance documentation](../doc/presentation-during-issuance-support.md))
+
+> Consumer of this library is responsible for processing and rendering the credential after it is downloaded.
+
+## Library implementations available in:
+This library is officially supported and available in both Kotlin and Swift, ensuring seamless integration across Android and iOS platforms. The references for both implementations are provided below:
+
+* [Kotlin](.)
+* [Swift](https://github.com/inji/inji-vci-client-ios-swift)
+
+---
 
 ## 📦 Installation
 
@@ -522,6 +558,26 @@ Mock-based tests are available covering:
 - **Gradle:** 8.0+
 - **AGP (Android Gradle Plugin):** 8.0+
 
-Architecture decisions are noted as ADRs [here](../doc/adr).
+## Documentation
+
+- Architecture decisions are documented in the [INJI VCI Client ADR directory](../doc/adr).
+- Documentation of the features are available in the [INJI VCI Client docs directory](../doc).
+
+**Note: The iOS (Swift) library is available in the [INJI VCI Client iOS repository](https://github.com/inji/inji-vci-client-ios-swift).**
+
+---
+
+## Example App
+
+A complete sample app demonstrating credential issuance flows, proof JWT signing, and error handling with `VCIClient` is available here:
+
+[Example Android App](./example)
+
+- Shows both **Credential Offer** and **Trusted Issuer** flows
+- Includes best practices for callbacks and UI integration
+
+> Use the example app to quickly get started and see the library in action.
+
+---
 </content>
 </invoke>
