@@ -6,27 +6,41 @@ import org.junit.Test
 class DPoPAlgorithmTest {
 
     @Test
-    fun `defaults to ES256 when list is null`() {
+    fun `defaults to ES256 when list is null or empty`() {
         assertEquals(DPoPAlgorithm.ES256, DPoPAlgorithm.select(null))
-    }
-
-    @Test
-    fun `defaults to ES256 when list is empty`() {
         assertEquals(DPoPAlgorithm.ES256, DPoPAlgorithm.select(emptyList()))
     }
 
     @Test
-    fun `prefers ES256 when multiple supported algorithms are advertised`() {
-        assertEquals(DPoPAlgorithm.ES256, DPoPAlgorithm.select(listOf("ES512", "ES384", "ES256")))
+    fun `prefers EdDSA when multiple supported algorithms are advertised`() {
+        assertEquals(
+            DPoPAlgorithm.EDDSA,
+            DPoPAlgorithm.select(listOf("RS256", "ES256", "ES256K", "EdDSA"))
+        )
     }
 
     @Test
-    fun `selects the only supported elliptic curve algorithm advertised`() {
-        assertEquals(DPoPAlgorithm.ES384, DPoPAlgorithm.select(listOf("RS256", "ES384")))
+    fun `honours preference order ES256K over ES256`() {
+        assertEquals(DPoPAlgorithm.ES256K, DPoPAlgorithm.select(listOf("ES512", "ES256K", "ES256")))
+    }
+
+    @Test
+    fun `selects RSA when it is the only supported algorithm`() {
+        assertEquals(DPoPAlgorithm.RS256, DPoPAlgorithm.select(listOf("RS256", "PS512")))
     }
 
     @Test
     fun `falls back to ES256 when only unsupported algorithms are advertised`() {
-        assertEquals(DPoPAlgorithm.ES256, DPoPAlgorithm.select(listOf("RS256", "PS256")))
+        assertEquals(DPoPAlgorithm.ES256, DPoPAlgorithm.select(listOf("PS256", "HS256")))
+    }
+
+    @Test
+    fun `every supported algorithm generates a key and signer`() {
+        DPoPAlgorithm.values().forEach { algorithm ->
+            val key = algorithm.generateKey()
+            assertEquals(false, key.toPublicJWK().isPrivate)
+            // signer construction must not throw for the generated key
+            algorithm.signer(key)
+        }
     }
 }

@@ -1,7 +1,13 @@
 package io.mosip.vciclient.dpop
 
+import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jose.crypto.ECDSAVerifier
+import com.nimbusds.jose.crypto.Ed25519Verifier
+import com.nimbusds.jose.crypto.RSASSAVerifier
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.ECKey
+import com.nimbusds.jose.jwk.OctetKeyPair
+import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.util.Base64URL
 import com.nimbusds.jwt.SignedJWT
 import org.junit.Assert.assertEquals
@@ -114,6 +120,26 @@ class DPoPManagerTest {
         val first = SignedJWT.parse(manager.generateTokenProof()).jwtClaimsSet.getStringClaim("jti")
         val second = SignedJWT.parse(manager.generateTokenProof()).jwtClaimsSet.getStringClaim("jti")
         assertFalse(first == second)
+    }
+
+    @Test
+    fun `produces a verifiable proof for every supported algorithm`() {
+        listOf("EdDSA", "ES256K", "ES256", "ES384", "ES512", "RS256").forEach { alg ->
+            val jwt = SignedJWT.parse(initializedManager(algorithms = listOf(alg)).generateTokenProof())
+            assertEquals(alg, jwt.header.algorithm.name)
+            val jwk = jwt.header.jwk
+            assertFalse("Public JWK must not contain the private key for $alg", jwk.isPrivate)
+
+            val verifier: JWSVerifier = when (jwk) {
+                is OctetKeyPair -> Ed25519Verifier(jwk)
+                is RSAKey -> RSASSAVerifier(jwk)
+                is ECKey -> ECDSAVerifier(jwk).apply {
+                    jcaContext.provider = BouncyCastleProviderSingleton.getInstance()
+                }
+                else -> throw IllegalStateException("Unexpected JWK type for $alg")
+            }
+            assertTrue("Proof for $alg must verify", jwt.verify(verifier))
+        }
     }
 
     @Test
