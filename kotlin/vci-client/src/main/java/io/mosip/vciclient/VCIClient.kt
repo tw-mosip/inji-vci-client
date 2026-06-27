@@ -10,6 +10,7 @@ import io.mosip.vciclient.constants.TokenResponseCallback
 import io.mosip.vciclient.constants.TxCodeCallback
 import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.credentialOffer.CredentialOfferFlowHandler
+import io.mosip.vciclient.dpop.DPoPManager
 import io.mosip.vciclient.exception.VCIClientException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
 import io.mosip.vciclient.trustedIssuer.TrustedIssuerFlowHandler
@@ -19,6 +20,20 @@ class VCIClient(val traceabilityId: String) {
 
     private val logTag = Util.getLogTag(javaClass.simpleName, traceabilityId)
     private val logger = Logger.getLogger(logTag)
+    private val dpopManager = DPoPManager()
+
+    /**
+     * Generates a fresh token-endpoint DPoP proof bound to the supplied nonce, used by the wallet
+     * to retry the token POST after an authorization server `use_dpop_nonce` challenge. Valid only
+     * during an active flow; the ephemeral key from that flow signs the proof.
+     */
+    fun generateTokenDPoPProof(dpopNonce: String): String {
+        try {
+            return dpopManager.generateTokenProof(dpopNonce)
+        } catch (e: IllegalStateException) {
+            throw VCIClientException("VCI-011", "DPoP proof cannot be generated: ${e.message}", cause = e)
+        }
+    }
 
     suspend fun getIssuerMetadata(credentialIssuer: String): Map<String, Any> {
         try {
@@ -68,6 +83,7 @@ class VCIClient(val traceabilityId: String) {
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
     ): CredentialResponse {
         try {
+            dpopManager.reset()
             return TrustedIssuerFlowHandler().downloadCredentials(
                 credentialIssuer = credentialIssuer,
                 credentialConfigurationId = credentialConfigurationId,
@@ -76,6 +92,7 @@ class VCIClient(val traceabilityId: String) {
                 authorizationMethods = authorizations,
                 getProofs = getProofs,
                 downloadTimeoutInMillis = downloadTimeoutInMillis,
+                dpopManager = dpopManager,
             )
         } catch (e: VCIClientException) {
             logger.severe("Downloading credential failed due to ${e.message}")
@@ -103,6 +120,7 @@ class VCIClient(val traceabilityId: String) {
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS
     ): CredentialResponse {
         try {
+            dpopManager.reset()
             return CredentialOfferFlowHandler().downloadCredentials(
                 credentialOffer = credentialOffer,
                 clientMetadata = clientMetadata,
@@ -111,7 +129,8 @@ class VCIClient(val traceabilityId: String) {
                 getTokenResponse = getTokenResponse,
                 getProofs = getProofs,
                 onCheckIssuerTrust = onCheckIssuerTrust,
-                downloadTimeoutInMillis = downloadTimeoutInMillis
+                downloadTimeoutInMillis = downloadTimeoutInMillis,
+                dpopManager = dpopManager
             )
         } catch (e: VCIClientException) {
             logger.severe("Downloading credential failed due to ${e.message}")

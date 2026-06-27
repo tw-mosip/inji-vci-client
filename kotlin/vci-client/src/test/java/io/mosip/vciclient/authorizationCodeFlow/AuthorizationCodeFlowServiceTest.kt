@@ -72,11 +72,7 @@ class AuthorizationCodeFlowServiceTest {
         every { anyConstructed<PKCESessionManager>().createSession() } returns pkceSession
         every {
             anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                any(), any(), any(), any(), any(), any(), any()
             )
         } returns mockCredentialResponse
 
@@ -88,6 +84,7 @@ class AuthorizationCodeFlowServiceTest {
         } returns mockk<AuthorizationServerMetadata> {
             every { authorizationEndpoint } returns "https://auth.example.com"
             every { tokenEndpoint } returns "https://token.example.com"
+            every { dpopSigningAlgValuesSupported } returns null
             every { interactiveAuthorizationEndpoint } returns null
         }
 
@@ -106,7 +103,7 @@ class AuthorizationCodeFlowServiceTest {
         } returns "https://auth.example.com/authorize"
 
         coEvery {
-            anyConstructed<TokenService>().getAccessToken(any(), any(), any(), any(), any(), any())
+            anyConstructed<TokenService>().getAccessToken(any(), any(), any(), any(), any(), any(), any())
         } returns TokenResponse("mockAccessToken", "jwt", expiresIn = 3600, cNonce = "mockCNonce")
 
         every {
@@ -115,10 +112,7 @@ class AuthorizationCodeFlowServiceTest {
 
         every {
             anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
-                any(),
-                any(),
-                any(),
-                any()
+                any(), any(), any(), any(), any(), any(), any()
             )
         } returns mockCredentialResponse
 
@@ -161,14 +155,7 @@ class AuthorizationCodeFlowServiceTest {
     fun `should throw when token service fails`() {
         runBlocking {
             coEvery {
-                anyConstructed<TokenService>().getAccessToken(
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                    any()
-                )
+                anyConstructed<TokenService>().getAccessToken(any(), any(), any(), any(), any(), any(), any())
             } throws Exception("Token service failure")
 
             val downloadFailureException = assertThrows<DownloadFailedException> {
@@ -200,6 +187,7 @@ class AuthorizationCodeFlowServiceTest {
             } returns mockk<AuthorizationServerMetadata> {
                 every { authorizationEndpoint } returns "https://auth.example.com"
                 every { tokenEndpoint } returns "https://token.example.com"
+                every { dpopSigningAlgValuesSupported } returns null
                 every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
             }
 
@@ -262,6 +250,7 @@ class AuthorizationCodeFlowServiceTest {
         } returns mockk {
             every { authorizationEndpoint } returns "https://auth.example.com"
             every { tokenEndpoint } returns null
+            every { dpopSigningAlgValuesSupported } returns null
             every { interactiveAuthorizationEndpoint } returns null
         }
 
@@ -290,6 +279,7 @@ class AuthorizationCodeFlowServiceTest {
             every { authorizationEndpoint } returns "https://auth.example.com"
             every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
             every { tokenEndpoint } returns "https://token.example.com"
+            every { dpopSigningAlgValuesSupported } returns null
         }
 
         val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
@@ -364,7 +354,7 @@ class AuthorizationCodeFlowServiceTest {
     fun `should throw when credential request returns null`() = runBlocking {
         every {
             anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
-                any(), any(), any(), any(), any()
+                any(), any(), any(), any(), any(), any(), any()
             )
         } returns null
 
@@ -419,6 +409,7 @@ class AuthorizationCodeFlowServiceTest {
         } returns mockk {
             every { authorizationEndpoint } returns "https://auth.example.com"
             every { tokenEndpoint } returns "https://token.example.com"
+            every { dpopSigningAlgValuesSupported } returns null
             every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
         }
 
@@ -454,6 +445,7 @@ class AuthorizationCodeFlowServiceTest {
         } returns mockk {
             every { authorizationEndpoint } returns "https://auth.example.com"
             every { tokenEndpoint } returns "https://token.example.com"
+            every { dpopSigningAlgValuesSupported } returns null
             every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
         }
 
@@ -495,6 +487,7 @@ class AuthorizationCodeFlowServiceTest {
         } returns mockk {
             every { authorizationEndpoint } returns "https://auth.example.com"
             every { tokenEndpoint } returns "https://token.example.com"
+            every { dpopSigningAlgValuesSupported } returns null
             every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
         }
 
@@ -535,6 +528,7 @@ class AuthorizationCodeFlowServiceTest {
         } returns mockk {
             every { authorizationEndpoint } returns "https://auth.example.com"
             every { tokenEndpoint } returns "https://token.example.com"
+            every { dpopSigningAlgValuesSupported } returns null
             every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
         }
 
@@ -567,11 +561,7 @@ class AuthorizationCodeFlowServiceTest {
     fun `should wrap credential executor client exception details`() = runBlocking {
         every {
             anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                any(), any(), any(), any(), any(), any(), any()
             )
         } throws InvalidDataProvidedException(
             message = "proof missing",
@@ -605,11 +595,7 @@ class AuthorizationCodeFlowServiceTest {
     fun `should wrap unexpected credential executor failures`() = runBlocking {
         every {
             anyConstructed<CredentialRequestExecutor>().requestCredentialDraft13(
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                any(), any(), any(), any(), any(), any(), any()
             )
         } throws RuntimeException("credential request crashed")
 

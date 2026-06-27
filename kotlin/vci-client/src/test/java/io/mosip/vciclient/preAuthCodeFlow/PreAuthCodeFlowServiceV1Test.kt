@@ -65,7 +65,8 @@ class PreAuthCodeFlowServiceV1Test {
                 getTokenResponse = any(),
                 tokenEndpoint = "https://auth.example.com/token",
                 preAuthCode = "pre-auth-code",
-                txCode = null
+                txCode = null,
+                dpopManager = any()
             )
         } returns TokenResponse("access-token", "Bearer")
         coEvery { nonceService.fetchNonce(issuerMetadata, 12_000) } returns "nonce-123"
@@ -75,7 +76,9 @@ class PreAuthCodeFlowServiceV1Test {
                 credentialConfigurationId = "UniversityDegreeCredential",
                 proofs = any(),
                 accessToken = "access-token",
-                downloadTimeoutInMillis = 12_000
+                downloadTimeoutInMillis = 12_000,
+                tokenType = any(),
+                dpopManager = any()
             )
         } returns expectedResponse
 
@@ -103,7 +106,7 @@ class PreAuthCodeFlowServiceV1Test {
             issuer = "https://auth.example.com",
             tokenEndpoint = "https://auth.example.com/token"
         )
-        coEvery { tokenService.getAccessToken(any(), any(), any(), any()) } returns TokenResponse("access-token", "Bearer")
+        coEvery { tokenService.getAccessToken(getTokenResponse = any(), tokenEndpoint = any(), preAuthCode = any(), txCode = any(), dpopManager = any()) } returns TokenResponse("access-token", "Bearer")
         coEvery { nonceService.fetchNonce(issuerMetadata, any()) } returns "nonce-123"
 
         val exception = assertThrows(DownloadFailedException::class.java) {

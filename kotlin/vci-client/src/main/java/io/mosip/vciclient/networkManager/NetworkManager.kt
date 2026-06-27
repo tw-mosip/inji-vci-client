@@ -46,6 +46,8 @@ object NetworkManager {
 
                     throw NetworkRequestFailedException(
                         message = "HTTP ${response.code}",
+                        httpStatusCode = response.code,
+                        headers = response.headers,
                         issuerErrorCode = issuerErrorCode,
                         issuerErrorDescription = issuerErrorDescription
                     )

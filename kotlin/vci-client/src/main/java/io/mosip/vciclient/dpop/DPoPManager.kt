@@ -1,0 +1,107 @@
+package io.mosip.vciclient.dpop
+
+import com.nimbusds.jose.JOSEObjectType
+import com.nimbusds.jose.JWSHeader
+import com.nimbusds.jose.crypto.ECDSASigner
+import com.nimbusds.jose.jwk.ECKey
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator
+import com.nimbusds.jose.util.Base64URL
+import com.nimbusds.jwt.JWTClaimsSet
+import com.nimbusds.jwt.SignedJWT
+import java.net.URI
+import java.security.MessageDigest
+import java.util.Date
+import java.util.UUID
+
+/**
+ * Owns the DPoP mechanism for a single issuance flow as described in the DPoP ADR (RFC 9449).
+ *
+ * A fresh ephemeral EC key pair is generated in memory for the flow and reused to sign every
+ * proof - the `dpop_jkt` in the authorization URL, the token-endpoint proof, and the
+ * credential-endpoint proof. The key never leaves the library and is never persisted.
+ */
+class DPoPManager {
+    private class Session(
+        val key: ECKey,
+        val algorithm: DPoPAlgorithm,
+        val tokenEndpoint: String,
+    )
+
+    private var session: Session? = null
+
+    val isInitialized: Boolean
+        get() = session != null
+
+    fun initialize(tokenEndpoint: String, authorizationServerSupportedAlgorithms: List<String>?) {
+        if (session != null) return
+        val algorithm = DPoPAlgorithm.select(authorizationServerSupportedAlgorithms)
+        val key = ECKeyGenerator(algorithm.curve)
+            .keyID(UUID.randomUUID().toString())
+            .generate()
+        session = Session(key, algorithm, normalizeHtu(tokenEndpoint))
+    }
+
+    fun reset() {
+        session = null
+    }
+
+    fun jwkThumbprint(): String =
+        requireSession().key.toPublicJWK().computeThumbprint().toString()
+
+    fun generateTokenProof(nonce: String? = null): String {
+        val activeSession = requireSession()
+        return buildProof(activeSession, activeSession.tokenEndpoint, nonce, accessToken = null)
+    }
+
+    fun generateCredentialProof(
+        credentialEndpoint: String,
+        accessToken: String,
+        nonce: String? = null,
+    ): String {
+        val activeSession = requireSession()
+        return buildProof(activeSession, normalizeHtu(credentialEndpoint), nonce, accessToken)
+    }
+
+    private fun buildProof(
+        activeSession: Session,
+        htu: String,
+        nonce: String?,
+        accessToken: String?,
+    ): String {
+        val issuedAt = Date()
+        val claims = JWTClaimsSet.Builder()
+            .jwtID(UUID.randomUUID().toString())
+            .claim("htm", DPoPConstants.HTTP_METHOD_POST)
+            .claim("htu", htu)
+            .issueTime(issuedAt)
+            .expirationTime(Date(issuedAt.time + DPoPConstants.PROOF_LIFETIME_SECONDS * 1000))
+            .apply {
+                if (nonce != null) claim("nonce", nonce)
+                if (accessToken != null) claim("ath", accessTokenHash(accessToken))
+            }
+            .build()
+
+        val header = JWSHeader.Builder(activeSession.algorithm.jwsAlgorithm)
+            .type(JOSEObjectType(DPoPConstants.DPOP_JWT_TYPE))
+            .jwk(activeSession.key.toPublicJWK())
+            .build()
+
+        return SignedJWT(header, claims)
+            .apply { sign(ECDSASigner(activeSession.key)) }
+            .serialize()
+    }
+
+    private fun accessTokenHash(accessToken: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(accessToken.toByteArray(Charsets.US_ASCII))
+        return Base64URL.encode(digest).toString()
+    }
+
+    private fun requireSession(): Session = session
+        ?: throw IllegalStateException("DPoP session is not initialized for the current flow")
+
+    private fun normalizeHtu(endpoint: String): String {
+        val uri = URI(endpoint)
+        return URI(uri.scheme, uri.authority, uri.path, null, null).toString()
+    }
+}

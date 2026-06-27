@@ -2,6 +2,7 @@ package io.mosip.vciclient.credential.request
 
 import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.proof.CredentialRequestProofs
+import io.mosip.vciclient.dpop.DPoPManager
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.NetworkRequestFailedException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
@@ -176,5 +177,59 @@ class CredentialRequestExecutorTest {
         assertTrue(ex.message.contains("HTTP 400"))
         assertTrue(ex.issuerErrorCode == "invalid_proof")
         assertTrue(ex.issuerErrorDescription == "proof is missing")
+    }
+
+    @Test
+    fun `should send dpop authorization and proof when token type is DPoP`() {
+        mockWebServer.enqueue(
+            MockResponse().setBody("""{"credential":"vc"}""").setResponseCode(200)
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON)
+        )
+        val dpopManager = DPoPManager().apply { initialize("https://as/token", listOf("ES256")) }
+
+        CredentialRequestExecutor().requestCredentialDraft13(
+            issuerMetadata = resolvedMeta,
+            credentialConfigurationId = "SampleCredential",
+            proof = mockProof,
+            accessToken = accessToken,
+            tokenType = "DPoP",
+            dpopManager = dpopManager
+        )
+
+        val recorded = mockWebServer.takeRequest()
+        assertEquals("DPoP $accessToken", recorded.getHeader("Authorization"))
+        assertNotNull(recorded.getHeader("DPoP"))
+    }
+
+    @Test
+    fun `should retry credential request with nonce on use_dpop_nonce challenge`() {
+        mockWebServer.enqueue(
+            MockResponse().setResponseCode(401)
+                .addHeader("WWW-Authenticate", """DPoP error="use_dpop_nonce"""")
+                .addHeader("DPoP-Nonce", "rs-nonce")
+        )
+        mockWebServer.enqueue(
+            MockResponse().setBody("""{"credential":"vc"}""").setResponseCode(200)
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON)
+        )
+        val dpopManager = DPoPManager().apply { initialize("https://as/token", listOf("ES256")) }
+
+        val response = CredentialRequestExecutor().requestCredentialDraft13(
+            issuerMetadata = resolvedMeta,
+            credentialConfigurationId = "SampleCredential",
+            proof = mockProof,
+            accessToken = accessToken,
+            tokenType = "DPoP",
+            dpopManager = dpopManager
+        )
+
+        assertNotNull(response)
+        mockWebServer.takeRequest()
+        val retry = mockWebServer.takeRequest()
+        val retryProof = retry.getHeader("DPoP")
+        assertEquals(
+            "rs-nonce",
+            com.nimbusds.jwt.SignedJWT.parse(retryProof).jwtClaimsSet.getStringClaim("nonce")
+        )
     }
 }

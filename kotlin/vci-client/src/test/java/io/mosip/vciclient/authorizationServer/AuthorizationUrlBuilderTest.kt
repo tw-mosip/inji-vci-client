@@ -29,4 +29,35 @@ class AuthorizationUrlBuilderTest {
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun `build should append dpop_jkt when provided`() {
+        val actual = AuthorizationUrlBuilder.build(
+            baseUrl = "https://example.com/auth",
+            clientId = "myClientId",
+            redirectUri = "https://myapp.com/callback",
+            scope = "openid",
+            state = "abc123",
+            codeChallenge = "xyzChallenge",
+            nonce = "randomNonce",
+            dpopJkt = "thumb-print-value"
+        )
+
+        assertEquals(true, actual.endsWith("&dpop_jkt=thumb-print-value"))
+    }
+
+    @Test
+    fun `build should omit dpop_jkt when null`() {
+        val actual = AuthorizationUrlBuilder.build(
+            baseUrl = "https://example.com/auth",
+            clientId = "myClientId",
+            redirectUri = "https://myapp.com/callback",
+            scope = "openid",
+            state = "abc123",
+            codeChallenge = "xyzChallenge",
+            nonce = "randomNonce"
+        )
+
+        assertEquals(false, actual.contains("dpop_jkt"))
+    }
 }

@@ -6,10 +6,11 @@ import io.mosip.vciclient.credential.response.CredentialResponse
 import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InvalidPublicKeyException
+import io.mosip.vciclient.dpop.DPoPCredentialRequestSender
+import io.mosip.vciclient.dpop.DPoPManager
 import io.mosip.vciclient.exception.NetworkRequestFailedException
 import io.mosip.vciclient.exception.NetworkRequestTimeoutException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadata
-import io.mosip.vciclient.networkManager.NetworkManager
 import io.mosip.vciclient.proof.Proof
 import io.mosip.vciclient.proof.CredentialRequestProofs
 import java.util.logging.Logger
@@ -17,6 +18,7 @@ import java.util.logging.Logger
 class CredentialRequestExecutor(
     private val factoryDraft13: CredentialRequestFactoryDraft13 = CredentialRequestFactoryDraft13(),
     private val factory: CredentialRequestFactory = CredentialRequestFactory(),
+    private val dpopCredentialRequestSender: DPoPCredentialRequestSender = DPoPCredentialRequestSender(),
 ) {
 
     private val logTag = Util.getLogTag(javaClass.simpleName, "")
@@ -31,6 +33,8 @@ class CredentialRequestExecutor(
         proofs: CredentialRequestProofs,
         accessToken: String,
         downloadTimeoutInMillis: Long? = 10000,
+        tokenType: String? = null,
+        dpopManager: DPoPManager = DPoPManager(),
     ): CredentialResponse? {
         val timeout = downloadTimeoutInMillis ?: 10000
 
@@ -42,8 +46,12 @@ class CredentialRequestExecutor(
                 proofs
             )
 
-            val networkResponse = NetworkManager.sendRequest(
-                request = request,
+            val networkResponse = dpopCredentialRequestSender.send(
+                baseRequest = request,
+                accessToken = accessToken,
+                credentialEndpoint = issuerMetadata.credentialEndpoint,
+                tokenType = tokenType,
+                dpopManager = dpopManager,
                 timeoutMillis = timeout
             )
 
@@ -110,6 +118,8 @@ class CredentialRequestExecutor(
         proof: Proof,
         accessToken: String,
         downloadTimeoutInMillis: Long? = 10000,
+        tokenType: String? = null,
+        dpopManager: DPoPManager = DPoPManager(),
     ): CredentialResponseDraft13? {
 
         val timeout = downloadTimeoutInMillis ?: 10000
@@ -123,8 +133,12 @@ class CredentialRequestExecutor(
                 proof
             )
 
-            val networkResponse = NetworkManager.sendRequest(
-                request = request,
+            val networkResponse = dpopCredentialRequestSender.send(
+                baseRequest = request,
+                accessToken = accessToken,
+                credentialEndpoint = issuerMetadata.credentialEndpoint,
+                tokenType = tokenType,
+                dpopManager = dpopManager,
                 timeoutMillis = timeout
             )
 
