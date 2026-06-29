@@ -309,4 +309,20 @@ class VCIClientTest {
         }
         assertEquals("VCI-011", exception.code)
     }
+
+    @Test
+    fun `generateTokenDPoPProof returns a valid dpop proof when a flow is active`() {
+        val client = VCIClient("trace-id")
+        val dpopManagerField = VCIClient::class.java.getDeclaredField("dpopManager")
+        dpopManagerField.isAccessible = true
+        val dpopManager = dpopManagerField.get(client) as io.mosip.vciclient.dpop.DPoPManager
+        dpopManager.initialize("https://as.example.com/token", listOf("ES256"))
+
+        val proof = client.generateTokenDPoPProof("test-nonce")
+
+        val jwt = com.nimbusds.jwt.SignedJWT.parse(proof)
+        assertEquals("dpop+jwt", jwt.header.type.toString())
+        assertEquals("test-nonce", jwt.jwtClaimsSet.getStringClaim("nonce"))
+        assertEquals("POST", jwt.jwtClaimsSet.getStringClaim("htm"))
+    }
 }

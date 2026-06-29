@@ -243,7 +243,7 @@ class CredentialRequestExecutor(
                     )
                 }
 
-                !challenge.isDpop -> sendRequest(withBearer(baseRequest, accessToken), timeoutMillis)
+                !challenge.isDpop && challenge.isBearer -> sendRequest(withBearer(baseRequest, accessToken), timeoutMillis)
 
                 else -> throw failure
             }

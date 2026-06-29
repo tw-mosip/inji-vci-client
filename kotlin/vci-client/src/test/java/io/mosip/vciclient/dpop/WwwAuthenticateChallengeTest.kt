@@ -12,6 +12,7 @@ class WwwAuthenticateChallengeTest {
     fun `parses a dpop use_dpop_nonce challenge`() {
         val challenge = WwwAuthenticateChallenge.parse("""DPoP error="use_dpop_nonce", error_description="nonce required"""")
         assertTrue(challenge.isDpop)
+        assertFalse(challenge.isBearer)
         assertEquals("use_dpop_nonce", challenge.error)
     }
 
@@ -19,6 +20,7 @@ class WwwAuthenticateChallengeTest {
     fun `parses a bearer only challenge`() {
         val challenge = WwwAuthenticateChallenge.parse("""Bearer realm="issuer", error="invalid_token"""")
         assertFalse(challenge.isDpop)
+        assertTrue(challenge.isBearer)
         assertEquals("invalid_token", challenge.error)
     }
 
@@ -26,6 +28,7 @@ class WwwAuthenticateChallengeTest {
     fun `detects dpop when present among multiple schemes`() {
         val challenge = WwwAuthenticateChallenge.parse("""Bearer realm="r", DPoP algs="ES256"""")
         assertTrue(challenge.isDpop)
+        assertTrue(challenge.isBearer)
     }
 
     @Test
@@ -33,7 +36,15 @@ class WwwAuthenticateChallengeTest {
         listOf(null, "", "   ").forEach {
             val challenge = WwwAuthenticateChallenge.parse(it)
             assertFalse(challenge.isDpop)
+            assertFalse(challenge.isBearer)
             assertNull(challenge.error)
         }
+    }
+
+    @Test
+    fun `isBearer is false when header contains unrecognised scheme only`() {
+        val challenge = WwwAuthenticateChallenge.parse("""NTLM realm="corp"""")
+        assertFalse(challenge.isDpop)
+        assertFalse(challenge.isBearer)
     }
 }
