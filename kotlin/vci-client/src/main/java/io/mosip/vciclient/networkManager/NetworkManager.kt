@@ -33,13 +33,6 @@ object NetworkManager {
         timeoutMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
     ): NetworkResponse {
 
-        val url = request.url.toString()
-        if (!url.startsWith("https://", ignoreCase = true)) {
-            throw NetworkRequestFailedException(
-                message = "Plaintext HTTP endpoints are not allowed; use HTTPS for: $url"
-            )
-        }
-
         try {
             val client = getClient(timeoutMillis)
 

@@ -1,7 +1,9 @@
 package io.mosip.vciclient.dpop
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.test.assertFailsWith
 
 class DPoPAlgorithmTest {
 
@@ -50,8 +52,11 @@ class DPoPAlgorithmTest {
     }
 
     @Test
-    fun `falls back to ES256 when only unsupported algorithms are advertised`() {
-        assertEquals(DPoPAlgorithm.ES256, DPoPAlgorithm.select(listOf("PS256", "HS256")))
+    fun `throws when AS advertises only unsupported algorithms`() {
+        val exception = assertFailsWith<IllegalArgumentException> {
+            DPoPAlgorithm.select(listOf("PS256", "HS256"))
+        }
+        assertTrue(exception.message!!.contains("No supported DPoP algorithm found"))
     }
 
     @Test
