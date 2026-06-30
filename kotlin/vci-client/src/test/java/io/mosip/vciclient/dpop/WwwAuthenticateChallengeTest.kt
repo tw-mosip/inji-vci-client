@@ -47,4 +47,14 @@ class WwwAuthenticateChallengeTest {
         assertFalse(challenge.isDpop)
         assertFalse(challenge.isBearer)
     }
+
+    @Test
+    fun `attributes the error to the dpop challenge when both schemes carry an error`() {
+        val challenge = WwwAuthenticateChallenge.parse(
+            """Bearer error="invalid_token", DPoP error="use_dpop_nonce""""
+        )
+        assertTrue(challenge.isDpop)
+        assertTrue(challenge.isBearer)
+        assertEquals("use_dpop_nonce", challenge.error)
+    }
 }

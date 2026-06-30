@@ -93,7 +93,15 @@ class DPoPManager {
         ?: throw IllegalStateException("DPoP session is not initialized for the current flow")
 
     private fun normalizeHtu(endpoint: String): String {
-        val uri = URI(endpoint)
-        return URI(uri.scheme, uri.authority, uri.path, null, null).toString()
+        val uri = URI(endpoint).normalize()
+        val scheme = uri.scheme?.lowercase()
+        val host = uri.host?.lowercase()
+        val port = when {
+            uri.port == -1 -> -1
+            scheme == "https" && uri.port == 443 -> -1
+            scheme == "http" && uri.port == 80 -> -1
+            else -> uri.port
+        }
+        return URI(scheme, null, host, port, uri.path.ifEmpty { "/" }, null, null).toString()
     }
 }

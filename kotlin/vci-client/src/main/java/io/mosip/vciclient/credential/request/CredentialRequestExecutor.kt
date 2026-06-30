@@ -208,10 +208,11 @@ class CredentialRequestExecutor(
         dpopManager: DPoPManager,
         timeoutMillis: Long,
     ): NetworkResponse {
-        val useDpop = dpopManager.isInitialized &&
-            tokenType.equals(Constants.DPOP_TOKEN_TYPE, ignoreCase = true)
-
-        if (!useDpop) {
+        val isDpopToken = tokenType.equals(Constants.DPOP_TOKEN_TYPE, ignoreCase = true)
+        if (isDpopToken && !dpopManager.isInitialized) {
+            throw DownloadFailedException("DPoP token_type requires an initialized DPoP session")
+        }
+        if (!isDpopToken) {
             return sendRequest(baseRequest, timeoutMillis)
         }
 
@@ -227,7 +228,7 @@ class CredentialRequestExecutor(
             if (failure.httpStatusCode != HTTP_UNAUTHORIZED) throw failure
 
             val challenge = WwwAuthenticateChallenge.parse(
-                failure.headers?.get(Constants.WWW_AUTHENTICATE_HEADER)
+                failure.headers?.values(Constants.WWW_AUTHENTICATE_HEADER)?.joinToString(", ")
             )
             val nonce = failure.headers?.get(Constants.DPOP_NONCE_HEADER)
 
