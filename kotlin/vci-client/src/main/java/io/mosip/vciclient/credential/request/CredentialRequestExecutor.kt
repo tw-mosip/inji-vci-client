@@ -244,7 +244,15 @@ class CredentialRequestExecutor(
                     )
                 }
 
-                !challenge.isDpop && challenge.isBearer -> sendRequest(withBearer(baseRequest, accessToken), timeoutMillis)
+                !challenge.isDpop && challenge.isBearer -> {
+                    // RFC 9449 §7.2: Only downgrade to Bearer if the AS explicitly
+                    // signals Bearer is acceptable. Log as a security-relevant event.
+                    logger.warning(
+                        "DPoP token downgraded to Bearer: AS does not require DPoP " +
+                        "(WWW-Authenticate: ${failure.headers?.get(Constants.WWW_AUTHENTICATE_HEADER)})"
+                    )
+                    sendRequest(withBearer(baseRequest, accessToken), timeoutMillis)
+                }
 
                 else -> throw failure
             }

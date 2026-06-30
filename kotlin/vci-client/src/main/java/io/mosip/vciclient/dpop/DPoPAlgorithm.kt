@@ -74,7 +74,10 @@ internal enum class DPoPAlgorithm(val algorithmName: String, val jwsAlgorithm: J
         fun select(authorizationServerSupported: List<String>?): DPoPAlgorithm {
             if (authorizationServerSupported.isNullOrEmpty()) return DEFAULT
             return preferenceOrder.firstOrNull { it.algorithmName in authorizationServerSupported }
-                ?: DEFAULT
+                ?: throw IllegalArgumentException(
+                    "No supported DPoP algorithm found. AS supports: $authorizationServerSupported, " +
+                    "client supports: ${preferenceOrder.map { it.algorithmName }}"
+                )
         }
 
         private fun newKeyId(): String = UUID.randomUUID().toString()
