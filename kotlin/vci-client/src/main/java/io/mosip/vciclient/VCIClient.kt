@@ -25,11 +25,6 @@ class VCIClient(val traceabilityId: String) {
     private val dpopManager = DPoPManager()
     private val dpopFlowMutex = Mutex()
 
-    /**
-     * Generates a fresh token-endpoint DPoP proof bound to the supplied nonce, used by the wallet
-     * to retry the token POST after an authorization server `use_dpop_nonce` challenge. Valid only
-     * during an active flow; the ephemeral key from that flow signs the proof.
-     */
     fun generateTokenDPoPProof(dpopNonce: String): String {
         try {
             return dpopManager.generateTokenProof(dpopNonce)

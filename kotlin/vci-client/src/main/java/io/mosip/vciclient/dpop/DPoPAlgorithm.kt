@@ -60,14 +60,6 @@ internal enum class DPoPAlgorithm(val algorithmName: String, val jwsAlgorithm: J
     abstract fun signer(key: JWK): JWSSigner
 
     companion object {
-        /**
-         * Preference order for ephemeral DPoP key selection:
-         *  1. EdDSA  (ed)           – Edwards-curve; smallest signatures, modern
-         *  2. ES256K (eck1)         – ECDSA secp256k1; widely deployed
-         *  3. ES256  (ecr1)         – ECDSA secp256r1 (P-256); default fallback
-         *  4. ES384, ES512          – Other EC r1 variants (P-384, P-521)
-         *  5. RS256  (rsa)          – RSA; last resort, large key/signature size
-         */
         private val preferenceOrder = listOf(EDDSA, ES256K, ES256, ES384, ES512, RS256)
         private val DEFAULT = ES256
 

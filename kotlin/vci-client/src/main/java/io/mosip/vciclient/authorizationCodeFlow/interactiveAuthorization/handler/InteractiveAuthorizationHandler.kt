@@ -35,7 +35,6 @@ class InteractiveAuthorizationHandler {
     ): AuthorizationResponse {
 
         return try {
-            //interaction types supported will be extracted from authmethods once we start supporting redirect-to-web
             val interactionTypesSupported = authorizationMethods
                 .filter { it.type != InteractionType.RedirectToWeb }
                 .map { it.type.value }

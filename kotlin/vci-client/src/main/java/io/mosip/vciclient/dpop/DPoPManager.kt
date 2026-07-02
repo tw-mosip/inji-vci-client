@@ -12,13 +12,6 @@ import java.security.MessageDigest
 import java.util.Date
 import java.util.UUID
 
-/**
- * Owns the DPoP mechanism for a single issuance flow as described in the DPoP ADR (RFC 9449).
- *
- * A fresh ephemeral key pair is generated in memory for the flow and reused to sign every
- * proof - the `dpop_jkt` in the authorization URL, the token-endpoint proof, and the
- * credential-endpoint proof. The key never leaves the library and is never persisted.
- */
 class DPoPManager {
     private class Session(val key: JWK, val algorithm: DPoPAlgorithm, val tokenEndpoint: String)
 
