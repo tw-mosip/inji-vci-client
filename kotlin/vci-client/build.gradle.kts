@@ -53,7 +53,7 @@ dependencies {
     implementation("io.fusionauth:fusionauth-jwt:5.3.2")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.bouncycastle:bcprov-jdk18on:1.77")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.78")
     implementation("com.google.crypto.tink:tink:1.7.0")
 
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
