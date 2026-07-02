@@ -14,8 +14,6 @@ import io.mosip.vciclient.dpop.DPoPManager
 import io.mosip.vciclient.exception.VCIClientException
 import io.mosip.vciclient.issuerMetadata.IssuerMetadataService
 import io.mosip.vciclient.trustedIssuer.TrustedIssuerFlowHandler
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.util.logging.Logger
 
 class VCIClient(val traceabilityId: String) {
@@ -23,8 +21,12 @@ class VCIClient(val traceabilityId: String) {
     private val logTag = Util.getLogTag(javaClass.simpleName, traceabilityId)
     private val logger = Logger.getLogger(logTag)
     private val dpopManager = DPoPManager()
-    private val dpopFlowMutex = Mutex()
 
+    /**
+     * Generates a fresh token-endpoint DPoP proof bound to the supplied nonce, used by the wallet
+     * to retry the token POST after an authorization server `use_dpop_nonce` challenge. Valid only
+     * during an active flow; the ephemeral key from that flow signs the proof.
+     */
     fun generateTokenDPoPProof(dpopNonce: String): String {
         try {
             return dpopManager.generateTokenProof(dpopNonce)
@@ -79,10 +81,11 @@ class VCIClient(val traceabilityId: String) {
         authorizations: List<AuthorizationMethod>,
         getProofs: ProofsCallback,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS,
-    ): CredentialResponse = dpopFlowMutex.withLock {
+    ): CredentialResponse {
+        // Reset any stale state from a previous broken flow before starting fresh.
+        dpopManager.reset()
         try {
-            dpopManager.reset()
-            TrustedIssuerFlowHandler().downloadCredentials(
+            return TrustedIssuerFlowHandler().downloadCredentials(
                 credentialIssuer = credentialIssuer,
                 credentialConfigurationId = credentialConfigurationId,
                 clientMetadata = clientMetadata,
@@ -118,10 +121,11 @@ class VCIClient(val traceabilityId: String) {
         getProofs: ProofsCallback,
         onCheckIssuerTrust: CheckIssuerTrustCallback? = null,
         downloadTimeoutInMillis: Long = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS
-    ): CredentialResponse = dpopFlowMutex.withLock {
+    ): CredentialResponse {
+        // Reset any stale state from a previous broken flow before starting fresh.
+        dpopManager.reset()
         try {
-            dpopManager.reset()
-            CredentialOfferFlowHandler().downloadCredentials(
+            return CredentialOfferFlowHandler().downloadCredentials(
                 credentialOffer = credentialOffer,
                 clientMetadata = clientMetadata,
                 getTxCode = getTxCode,
