@@ -103,4 +103,15 @@ class NetworkManagerTest {
 
         assertTrue(exception.message.isNotBlank())
     }
+
+    @Test
+    fun `should reject plaintext http for non-loopback hosts`() {
+        val request = Request.Builder().url("http://issuer.example.com/credential").build()
+
+        val exception = assertFailsWith<NetworkRequestFailedException> {
+            NetworkManager.sendRequest(request = request)
+        }
+
+        assertTrue(exception.message.contains("Plaintext HTTP endpoints are not allowed"))
+    }
 }
