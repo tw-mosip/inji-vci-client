@@ -198,8 +198,7 @@ class CredentialRequestExecutor(
     /**
      * Sends the credential request, applying DPoP when the token response carried
      * `token_type=DPoP`. A `use_dpop_nonce` challenge is retried once with the server supplied
-     * nonce. Any other 401 challenge propagates the failure: a DPoP-bound token is never
-     * downgraded to a Bearer credential.
+     * nonce; a Bearer-only challenge triggers a best-effort Bearer retry per RFC 9449 section 7.2.
      */
     private fun sendCredentialRequest(
         baseRequest: Request,
@@ -245,7 +244,16 @@ class CredentialRequestExecutor(
                     )
                 }
 
-                // Fail fast: a DPoP-bound token is never silently downgraded to Bearer.
+                !challenge.isDpop && challenge.isBearer -> {
+                    // RFC 9449 §7.2: Only downgrade to Bearer if the AS explicitly
+                    // signals Bearer is acceptable. Log as a security-relevant event.
+                    logger.warning(
+                        "DPoP token downgraded to Bearer: AS does not require DPoP " +
+                        "(WWW-Authenticate: ${failure.headers?.get(Constants.WWW_AUTHENTICATE_HEADER)})"
+                    )
+                    sendRequest(withBearer(baseRequest, accessToken), timeoutMillis)
+                }
+
                 else -> throw failure
             }
         }
@@ -255,6 +263,12 @@ class CredentialRequestExecutor(
         baseRequest.newBuilder()
             .header(Constants.AUTHORIZATION_HEADER, "${Constants.DPOP_TOKEN_TYPE} $accessToken")
             .header(Constants.DPOP_HEADER, proof)
+            .build()
+
+    private fun withBearer(baseRequest: Request, accessToken: String): Request =
+        baseRequest.newBuilder()
+            .header(Constants.AUTHORIZATION_HEADER, "${Constants.BEARER_TOKEN_TYPE} $accessToken")
+            .removeHeader(Constants.DPOP_HEADER)
             .build()
 
 }
