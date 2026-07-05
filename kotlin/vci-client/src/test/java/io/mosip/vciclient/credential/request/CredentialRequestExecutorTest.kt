@@ -234,30 +234,27 @@ class CredentialRequestExecutorTest {
     }
 
     @Test
-    fun `should fall back to bearer when 401 challenge has no dpop scheme`() {
+    fun `should fail fast without downgrading to bearer on a non-dpop 401 challenge`() {
         mockWebServer.enqueue(
             MockResponse().setResponseCode(401)
                 .addHeader("WWW-Authenticate", """Bearer realm="issuer", error="invalid_token"""")
         )
-        mockWebServer.enqueue(
-            MockResponse().setBody("""{"credential":"vc"}""").setResponseCode(200)
-                .addHeader(CONTENT_TYPE, APPLICATION_JSON)
-        )
         val dpopManager = DPoPManager().apply { initialize("https://as/token", listOf("ES256")) }
 
-        val response = CredentialRequestExecutor().requestCredentialDraft13(
-            issuerMetadata = resolvedMeta,
-            credentialConfigurationId = "SampleCredential",
-            proof = mockProof,
-            accessToken = accessToken,
-            tokenType = "DPoP",
-            dpopManager = dpopManager
-        )
+        assertThrows<DownloadFailedException> {
+            CredentialRequestExecutor().requestCredentialDraft13(
+                issuerMetadata = resolvedMeta,
+                credentialConfigurationId = "SampleCredential",
+                proof = mockProof,
+                accessToken = accessToken,
+                tokenType = "DPoP",
+                dpopManager = dpopManager
+            )
+        }
 
-        assertNotNull(response)
-        mockWebServer.takeRequest()
-        val retry = mockWebServer.takeRequest()
-        assertEquals("Bearer $accessToken", retry.getHeader("Authorization"))
-        assertNull(retry.getHeader("DPoP"))
+        // Only the initial DPoP request is sent; there is no Bearer retry.
+        assertEquals(1, mockWebServer.requestCount)
+        val sent = mockWebServer.takeRequest()
+        assertEquals("DPoP $accessToken", sent.getHeader("Authorization"))
     }
 }
