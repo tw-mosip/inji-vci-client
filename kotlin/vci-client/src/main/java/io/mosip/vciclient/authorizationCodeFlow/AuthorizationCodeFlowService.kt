@@ -63,7 +63,8 @@ internal class AuthorizationCodeFlowService(
         ) { token ->
             val nonce = resolveNonce(
                 issuerMetadata = issuerMetadata,
-                timeoutInMillis = downloadTimeOutInMillis
+                timeoutInMillis = downloadTimeOutInMillis,
+                dpopManager = dpopManager
             )
             val proofs = try {
                 getProofs(
@@ -441,10 +442,12 @@ internal class AuthorizationCodeFlowService(
     private suspend fun resolveNonce(
         issuerMetadata: IssuerMetadata,
         timeoutInMillis: Long,
+        dpopManager: DPoPManager,
     ): String? {
         return nonceService.fetchNonce(
             issuerMetadata = issuerMetadata,
-            timeoutInMillis = timeoutInMillis
+            timeoutInMillis = timeoutInMillis,
+            dpopManager = dpopManager
         )
     }
 }

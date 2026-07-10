@@ -85,7 +85,7 @@ class AuthorizationCodeFlowServiceV1Test {
                     dpopManager = any()
                 )
             } returns TokenResponse("access-token", "Bearer")
-            coEvery { nonceService.fetchNonce(issuerMetadata, 15_000) } returns "nonce-123"
+            coEvery { nonceService.fetchNonce(issuerMetadata, 15_000, any()) } returns "nonce-123"
             every {
                 executor.requestCredential(
                     issuerMetadata = issuerMetadata,
@@ -119,7 +119,7 @@ class AuthorizationCodeFlowServiceV1Test {
             coVerify(exactly = 1) {
                 tokenService.getAccessToken(any(), "https://auth.example.com/token", "auth-code", "client-id", "app://callback", "verifier", any())
             }
-            io.mockk.coVerify(exactly = 1) { nonceService.fetchNonce(issuerMetadata, 15_000) }
+            io.mockk.coVerify(exactly = 1) { nonceService.fetchNonce(issuerMetadata, 15_000, any()) }
         }
     }
 
@@ -134,7 +134,7 @@ class AuthorizationCodeFlowServiceV1Test {
         coEvery {
             tokenService.getAccessToken(any(), any(), any(), any(), any(), any(), any())
         } returns TokenResponse("access-token", "Bearer")
-        coEvery { nonceService.fetchNonce(issuerMetadata, any()) } returns "nonce-123"
+        coEvery { nonceService.fetchNonce(issuerMetadata, any(), any()) } returns "nonce-123"
 
         val exception = assertThrows(DownloadFailedException::class.java) {
             runBlocking {

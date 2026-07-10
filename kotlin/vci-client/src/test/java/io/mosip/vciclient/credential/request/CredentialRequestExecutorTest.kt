@@ -234,6 +234,64 @@ class CredentialRequestExecutorTest {
     }
 
     @Test
+    fun `should carry seeded issuer nonce on first request without a retry`() {
+        mockWebServer.enqueue(
+            MockResponse().setBody("""{"credential":"vc"}""").setResponseCode(200)
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON)
+        )
+        val dpopManager = DPoPManager().apply {
+            initialize("https://as/token", listOf("ES256"))
+            updateNonce("nonce-endpoint-nonce")
+        }
+
+        val response = CredentialRequestExecutor().requestCredentialDraft13(
+            issuerMetadata = resolvedMeta,
+            credentialConfigurationId = "SampleCredential",
+            proof = mockProof,
+            accessToken = accessToken,
+            tokenType = "DPoP",
+            dpopManager = dpopManager
+        )
+
+        assertNotNull(response)
+        assertEquals(1, mockWebServer.requestCount)
+        val recorded = mockWebServer.takeRequest()
+        assertEquals(
+            "nonce-endpoint-nonce",
+            com.nimbusds.jwt.SignedJWT.parse(recorded.getHeader("DPoP"))
+                .jwtClaimsSet.getStringClaim("nonce")
+        )
+    }
+
+    @Test
+    fun `should store rotated nonce from a successful response`() {
+        mockWebServer.enqueue(
+            MockResponse().setBody("""{"credential":"vc"}""").setResponseCode(200)
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .addHeader("DPoP-Nonce", "rotated-nonce")
+        )
+        val dpopManager = DPoPManager().apply { initialize("https://as/token", listOf("ES256")) }
+
+        CredentialRequestExecutor().requestCredentialDraft13(
+            issuerMetadata = resolvedMeta,
+            credentialConfigurationId = "SampleCredential",
+            proof = mockProof,
+            accessToken = accessToken,
+            tokenType = "DPoP",
+            dpopManager = dpopManager
+        )
+
+        val nextProof = dpopManager.generateCredentialProof(
+            credentialEndpoint = resolvedMeta.credentialEndpoint,
+            accessToken = accessToken
+        )
+        assertEquals(
+            "rotated-nonce",
+            com.nimbusds.jwt.SignedJWT.parse(nextProof).jwtClaimsSet.getStringClaim("nonce")
+        )
+    }
+
+    @Test
     fun `should fall back to bearer when 401 challenge has no dpop scheme`() {
         mockWebServer.enqueue(
             MockResponse().setResponseCode(401)

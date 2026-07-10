@@ -45,7 +45,7 @@ class PreAuthCodeFlowService(
             offer = offer,
             dpopManager = dpopManager
         ) { token ->
-            val nonce = resolveNonce(issuerMetadata, downloadTimeoutInMillis)
+            val nonce = resolveNonce(issuerMetadata, downloadTimeoutInMillis, dpopManager)
             val proofs = try {
                 getProofs(
                     issuerMetadata.credentialIssuer,
@@ -183,7 +183,8 @@ class PreAuthCodeFlowService(
     private suspend fun resolveNonce(
         issuerMetadata: IssuerMetadata,
         timeoutInMillis: Long,
+        dpopManager: DPoPManager,
     ): String? {
-        return nonceService.fetchNonce(issuerMetadata, timeoutInMillis)
+        return nonceService.fetchNonce(issuerMetadata, timeoutInMillis, dpopManager)
     }
 }

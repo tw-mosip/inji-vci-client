@@ -24,6 +24,8 @@ class DPoPManager {
 
     private var session: Session? = null
 
+    private var issuerNonce: String? = null
+
     val isInitialized: Boolean
         get() = session != null
 
@@ -35,6 +37,11 @@ class DPoPManager {
 
     fun reset() {
         session = null
+        issuerNonce = null
+    }
+
+    fun updateNonce(nonce: String?) {
+        if (!nonce.isNullOrBlank()) issuerNonce = nonce
     }
 
     fun jwkThumbprint(): String =
@@ -51,7 +58,8 @@ class DPoPManager {
         nonce: String? = null,
     ): String {
         val activeSession = requireSession()
-        return buildProof(activeSession, normalizeHtu(credentialEndpoint), nonce, accessToken)
+        updateNonce(nonce)
+        return buildProof(activeSession, normalizeHtu(credentialEndpoint), issuerNonce, accessToken)
     }
 
     private fun buildProof(

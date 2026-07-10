@@ -98,6 +98,76 @@ class DPoPManagerTest {
     }
 
     @Test
+    fun `credential proof uses stored issuer nonce when none is supplied`() {
+        val manager = initializedManager()
+        manager.updateNonce("issuer-nonce")
+
+        val claims = SignedJWT.parse(
+            manager.generateCredentialProof(
+                credentialEndpoint = "https://issuer.example.com/credential",
+                accessToken = "an-access-token"
+            )
+        ).jwtClaimsSet
+
+        assertEquals("issuer-nonce", claims.getStringClaim("nonce"))
+    }
+
+    @Test
+    fun `credential proof supplied nonce overrides and updates the stored nonce`() {
+        val manager = initializedManager()
+        manager.updateNonce("old-nonce")
+
+        val first = SignedJWT.parse(
+            manager.generateCredentialProof(
+                credentialEndpoint = "https://issuer.example.com/credential",
+                accessToken = "an-access-token",
+                nonce = "new-nonce"
+            )
+        ).jwtClaimsSet
+        assertEquals("new-nonce", first.getStringClaim("nonce"))
+
+        val second = SignedJWT.parse(
+            manager.generateCredentialProof(
+                credentialEndpoint = "https://issuer.example.com/credential",
+                accessToken = "an-access-token"
+            )
+        ).jwtClaimsSet
+        assertEquals("new-nonce", second.getStringClaim("nonce"))
+    }
+
+    @Test
+    fun `updateNonce ignores blank values`() {
+        val manager = initializedManager()
+        manager.updateNonce("issuer-nonce")
+        manager.updateNonce(null)
+        manager.updateNonce(" ")
+
+        val claims = SignedJWT.parse(
+            manager.generateCredentialProof(
+                credentialEndpoint = "https://issuer.example.com/credential",
+                accessToken = "an-access-token"
+            )
+        ).jwtClaimsSet
+        assertEquals("issuer-nonce", claims.getStringClaim("nonce"))
+    }
+
+    @Test
+    fun `reset clears the stored issuer nonce`() {
+        val manager = initializedManager()
+        manager.updateNonce("issuer-nonce")
+        manager.reset()
+        manager.initialize("https://as.example.com/token", listOf("ES256"))
+
+        val claims = SignedJWT.parse(
+            manager.generateCredentialProof(
+                credentialEndpoint = "https://issuer.example.com/credential",
+                accessToken = "an-access-token"
+            )
+        ).jwtClaimsSet
+        assertNull(claims.getStringClaim("nonce"))
+    }
+
+    @Test
     fun `htu strips query string and fragment`() {
         val manager = DPoPManager().apply {
             initialize("https://as.example.com/token?foo=bar#frag", listOf("ES256"))

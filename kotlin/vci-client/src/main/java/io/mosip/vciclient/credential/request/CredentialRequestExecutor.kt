@@ -223,7 +223,7 @@ class CredentialRequestExecutor(
         )
 
         return try {
-            sendRequest(dpopRequest, timeoutMillis)
+            sendRequest(dpopRequest, timeoutMillis).persistIssuerNonce(dpopManager)
         } catch (failure: NetworkRequestFailedException) {
             if (failure.httpStatusCode != HTTP_UNAUTHORIZED) throw failure
 
@@ -241,7 +241,7 @@ class CredentialRequestExecutor(
                             dpopManager.generateCredentialProof(credentialEndpoint, accessToken, nonce)
                         ),
                         timeoutMillis
-                    )
+                    ).persistIssuerNonce(dpopManager)
                 }
 
                 !challenge.isDpop && challenge.isBearer -> {
@@ -258,6 +258,9 @@ class CredentialRequestExecutor(
             }
         }
     }
+
+    private fun NetworkResponse.persistIssuerNonce(dpopManager: DPoPManager): NetworkResponse =
+        also { dpopManager.updateNonce(it.headers?.get(Constants.DPOP_NONCE_HEADER)) }
 
     private fun withDpop(baseRequest: Request, accessToken: String, proof: String): Request =
         baseRequest.newBuilder()
