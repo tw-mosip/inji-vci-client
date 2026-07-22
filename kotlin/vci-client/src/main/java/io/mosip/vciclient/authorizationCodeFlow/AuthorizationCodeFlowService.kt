@@ -408,7 +408,7 @@ internal class AuthorizationCodeFlowService(
                 clientMetadata = clientMetadata,
                 pkceSession = pkceSession,
                 scope = issuerMetadata.scope,
-                dpopJkt = if (dpopManager.isInitialized) dpopManager.jwkThumbprint() else null
+                dpopJkt = dpopManager.jwkThumbprint()
             )
 
             val response = try {
