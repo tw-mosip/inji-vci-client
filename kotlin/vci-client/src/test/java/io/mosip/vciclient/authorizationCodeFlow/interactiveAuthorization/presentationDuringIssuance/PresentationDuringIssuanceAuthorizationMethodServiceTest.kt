@@ -160,7 +160,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
     fun `should successfully authorize and return success response`() = runTest {
         coEvery { mockOvp.constructUnsignedVPToken(any()) } returns listOf(
             UnsignedVPToken(
-                id = "vp-token-id",
+                id = "id1",
                 format = FormatType.LDP_VC,
                 holderKeyReference = "k1",
                 signatureAlgorithm = "ES256",
@@ -184,7 +184,7 @@ class PresentationDuringIssuanceAuthorizationMethodServiceTest {
             signVerifiablePresentation = {
                 listOf(
                     VPTokenSigningResult(
-                        id = "vp-token-id",
+                        id = "id1",
                         signedData = "signed".toByteArray(),
                     )
                 )
