@@ -21,7 +21,7 @@ private const val RSA_KEY_SIZE = 2048
 internal enum class DPoPAlgorithm(val algorithmName: String, val jwsAlgorithm: JWSAlgorithm) {
     EDDSA("EdDSA", JWSAlgorithm.EdDSA) {
         override fun generateKey(): JWK =
-            OctetKeyPairGenerator(Curve.Ed25519).keyID(newKeyId()).generate()
+            OctetKeyPairGenerator(Curve.Ed25519).keyID(generateKeyId()).generate()
 
         override fun signer(key: JWK): JWSSigner = Ed25519Signer(key as OctetKeyPair)
     },
@@ -29,7 +29,7 @@ internal enum class DPoPAlgorithm(val algorithmName: String, val jwsAlgorithm: J
         override fun generateKey(): JWK =
             ECKeyGenerator(Curve.SECP256K1)
                 .provider(BouncyCastleProviderSingleton.getInstance())
-                .keyID(newKeyId())
+                .keyID(generateKeyId())
                 .generate()
 
         override fun signer(key: JWK): JWSSigner =
@@ -51,7 +51,7 @@ internal enum class DPoPAlgorithm(val algorithmName: String, val jwsAlgorithm: J
     },
     RS256("RS256", JWSAlgorithm.RS256) {
         override fun generateKey(): JWK =
-            RSAKeyGenerator(RSA_KEY_SIZE).keyID(newKeyId()).generate()
+            RSAKeyGenerator(RSA_KEY_SIZE).keyID(generateKeyId()).generate()
 
         override fun signer(key: JWK): JWSSigner = RSASSASigner(key as RSAKey)
     };
@@ -80,9 +80,9 @@ internal enum class DPoPAlgorithm(val algorithmName: String, val jwsAlgorithm: J
                 )
         }
 
-        private fun newKeyId(): String = UUID.randomUUID().toString()
+        private fun generateKeyId(): String = UUID.randomUUID().toString()
 
         private fun generateEcKey(curve: Curve): JWK =
-            ECKeyGenerator(curve).keyID(newKeyId()).generate()
+            ECKeyGenerator(curve).keyID(generateKeyId()).generate()
     }
 }
