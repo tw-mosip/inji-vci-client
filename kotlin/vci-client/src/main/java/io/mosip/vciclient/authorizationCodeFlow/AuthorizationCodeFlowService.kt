@@ -315,6 +315,7 @@ internal class AuthorizationCodeFlowService(
                     pkceSession = pkceSession,
                     credentialConfigurationId = credentialConfigurationId,
                     authorizationMethods = authorizationMethods,
+                    dpopManager = dpopManager,
                     traceabilityId = traceabilityId
                 )
             } catch (e: DownloadFailedException) {
@@ -356,6 +357,7 @@ private suspend fun obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
     pkceSession: PKCESessionManager.PKCESession,
     credentialConfigurationId: String,
     authorizationMethods: List<AuthorizationMethod>,
+    dpopManager: DPoPManager,
     traceabilityId: String? = null,
 ): String {
         val response = try {
@@ -365,7 +367,8 @@ private suspend fun obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
                 credentialConfigurationId = credentialConfigurationId,
                 authorizationMethods = authorizationMethods,
                 pkceSession = pkceSession,
-                traceabilityId = traceabilityId
+                traceabilityId = traceabilityId,
+                dpopJkt = dpopManager.jwkThumbprint()
             )
         } catch (e: VCIClientException) {
             throw DownloadFailedException(

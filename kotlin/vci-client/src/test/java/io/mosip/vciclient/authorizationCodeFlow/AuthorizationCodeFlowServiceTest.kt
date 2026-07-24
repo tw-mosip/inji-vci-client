@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.mockkConstructor
 import io.mockk.mockkObject
+import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationCodeFlowService
 import io.mosip.vciclient.authorizationCodeFlow.AuthorizationMethod
@@ -22,6 +23,7 @@ import io.mosip.vciclient.constants.TokenResponseCallback
 import io.mosip.vciclient.credential.request.CredentialRequestExecutor
 import io.mosip.vciclient.credential.response.CredentialResponseDraft13
 import io.mosip.vciclient.credentialOffer.CredentialOffer
+import io.mosip.vciclient.dpop.DPoPManager
 import io.mosip.vciclient.exception.DownloadFailedException
 import io.mosip.vciclient.exception.InteractiveAuthorizationException
 import io.mosip.vciclient.exception.InvalidDataProvidedException
@@ -203,6 +205,8 @@ class AuthorizationCodeFlowServiceTest {
                     any(),
                     any(),
                     any(),
+                    any(),
+                    any(),
                 )
             } returns AuthorizationResponse("mockAuthCode", "success")
 
@@ -288,7 +292,7 @@ class AuthorizationCodeFlowServiceTest {
 
         val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
         coEvery {
-            mockHandler.handle(any(), any(), any(), any(), any())
+            mockHandler.handle(any(), any(), any(), any(), any(), any(), any())
         } returns AuthorizationResponse(
             authorizationCode = null,
             status = "error",
@@ -420,7 +424,7 @@ class AuthorizationCodeFlowServiceTest {
 
         val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
         coEvery {
-            mockHandler.handle(any(), any(), any(), any(), any(), any())
+            mockHandler.handle(any(), any(), any(), any(), any(), any(), any())
         } returns AuthorizationResponse(
             authorizationCode = null,
             status = "error",
@@ -458,7 +462,7 @@ class AuthorizationCodeFlowServiceTest {
         val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
 
         coEvery {
-            mockHandler.handle(any(), any(), any(), any(), any(), any())
+            mockHandler.handle(any(), any(), any(), any(), any(), any(), any())
         } throws InteractiveAuthorizationException(
             message = "interaction rejected",
             issuerErrorCode = "access_denied",
@@ -502,7 +506,7 @@ class AuthorizationCodeFlowServiceTest {
         val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
 
         coEvery {
-            mockHandler.handle(any(), any(), any(), any(), any(), any())
+            mockHandler.handle(any(), any(), any(), any(), any(), any(), any())
         } returns AuthorizationResponse(
             authorizationCode = null,
             status = "error",
@@ -543,7 +547,7 @@ class AuthorizationCodeFlowServiceTest {
 
         val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
         coEvery {
-            mockHandler.handle(any(), any(), any(), any(), any(), any())
+            mockHandler.handle(any(), any(), any(), any(), any(), any(), any())
         } throws RuntimeException("interactive flow crashed")
 
         val ex = assertThrows<DownloadFailedException> {
@@ -675,4 +679,39 @@ fun `should throw when interactive authorization is required but endpoint is mis
     exception.message.orEmpty().contains("Missing interactive authorization endpoint")
 )
 }
+
+    @Test
+    fun `should thread dpop_jkt thumbprint to interactive authorization handler`() = runBlocking {
+        coEvery {
+            anyConstructed<AuthorizationServerResolver>().resolveForAuthCode(any(), any())
+        } returns mockk<AuthorizationServerMetadata> {
+            every { authorizationEndpoint } returns "https://auth.example.com"
+            every { tokenEndpoint } returns "https://token.example.com"
+            every { dpopSigningAlgValuesSupported } returns null
+            every { interactiveAuthorizationEndpoint } returns "https://auth.example.com/interactive"
+            every { requireInteractiveAuthorizationRequest } returns false
+        }
+
+        val dpopManager = DPoPManager()
+        val jktSlot = slot<String>()
+        val mockHandler = mockkClass(InteractiveAuthorizationHandler::class)
+        coEvery {
+            mockHandler.handle(any(), any(), any(), any(), any(), any(), capture(jktSlot))
+        } returns AuthorizationResponse("interactive-auth-code", "success")
+
+        AuthorizationCodeFlowService(
+            interactiveAuthorizationHandler = mockHandler
+        ).requestCredentialsDraft13(
+            issuerMetadata = resolvedIssuerMetadata,
+            credentialConfigurationId = credentialConfigurationId,
+            clientMetadata = clientMetadata,
+            getTokenResponse = getTokenResponse,
+            getProofJwt = getProofJwt,
+            jwtProofAlgorithmsSupported = listOf("ES256"),
+            authorizationMethods = listOf(authorizationMethod),
+            dpopManager = dpopManager
+        )
+
+        assertEquals(dpopManager.jwkThumbprint(), jktSlot.captured)
+    }
 }

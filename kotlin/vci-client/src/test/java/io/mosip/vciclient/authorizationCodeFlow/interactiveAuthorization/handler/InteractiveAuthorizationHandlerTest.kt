@@ -26,6 +26,7 @@ import org.junit.Before
 import org.junit.Test
 import android.util.Base64
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 
 
 class InteractiveAuthorizationHandlerTest {
@@ -350,4 +351,63 @@ fun `should include both OpenID4VP and IAE interaction types in initial IAR requ
     interactionTypes
 )
 }
+
+    @Test
+    fun `should include dpop_jkt in initial IAR request when provided`() = runTest {
+        every {
+            NetworkManager.sendRequest(
+                url = endpoint,
+                method = HttpMethod.POST,
+                bodyParams = capture(mapSlot),
+                headers = any()
+            )
+        } returns NetworkResponse("""{ "type": "unknown_type" }""", null)
+
+        assertFailsWith<InteractiveAuthorizationException> {
+            handler.handle(
+                endpoint = endpoint,
+                clientMetadata = clientMetadata,
+                credentialConfigurationId = credentialConfigId,
+                authorizationMethods = listOf(
+                    AuthorizationMethod.PresentationDuringIssuance(
+                        selectCredentialsForPresentation = mockk(relaxed = true),
+                        signVerifiablePresentation = mockk(relaxed = true)
+                    )
+                ),
+                pkceSession = pkceSession,
+                dpopJkt = "test-thumbprint"
+            )
+        }
+
+        assertEquals("test-thumbprint", mapSlot.captured["dpop_jkt"])
+    }
+
+    @Test
+    fun `should omit dpop_jkt from initial IAR request when not provided`() = runTest {
+        every {
+            NetworkManager.sendRequest(
+                url = endpoint,
+                method = HttpMethod.POST,
+                bodyParams = capture(mapSlot),
+                headers = any()
+            )
+        } returns NetworkResponse("""{ "type": "unknown_type" }""", null)
+
+        assertFailsWith<InteractiveAuthorizationException> {
+            handler.handle(
+                endpoint = endpoint,
+                clientMetadata = clientMetadata,
+                credentialConfigurationId = credentialConfigId,
+                authorizationMethods = listOf(
+                    AuthorizationMethod.PresentationDuringIssuance(
+                        selectCredentialsForPresentation = mockk(relaxed = true),
+                        signVerifiablePresentation = mockk(relaxed = true)
+                    )
+                ),
+                pkceSession = pkceSession
+            )
+        }
+
+        assertFalse(mapSlot.captured.containsKey("dpop_jkt"))
+    }
 }

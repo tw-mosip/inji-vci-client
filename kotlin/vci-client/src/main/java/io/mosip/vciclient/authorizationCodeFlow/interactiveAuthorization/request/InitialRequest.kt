@@ -23,17 +23,21 @@ internal data class IARInitialRequestBody(
     val authorizationDetails: List<AuthorizationDetail>,
 
     @SerializedName("interaction_types_supported")
-    val interactionTypesSupported: List<String>
+    val interactionTypesSupported: List<String>,
+
+    @SerializedName("dpop_jkt")
+    val dpopJkt: String? = null
 ) {
-    fun toFormMap(): Map<String, String> = mapOf(
-        "response_type" to responseType,
-        "client_id" to clientId,
-        "code_challenge" to codeChallenge,
-        "code_challenge_method" to codeChallengeMethod,
-        "redirect_uri" to redirectUri,
-        "authorization_details" to JsonUtils.serialize(authorizationDetails),
-        "interaction_types_supported" to interactionTypesSupported.joinToString(",")
-    )
+    fun toFormMap(): Map<String, String> = buildMap {
+        put("response_type", responseType)
+        put("client_id", clientId)
+        put("code_challenge", codeChallenge)
+        put("code_challenge_method", codeChallengeMethod)
+        put("redirect_uri", redirectUri)
+        put("authorization_details", JsonUtils.serialize(authorizationDetails))
+        put("interaction_types_supported", interactionTypesSupported.joinToString(","))
+        dpopJkt?.let { put("dpop_jkt", it) }
+    }
 }
 
 
