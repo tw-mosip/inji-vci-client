@@ -101,6 +101,7 @@ class AuthorizationCodeFlowServiceTest {
                 any(),
                 any(),
                 any(),
+                any(),
                 any()
             )
         } returns "https://auth.example.com/authorize"

@@ -32,7 +32,7 @@ class InteractiveAuthorizationHandler {
         authorizationMethods: List<AuthorizationMethod>,
         pkceSession: PKCESessionManager.PKCESession,
         traceabilityId: String? = null,
-        dpopJkt: String? = null
+        dpopJkt: String
     ): AuthorizationResponse {
 
         return try {
@@ -109,7 +109,7 @@ class InteractiveAuthorizationHandler {
         credentialConfigId: String,
         pkce: PKCESessionManager.PKCESession,
         interactionTypesSupported: List<String>,
-        dpopJkt: String?
+        dpopJkt: String
     ): Map<String, String> {
         val details = listOf(
             AuthorizationDetail(

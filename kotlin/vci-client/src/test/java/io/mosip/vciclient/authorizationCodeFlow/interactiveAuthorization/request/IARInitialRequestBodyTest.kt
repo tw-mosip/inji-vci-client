@@ -2,12 +2,11 @@ package io.mosip.vciclient.authorizationCodeFlow.interactiveAuthorization.reques
 
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class IARInitialRequestBodyTest {
 
-    private fun body(dpopJkt: String? = null) = IARInitialRequestBody(
+    private fun body(dpopJkt: String = "thumb-print-value") = IARInitialRequestBody(
         clientId = "wallet-client",
         codeChallenge = "challenge",
         redirectUri = "wallet://callback",
@@ -22,30 +21,10 @@ class IARInitialRequestBodyTest {
     )
 
     @Test
-    fun `toFormMap includes dpop_jkt when provided`() {
+    fun `toFormMap includes dpop_jkt`() {
         val map = body(dpopJkt = "thumb-print-value").toFormMap()
 
         assertEquals("thumb-print-value", map["dpop_jkt"])
-    }
-
-    @Test
-    fun `toFormMap omits dpop_jkt when null`() {
-        val map = body(dpopJkt = null).toFormMap()
-
-        assertFalse(map.containsKey("dpop_jkt"))
-    }
-
-    @Test
-    fun `toFormMap defaults dpop_jkt to omitted`() {
-        val map = IARInitialRequestBody(
-            clientId = "wallet-client",
-            codeChallenge = "challenge",
-            redirectUri = "wallet://callback",
-            authorizationDetails = emptyList(),
-            interactionTypesSupported = listOf("openid4vp_presentation")
-        ).toFormMap()
-
-        assertFalse(map.containsKey("dpop_jkt"))
     }
 
     @Test

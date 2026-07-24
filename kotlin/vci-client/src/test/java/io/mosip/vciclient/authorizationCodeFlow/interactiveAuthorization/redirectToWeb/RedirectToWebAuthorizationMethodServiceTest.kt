@@ -38,6 +38,7 @@ class RedirectToWebAuthorizationMethodServiceTest {
                 any(),
                 any(),
                 any(),
+                any(),
                 any()
             )
         } returns "https://auth.example.com/authorize"
@@ -144,7 +145,8 @@ class RedirectToWebAuthorizationMethodServiceTest {
                 state = "state",
                 nonce = "nonce"
             ),
-            scope = "openid"
+            scope = "openid",
+            dpopJkt = "dpop",
         )
     }
 }

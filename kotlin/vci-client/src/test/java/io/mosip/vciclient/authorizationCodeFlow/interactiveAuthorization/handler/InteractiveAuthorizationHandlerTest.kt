@@ -26,7 +26,6 @@ import org.junit.Before
 import org.junit.Test
 import android.util.Base64
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
 
 
 class InteractiveAuthorizationHandlerTest {
@@ -101,7 +100,8 @@ class InteractiveAuthorizationHandlerTest {
             credentialConfigurationId = credentialConfigId,
             authorizationMethods = listOf(presentationMethod),
             pkceSession = pkceSession,
-            traceabilityId = "demo"
+            traceabilityId = "demo",
+            dpopJkt = "test-jkt"
         )
 
         assertEquals(expectedAuthResponse, result)
@@ -122,7 +122,8 @@ class InteractiveAuthorizationHandlerTest {
                 clientMetadata,
                 credentialConfigId,
                 emptyList(),
-                pkceSession
+                pkceSession,
+                dpopJkt = "test-jkt"
             )
         }
 
@@ -143,7 +144,8 @@ class InteractiveAuthorizationHandlerTest {
                 clientMetadata,
                 credentialConfigId,
                 emptyList(),
-                pkceSession
+                pkceSession,
+                dpopJkt = "test-jkt"
             )
         }
     }
@@ -168,7 +170,8 @@ class InteractiveAuthorizationHandlerTest {
                         signVerifiablePresentation = mockk(relaxed = true)
                     )
                 ),
-                pkceSession
+                pkceSession,
+                dpopJkt = "test-jkt"
             )
         }
 
@@ -199,7 +202,8 @@ class InteractiveAuthorizationHandlerTest {
                         signVerifiablePresentation = mockk(relaxed = true)
                     )
                 ),
-                pkceSession
+                pkceSession,
+                dpopJkt = "test-jkt"
             )
         }
     }
@@ -226,7 +230,8 @@ class InteractiveAuthorizationHandlerTest {
                         signVerifiablePresentation = mockk(relaxed = true)
                     )
                 ),
-                pkceSession
+                pkceSession,
+                dpopJkt = "test-jkt"
             )
         }
 
@@ -247,7 +252,8 @@ class InteractiveAuthorizationHandlerTest {
                 clientMetadata,
                 credentialConfigId,
                 authorizationMethods = emptyList(),
-                pkceSession = pkceSession
+                pkceSession = pkceSession,
+                dpopJkt = "test-jkt"
             )
         }
 
@@ -273,6 +279,7 @@ class InteractiveAuthorizationHandlerTest {
                 ),
 
                 pkceSession,
+                dpopJkt = "test-jkt"
 
                 )
         }
@@ -297,7 +304,8 @@ class InteractiveAuthorizationHandlerTest {
                         signVerifiablePresentation = mockk(relaxed = true)
                     )
                 ),
-                pkceSession
+                pkceSession,
+                dpopJkt = "test-jkt"
             )
         }
 
@@ -341,7 +349,8 @@ fun `should include both OpenID4VP and IAE interaction types in initial IAR requ
         clientMetadata = clientMetadata,
         credentialConfigurationId = credentialConfigId,
         authorizationMethods = listOf(presentationMethod),
-        pkceSession = pkceSession
+        pkceSession = pkceSession,
+        dpopJkt = "test-jkt"
     )
 
    val interactionTypes = mapSlot.captured["interaction_types_supported"]
@@ -380,34 +389,5 @@ fun `should include both OpenID4VP and IAE interaction types in initial IAR requ
         }
 
         assertEquals("test-thumbprint", mapSlot.captured["dpop_jkt"])
-    }
-
-    @Test
-    fun `should omit dpop_jkt from initial IAR request when not provided`() = runTest {
-        every {
-            NetworkManager.sendRequest(
-                url = endpoint,
-                method = HttpMethod.POST,
-                bodyParams = capture(mapSlot),
-                headers = any()
-            )
-        } returns NetworkResponse("""{ "type": "unknown_type" }""", null)
-
-        assertFailsWith<InteractiveAuthorizationException> {
-            handler.handle(
-                endpoint = endpoint,
-                clientMetadata = clientMetadata,
-                credentialConfigurationId = credentialConfigId,
-                authorizationMethods = listOf(
-                    AuthorizationMethod.PresentationDuringIssuance(
-                        selectCredentialsForPresentation = mockk(relaxed = true),
-                        signVerifiablePresentation = mockk(relaxed = true)
-                    )
-                ),
-                pkceSession = pkceSession
-            )
-        }
-
-        assertFalse(mapSlot.captured.containsKey("dpop_jkt"))
     }
 }
