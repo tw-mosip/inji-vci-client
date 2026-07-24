@@ -296,9 +296,17 @@ internal class AuthorizationCodeFlowService(
         traceabilityId: String? = null,
         dpopManager: DPoPManager,
     ): String {
-        val interactiveEndpoint = authorizationServerMetadata.interactiveAuthorizationEndpoint
+        val interactiveEndpoint =
+            authorizationServerMetadata.interactiveAuthorizationEndpoint?.trim()
 
-        return if (interactiveEndpoint != null) {
+        if (
+            authorizationServerMetadata.requireInteractiveAuthorizationRequest == true &&
+            interactiveEndpoint.isNullOrEmpty()
+        ) {
+            throw DownloadFailedException("Missing interactive authorization endpoint")
+        }
+
+        return if (!interactiveEndpoint.isNullOrEmpty()) {
             try {
                 obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
                     endpoint = interactiveEndpoint,
@@ -310,8 +318,14 @@ internal class AuthorizationCodeFlowService(
                     traceabilityId = traceabilityId
                 )
             } catch (e: DownloadFailedException) {
-                if (e.issuerErrorCode == MISSING_INTERACTION_TYPE_ERROR) {
-                    logger.warning("Interactive authorization failed at $interactiveEndpoint: ${e.message}. Falling back to standard authorization endpoint if available.")
+                if (
+                    e.issuerErrorCode == MISSING_INTERACTION_TYPE_ERROR &&
+                    authorizationServerMetadata.requireInteractiveAuthorizationRequest != true
+                ) {
+                    logger.warning(
+                        "Interactive authorization failed at $interactiveEndpoint: ${e.message}. Falling back to standard authorization endpoint if available."
+                    )
+
                     obtainAuthorizationCodeViaAuthorizationEndpoint(
                         authorizationServerMetadata = authorizationServerMetadata,
                         issuerMetadata = issuerMetadata,
@@ -335,20 +349,15 @@ internal class AuthorizationCodeFlowService(
             )
         }
     }
-
-    private suspend fun obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
-        endpoint: String,
-        issuerMetadata: IssuerMetadata,
-        clientMetadata: ClientMetadata,
-        pkceSession: PKCESessionManager.PKCESession,
-        credentialConfigurationId: String,
-        authorizationMethods: List<AuthorizationMethod>,
-        traceabilityId: String? = null,
-    ): String {
-        logger.info(
-            "Using Interactive Authorization Endpoint: $endpoint for issuer=${issuerMetadata.credentialIssuer}"
-        )
-
+private suspend fun obtainAuthorizationCodeViaInteractiveAuthorizationEndpoint(
+    endpoint: String,
+    issuerMetadata: IssuerMetadata,
+    clientMetadata: ClientMetadata,
+    pkceSession: PKCESessionManager.PKCESession,
+    credentialConfigurationId: String,
+    authorizationMethods: List<AuthorizationMethod>,
+    traceabilityId: String? = null,
+): String {
         val response = try {
             interactiveAuthorizationHandler.handle(
                 endpoint = endpoint,
