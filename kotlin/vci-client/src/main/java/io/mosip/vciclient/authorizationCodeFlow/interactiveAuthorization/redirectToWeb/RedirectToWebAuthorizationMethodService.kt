@@ -32,7 +32,8 @@ class RedirectToWebAuthorizationMethodService(
             scope = requestData.scope,
             state = requestData.pkceSession.state,
             codeChallenge = requestData.pkceSession.codeChallenge,
-            nonce = requestData.pkceSession.nonce
+            nonce = requestData.pkceSession.nonce,
+            dpopJkt = requestData.dpopJkt
         )
         val authorizationResponse = openWebPage(authUrl)
 

@@ -31,11 +31,11 @@ class InteractiveAuthorizationHandler {
         credentialConfigurationId: String,
         authorizationMethods: List<AuthorizationMethod>,
         pkceSession: PKCESessionManager.PKCESession,
-        traceabilityId: String? = null
+        traceabilityId: String? = null,
+        dpopJkt: String
     ): AuthorizationResponse {
 
         return try {
-            //interaction types supported will be extracted from authmethods once we start supporting redirect-to-web
             val interactionTypesSupported = authorizationMethods
                 .filter { it.type != InteractionType.RedirectToWeb }
                 .flatMap {  
@@ -58,7 +58,8 @@ class InteractiveAuthorizationHandler {
                 clientMetadata,
                 credentialConfigurationId,
                 pkceSession,
-                interactionTypesSupported
+                interactionTypesSupported,
+                dpopJkt
             )
 
             val response = withContext(Dispatchers.IO) {
@@ -107,7 +108,8 @@ class InteractiveAuthorizationHandler {
         clientMetadata: ClientMetadata,
         credentialConfigId: String,
         pkce: PKCESessionManager.PKCESession,
-        interactionTypesSupported: List<String>
+        interactionTypesSupported: List<String>,
+        dpopJkt: String
     ): Map<String, String> {
         val details = listOf(
             AuthorizationDetail(
@@ -121,7 +123,8 @@ class InteractiveAuthorizationHandler {
             codeChallenge = pkce.codeChallenge,
             redirectUri = clientMetadata.redirectUri,
             authorizationDetails = details,
-            interactionTypesSupported = interactionTypesSupported
+            interactionTypesSupported = interactionTypesSupported,
+            dpopJkt = dpopJkt
         ).toFormMap()
     }
 

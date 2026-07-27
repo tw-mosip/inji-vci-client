@@ -14,7 +14,8 @@ class AuthorizationUrlBuilderTest {
             scope = "openid profile email",
             state = "abc123",
             codeChallenge = "xyzChallenge",
-            nonce = "randomNonce"
+            nonce = "randomNonce",
+            dpopJkt = "dpopJkt"
         )
 
         val expected = "https://example.com/auth" +
@@ -25,8 +26,25 @@ class AuthorizationUrlBuilderTest {
                 "&state=abc123" +
                 "&code_challenge=xyzChallenge" +
                 "&code_challenge_method=S256" +
-                "&nonce=randomNonce"
+                "&nonce=randomNonce" +
+                "&dpop_jkt=dpopJkt"
 
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `build should append dpop_jkt when provided`() {
+        val actual = AuthorizationUrlBuilder.build(
+            baseUrl = "https://example.com/auth",
+            clientId = "myClientId",
+            redirectUri = "https://myapp.com/callback",
+            scope = "openid",
+            state = "abc123",
+            codeChallenge = "xyzChallenge",
+            nonce = "randomNonce",
+            dpopJkt = "thumb-print-value"
+        )
+
+        assertEquals(true, actual.endsWith("&dpop_jkt=thumb-print-value"))
     }
 }

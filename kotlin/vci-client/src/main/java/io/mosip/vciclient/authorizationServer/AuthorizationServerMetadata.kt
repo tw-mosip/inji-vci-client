@@ -18,6 +18,9 @@ data class AuthorizationServerMetadata(
     @SerializedName("interactive_authorization_endpoint")
     val interactiveAuthorizationEndpoint: String? = null,
 
+    @SerializedName("dpop_signing_alg_values_supported")
+    val dpopSigningAlgValuesSupported: List<String>? = null,
+
     @SerializedName("require_interactive_authorization_request")
-val requireInteractiveAuthorizationRequest: Boolean? = null
+    val requireInteractiveAuthorizationRequest: Boolean? = null
 )
