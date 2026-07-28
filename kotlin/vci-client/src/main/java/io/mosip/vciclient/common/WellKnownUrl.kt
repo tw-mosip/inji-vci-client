@@ -16,7 +16,9 @@ object WellKnownUrl {
      */
     fun insertSuffix(baseUrl: String, suffix: String): String {
         val uri = URI(baseUrl)
-        val path = uri.path?.trimEnd('/').orEmpty()
+        // Use rawPath so an escaped separator (e.g. /tenant%2Falpha) is not decoded into a
+        // different path that would resolve to a different metadata endpoint.
+        val path = uri.rawPath?.trimEnd('/').orEmpty()
         return "${uri.scheme}://${uri.authority}$suffix$path"
     }
 }

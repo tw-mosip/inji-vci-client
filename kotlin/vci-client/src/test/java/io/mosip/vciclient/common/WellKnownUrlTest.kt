@@ -37,4 +37,15 @@ class WellKnownUrlTest {
             )
         )
     }
+
+    @Test
+    fun `preserves percent-encoded path segments`() {
+        assertEquals(
+            "https://host.example.com/.well-known/openid-configuration/tenant%2Falpha",
+            WellKnownUrl.insertSuffix(
+                "https://host.example.com/tenant%2Falpha",
+                "/.well-known/openid-configuration"
+            )
+        )
+    }
 }
