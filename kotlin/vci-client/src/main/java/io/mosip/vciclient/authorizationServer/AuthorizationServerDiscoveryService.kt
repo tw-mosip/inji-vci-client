@@ -1,13 +1,13 @@
 package io.mosip.vciclient.authorizationServer
 
 import io.mosip.vciclient.common.JsonUtils
+import io.mosip.vciclient.common.WellKnownUrl
 import io.mosip.vciclient.constants.Constants
 import io.mosip.vciclient.exception.AuthorizationServerDiscoveryException
 import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.net.URI
 import java.util.logging.Logger
 
 private const val OAUTH_WELL_KNOWN_URI_SUFFIX = "/.well-known/oauth-authorization-server"
@@ -59,23 +59,16 @@ class AuthorizationServerDiscoveryService {
         val normalized = baseUrl.trimEnd('/')
         val candidates = mutableListOf<String>()
 
+        // RFC 8414 inserted form (a no-op vs. append when the base URL has no path).
         runCatching {
-            val uri = URI(normalized)
-            val scheme = uri.scheme
-            val host = uri.host
-            if (scheme != null && host != null) {
-                val port = if (uri.port != -1) ":${uri.port}" else ""
-                val authority = "$scheme://$host$port"
-                val path = (uri.path ?: "").trimEnd('/')
-                if (path.isNotEmpty()) {
-                    candidates.add("$authority$OAUTH_WELL_KNOWN_URI_SUFFIX$path")
-                    candidates.add("$authority$OPENID_WELL_KNOWN_URI_SUFFIX$path")
-                }
-            }
+            candidates.add(WellKnownUrl.withInsertedSuffix(normalized, OAUTH_WELL_KNOWN_URI_SUFFIX))
+            candidates.add(WellKnownUrl.withInsertedSuffix(normalized, OPENID_WELL_KNOWN_URI_SUFFIX))
         }
 
+        // Legacy append form kept as a fallback.
         candidates.add("$normalized$OAUTH_WELL_KNOWN_URI_SUFFIX")
         candidates.add("$normalized$OPENID_WELL_KNOWN_URI_SUFFIX")
-        return candidates
+
+        return candidates.distinct()
     }
 }
