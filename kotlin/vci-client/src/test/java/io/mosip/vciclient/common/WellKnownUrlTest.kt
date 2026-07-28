@@ -9,7 +9,7 @@ class WellKnownUrlTest {
     fun `inserts suffix between authority and path per RFC 8414`() {
         assertEquals(
             "https://host.example.com/.well-known/openid-credential-issuer/v1/issuer",
-            WellKnownUrl.withInsertedSuffix(
+            WellKnownUrl.insertSuffix(
                 "https://host.example.com/v1/issuer",
                 "/.well-known/openid-credential-issuer"
             )
@@ -20,7 +20,7 @@ class WellKnownUrlTest {
     fun `appends suffix when there is no path`() {
         assertEquals(
             "https://host.example.com/.well-known/oauth-authorization-server",
-            WellKnownUrl.withInsertedSuffix(
+            WellKnownUrl.insertSuffix(
                 "https://host.example.com",
                 "/.well-known/oauth-authorization-server"
             )
@@ -31,7 +31,7 @@ class WellKnownUrlTest {
     fun `preserves port and trims trailing path slash`() {
         assertEquals(
             "https://host.example.com:8443/.well-known/openid-configuration/tenant",
-            WellKnownUrl.withInsertedSuffix(
+            WellKnownUrl.insertSuffix(
                 "https://host.example.com:8443/tenant/",
                 "/.well-known/openid-configuration"
             )

@@ -14,7 +14,7 @@ object WellKnownUrl {
      * [baseUrl]. e.g. `https://host/tenant` + `/.well-known/x` -> `https://host/.well-known/x/tenant`.
      * When [baseUrl] has no path this is equivalent to appending the suffix.
      */
-    fun withInsertedSuffix(baseUrl: String, suffix: String): String {
+    fun insertSuffix(baseUrl: String, suffix: String): String {
         val uri = URI(baseUrl)
         val path = uri.path?.trimEnd('/').orEmpty()
         return "${uri.scheme}://${uri.authority}$suffix$path"

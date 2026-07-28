@@ -141,7 +141,7 @@ class IssuerMetadataService {
     }
 
     private fun buildWellKnownUrl(credentialIssuer: String): String =
-        WellKnownUrl.withInsertedSuffix(credentialIssuer, CREDENTIAL_ISSUER_WELL_KNOWN_URI_SUFFIX)
+        WellKnownUrl.insertSuffix(credentialIssuer, CREDENTIAL_ISSUER_WELL_KNOWN_URI_SUFFIX)
 
     private fun buildDraft13WellKnownUrl(credentialIssuer: String): String {
         val normalizedIssuer = credentialIssuer.trimEnd('/')
