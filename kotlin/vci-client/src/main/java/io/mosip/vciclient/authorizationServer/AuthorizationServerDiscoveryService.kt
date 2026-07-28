@@ -7,6 +7,7 @@ import io.mosip.vciclient.networkManager.HttpMethod
 import io.mosip.vciclient.networkManager.NetworkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.net.URI
 import java.util.logging.Logger
 
 private const val OAUTH_WELL_KNOWN_URI_SUFFIX = "/.well-known/oauth-authorization-server"
@@ -17,41 +18,64 @@ class AuthorizationServerDiscoveryService {
 
     /**
      * Discovers the authorization server metadata by querying the well-known endpoints.
-     * Some authorization servers will choose to support "openid-configuration" well-known suffix while some will choose to go with default "oauth-authorization-server" suffix.
+     * Some authorization servers support the "openid-configuration" suffix while others use the
+     * default "oauth-authorization-server" suffix, so both are attempted.
+     *
+     * Per RFC 8414 section 3, when the issuer has a path component the well-known suffix is
+     * inserted between the authority and the path; the legacy form (suffix appended to the issuer)
+     * is kept as a fallback for servers that expose it that way.
      * reference - https://datatracker.ietf.org/doc/html/rfc8414#section-3
      */
     suspend fun discover(baseUrl: String): AuthorizationServerMetadata = withContext(Dispatchers.IO) {
-        val oauthUrl = "$baseUrl$OAUTH_WELL_KNOWN_URI_SUFFIX"
-        val openidUrl = "$baseUrl$OPENID_WELL_KNOWN_URI_SUFFIX"
-
-        try {
-            val oauthResponse = NetworkManager.sendRequest(
-                url = oauthUrl,
-                method = HttpMethod.GET,
-                timeoutMillis = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS
-            )
-            if (oauthResponse.body.isNotBlank()) {
-                JsonUtils.deserialize(oauthResponse.body, AuthorizationServerMetadata::class.java)
-                    ?.let { return@withContext it }
+        for (wellKnownUrl in buildCandidateWellKnownUrls(baseUrl)) {
+            try {
+                val response = NetworkManager.sendRequest(
+                    url = wellKnownUrl,
+                    method = HttpMethod.GET,
+                    timeoutMillis = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS
+                )
+                if (response.body.isNotBlank()) {
+                    JsonUtils.deserialize(response.body, AuthorizationServerMetadata::class.java)
+                        ?.let { return@withContext it }
+                }
+            } catch (e: Exception) {
+                logger.warning(
+                    "Authorization server discovery failed at $wellKnownUrl, trying next candidate: ${e.message}"
+                )
             }
-        } catch (e: Exception) {
-            logger.warning("OAuth discovery failed, trying OpenID discovery: ${e.message}")
         }
 
-        try {
-            val openidResponse = NetworkManager.sendRequest(
-                url = openidUrl,
-                method = HttpMethod.GET,
-                timeoutMillis = Constants.DEFAULT_NETWORK_TIMEOUT_IN_MILLIS
-            )
-            if (openidResponse.body.isNotBlank()) {
-                JsonUtils.deserialize(openidResponse.body, AuthorizationServerMetadata::class.java)
-                    ?.let { return@withContext it }
+        throw AuthorizationServerDiscoveryException(
+            "Failed to discover authorization server metadata at all well-known endpoints"
+        )
+    }
+
+    /**
+     * Candidate well-known URLs in priority order. When the base URL has a path component the
+     * suffix is inserted between the authority and the path (RFC 8414); the legacy suffix-append
+     * form is always added as a fallback for servers that expose it that way.
+     */
+    internal fun buildCandidateWellKnownUrls(baseUrl: String): List<String> {
+        val normalized = baseUrl.trimEnd('/')
+        val candidates = mutableListOf<String>()
+
+        runCatching {
+            val uri = URI(normalized)
+            val scheme = uri.scheme
+            val host = uri.host
+            if (scheme != null && host != null) {
+                val port = if (uri.port != -1) ":${uri.port}" else ""
+                val authority = "$scheme://$host$port"
+                val path = (uri.path ?: "").trimEnd('/')
+                if (path.isNotEmpty()) {
+                    candidates.add("$authority$OAUTH_WELL_KNOWN_URI_SUFFIX$path")
+                    candidates.add("$authority$OPENID_WELL_KNOWN_URI_SUFFIX$path")
+                }
             }
-        } catch (e: Exception) {
-            logger.warning("OpenID discovery also failed: ${e.message}")
         }
 
-        throw AuthorizationServerDiscoveryException("Failed to discover authorization server metadata at both endpoints")
+        candidates.add("$normalized$OAUTH_WELL_KNOWN_URI_SUFFIX")
+        candidates.add("$normalized$OPENID_WELL_KNOWN_URI_SUFFIX")
+        return candidates
     }
 }
