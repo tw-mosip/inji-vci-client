@@ -178,4 +178,37 @@ class AuthorizationServerDiscoveryServiceTest {
         val result = AuthorizationServerDiscoveryService().discover(issuer)
         assertEquals(expected.authorizationEndpoint, result.authorizationEndpoint)
     }
+
+    @Test
+    fun `discover falls back to legacy appended well-known url for path-based issuer`() = runBlocking {
+        val issuer = "https://host.example.com/v1/esignet"
+        val insertedOauthUrl =
+            "https://host.example.com/.well-known/oauth-authorization-server/v1/esignet"
+        val insertedOpenidUrl =
+            "https://host.example.com/.well-known/openid-configuration/v1/esignet"
+        val legacyOauthUrl =
+            "https://host.example.com/v1/esignet/.well-known/oauth-authorization-server"
+        val expected = AuthorizationServerMetadata(
+            issuer = "x", authorizationEndpoint = "https://host.example.com/auth"
+        )
+
+        every {
+            NetworkManager.sendRequest(insertedOauthUrl, HttpMethod.GET, any(), any(), 10000)
+        } throws RuntimeException("inserted oauth down")
+
+        every {
+            NetworkManager.sendRequest(insertedOpenidUrl, HttpMethod.GET, any(), any(), 10000)
+        } throws RuntimeException("inserted openid down")
+
+        every {
+            NetworkManager.sendRequest(legacyOauthUrl, HttpMethod.GET, any(), any(), 10000)
+        } returns io.mosip.vciclient.networkManager.NetworkResponse(mockResponseBody, null)
+
+        every {
+            JsonUtils.deserialize(mockResponseBody, AuthorizationServerMetadata::class.java)
+        } returns expected
+
+        val result = AuthorizationServerDiscoveryService().discover(issuer)
+        assertEquals(expected.authorizationEndpoint, result.authorizationEndpoint)
+    }
 }
